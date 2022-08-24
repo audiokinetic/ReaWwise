@@ -1,0 +1,15 @@
+[submodule "3rd/JUCE"]
+	path = 3rd/JUCE
+	url = https://github.com/juce-framework/JUCE.git
+[submodule "3rd/rapidjson"]
+	path = 3rd/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
+[submodule "3rd/WDL"]
+	path = 3rd/WDL
+	url = https://github.com/justinfrankel/WDL.git
+[submodule "3rd/Catch2"]
+	path = 3rd/Catch2
+	url = https://github.com/catchorg/Catch2.git
+[submodule "3rd/trompeloeil"]
+	path = 3rd/trompeloeil
+	url = https://github.com/rollbear/trompeloeil.git

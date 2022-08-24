@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-314,-48)">
+        <g transform="matrix(1,0,0,1,266,44)">
+            <g id="General_SmallAdd_Normal">
+                <g id="Plus">
+                    <g id="General_AddWithTriangle_Normal">
+                        <g id="Transparent-BG" serif:id="Transparent BG" transform="matrix(1,0,0,1,48,4)">
+                            <rect x="0" y="0" width="20" height="20" style="fill:white;fill-opacity:0;"/>
+                        </g>
+                        <g transform="matrix(1,0,0,1,-71,-234)">
+                            <path d="M124,247L128,247L128,243L130,243L130,247L134,247L134,249L130,249L130,253L128,253L128,249L124,249L124,247Z" style="fill:rgb(189,189,189);"/>
+                            <path d="M124,246C123.448,246 123,246.448 123,247L123,249C123,249.552 123.448,250 124,250L127,250C127,250 127,253 127,253C127,253.552 127.448,254 128,254L130,254C130.552,254 131,253.552 131,253L131,250C131,250 134,250 134,250C134.552,250 135,249.552 135,249L135,247C135,246.448 134.552,246 134,246L131,246C131,246 131,243 131,243C131,242.448 130.552,242 130,242L128,242C127.448,242 127,242.448 127,243L127,246C127,246 124,246 124,246ZM124,247L128,247L128,243L130,243L130,247L134,247L134,249L130,249L130,253L128,253L128,249L124,249L124,247Z" style="fill:rgb(58,58,58);"/>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

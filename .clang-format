@@ -1,0 +1,25 @@
+# Format Style Options - Created with Clang Power Tools
+---
+BasedOnStyle: Microsoft
+AccessModifierOffset: -4
+AlignAfterOpenBracket: DontAlign
+AllowShortLambdasOnASingleLine: None
+AlwaysBreakTemplateDeclarations: Yes
+BinPackParameters: true
+BreakBeforeBraces: Allman
+BreakInheritanceList: BeforeComma
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 0
+EmptyLineBeforeAccessModifier: Always
+FixNamespaceComments: true
+IncludeBlocks: Regroup
+IndentCaseLabels: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+NamespaceIndentation: All
+PointerAlignment: Left
+ReferenceAlignment: Left
+SpacesInAngles: Never
+UseTab: AlignWithSpaces
+UseCRLF: true
+SpaceBeforeParens: Never
+...

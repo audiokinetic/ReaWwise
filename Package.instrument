@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<instrument rootdir="../"
+	xmlns:ak="file://instrument/tasks/ak"
+	xmlns:wwise="file://instrument/tasks/wwise"
+	xmlns:scripts="file://instrument/tasks/scripts">
+
+	<!-- Predefined filepaths. -->
+	<property name="PKG_DISTRIBUTE_PATH" value="ReaperWwiseTransfer/Package.distribute" />
+
+	<target name="build_reaper_wwise_transfer">
+		<fail message="Requires the 'WWISE_BUILD_NUMBER' property to be set." if="${WWISE_BUILD_NUMBER is None}" />
+		<fail message="Requires the 'WWISE_VERSION' property to be set." if="${WWISE_VERSION is None}" />
+		<fail message="Requires the 'VERSION' property to be set." if="${VERSION is None}" />
+		<fail message="Requires the 'BUILD_NUMBER' property to be set." if="${BUILD_NUMBER is None}" />
+
+		<exec path="mkdir" verbose="true" workingdir="${_ROOT_DIRECTORY_}/ReaperWwiseTransfer">
+			<arg value="build"/>
+		</exec>
+
+		<setenv name="WWISESDK" value="${_ROOT_DIRECTORY_}/Wwise/SDK"/>
+
+		<if condition="${platform.is_darwin()}">
+			<exec path="cmake" verbose="true" workingdir="${_ROOT_DIRECTORY_}/ReaperWwiseTransfer/build">
+				<arg value='-GXcode'/>
+				<arg value='..'/>
+			</exec>
+		</if>
+		<if condition="${not platform.is_darwin()}">
+			<exec path="cmake" verbose="true" workingdir="${_ROOT_DIRECTORY_}/ReaperWwiseTransfer/build">
+				<arg value='-G'/>
+				<arg value='Visual Studio 16 2019'/>
+				<arg value='..'/>
+			</exec>
+		</if>
+
+		<property name="CONFIGS" value="Release Debug" />
+		<foreach property="CONFIG" items="${CONFIGS.split(' ')}">
+			<exec path="cmake" verbose="true" workingdir="${_ROOT_DIRECTORY_}/ReaperWwiseTransfer/build">
+				<arg value='--build'/>
+				<arg value='.'/>
+				<arg value='--target'/>
+				<arg value='ReaWwise'/>
+				<arg value='--config'/>
+				<arg value='${CONFIG}'/>
+			</exec>
+			<exec path="cmake" verbose="true" workingdir="${_ROOT_DIRECTORY_}/ReaperWwiseTransfer/build">
+				<arg value='--build'/>
+				<arg value='.'/>
+				<arg value='--target'/>
+				<arg value='WwiseTransfer_Test'/>
+				<arg value='--config'/>
+				<arg value='${CONFIG}'/>
+			</exec>
+		</foreach>
+	</target>
+
+	<target name="distribute_artifacts">
+		<fail message="Requires the 'REAPER_WWISE_TRANSFER_PLATFORM' property to be set." if="${REAPER_WWISE_TRANSFER_PLATFORM is None}" />
+		<fail message="Requires the 'WWISE_BUILD_NUMBER' property to be set." if="${WWISE_BUILD_NUMBER is None}" />
+		<fail message="Requires the 'BUILD_NUMBER' property to be set." if="${BUILD_NUMBER is None}" />
+		<fail message="Requires the 'WWISE_VERSION' property to be set." if="${WWISE_VERSION is None}" />
+		<fail message="Requires the 'VERSION' property to be set." if="${VERSION is None}" />
+		<fail message="Requires the 'MAC_NAS_PATH' property to be set." if="${MAC_NAS_PATH is None}" />
+		<fail message="Requires the 'WINDOWS_NAS_PATH' property to be set." if="${WINDOWS_NAS_PATH is None}" />
+
+		<property name="REAPER_WWISE_TRANSFER_VERSION" value="${WWISE_BUILD_NUMBER}.${BUILD_NUMBER}" />
+
+		<property name="CONFIGS" value="Release Debug" />
+		<foreach property="CONFIG" items="${CONFIGS.split(' ')}">
+			<distribute
+				file="${PKG_DISTRIBUTE_PATH}"
+				override-rootpath="${_root_directory_}/ReaperWwiseTransfer/Build/src/extension/${CONFIG}"
+				tasks="ReaperWwiseTransfer.${REAPER_WWISE_TRANSFER_PLATFORM}"
+				tool="7z"
+				mode="export"
+				/>
+			</foreach>
+	</target>
+
+	<target name="distribute_bundles">
+		<fail message="Requires the 'REAPER_WWISE_TRANSFER_PLATFORM' property to be set." if="${REAPER_WWISE_TRANSFER_PLATFORM is None}" />
+		<fail message="Requires the 'WWISE_BUILD_NUMBER' property to be set." if="${WWISE_BUILD_NUMBER is None}" />
+		<fail message="Requires the 'BUILD_NUMBER' property to be set." if="${BUILD_NUMBER is None}" />
+		<fail message="Requires the 'WWISE_VERSION' property to be set." if="${WWISE_VERSION is None}" />
+		<fail message="Requires the 'VERSION' property to be set." if="${VERSION is None}" />
+		<fail message="Requires the 'MAC_NAS_PATH' property to be set." if="${MAC_NAS_PATH is None}" />
+		<fail message="Requires the 'WINDOWS_NAS_PATH' property to be set." if="${WINDOWS_NAS_PATH is None}" />
+
+		<property name="REAPER_WWISE_TRANSFER_VERSION" value="${WWISE_BUILD_NUMBER}.${BUILD_NUMBER}" />
+		<property name="CONFIG" value="Release" />
+		<distribute
+			file="${PKG_DISTRIBUTE_PATH}"
+			override-rootpath="${_root_directory_}/ReaperWwiseTransfer"
+			tasks="ReaperWwiseTransfer.${REAPER_WWISE_TRANSFER_PLATFORM}"
+			tool="7z"
+			mode="import"
+			/>
+
+		<distribute
+			file="${PKG_DISTRIBUTE_PATH}"
+			override-rootpath="${_root_directory_}/ReaperWwiseTransfer"
+			tasks="ReaperWwiseTransferBinaryBundles.${REAPER_WWISE_TRANSFER_PLATFORM}"
+			tool="7z"
+			mode="export"
+			/>
+	</target>
+
+</instrument>

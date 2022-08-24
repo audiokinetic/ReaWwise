@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<distribute rootdir="../../Installers"
+	xmlns:tar="attrib://tar"
+	xmlns:zip="attrib://7z">
+
+	<tasks>
+		<task name="ReaperWwiseTransfer.Mac" export-path="${MAC_NAS_PATH}/ReaperWwiseTransfer/${VERSION}/${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}/Artifacts" zip:archive-name="ReaperWwiseTransfer_MacOS_${CONFIG}">
+			<includegroup>Binary</includegroup>
+		</task>
+		<task name="ReaperWwiseTransfer.Windows" export-path="${WINDOWS_NAS_PATH}\ReaperWwiseTransfer\${VERSION}\${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}\Artifacts" zip:archive-name="ReaperWwiseTransfer_Windows_${CONFIG}">
+			<includegroup>Binary</includegroup>
+		</task>
+		<task name="ReaperWwiseTransferBinaryBundles.Windows" export-path="${WINDOWS_NAS_PATH}\ReaperWwiseTransfer\${VERSION}\${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}\Bundles" zip:archive-name="ReaperWwiseTransfer_${VERSION}_Build${BUILD_NUMBER}_Windows">
+			<includegroup>BinaryBundlesWindows</includegroup>
+		</task>
+		<task name="ReaperWwiseTransferBinaryBundles.Mac" export-path="${MAC_NAS_PATH}/ReaperWwiseTransfer/${VERSION}/${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}/Bundles" zip:archive-name="ReaperWwiseTransfer_${VERSION}_Build${BUILD_NUMBER}_MacOS">
+			<includegroup>BinaryBundlesMac</includegroup>
+		</task>
+	</tasks>
+
+	<groups>
+		<group name="Binary">
+			<path source="." >
+				<include value="*" />
+			</path>
+		</group>
+		<group name="BinaryBundlesWindows">
+			<path source=".">
+				<include value="*.dll" />
+			</path>
+		</group>
+		<group name="BinaryBundlesMac">
+			<path source=".">
+				<include value="*.dylib" />
+			</path>
+		</group>
+	</groups>
+</distribute>
