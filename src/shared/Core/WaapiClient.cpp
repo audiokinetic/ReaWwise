@@ -13,21 +13,21 @@ namespace AK::WwiseTransfer
 {
 	namespace WaapiCommands
 	{
-		static constexpr const char* const projectLoaded = "ak::wwise::core::project::loaded";
-		static constexpr const char* const projectPostClosed = "ak::wwise::core::project::postClosed";
-		static constexpr const char* const objectPostDeleted = "ak::wwise::core::object::postDeleted";
-		static constexpr const char* const objectNameChanged = "ak::wwise::core::object::nameChanged";
-		static constexpr const char* const objectCreated = "ak::wwise::core::object::created";
-		static constexpr const char* const objectGet = "ak::wwise::core::object::get";
-		static constexpr const char* const audioImport = "ak::wwise::core::audio::import";
-		static constexpr const char* const getProjectInfo = "ak::wwise::core::getProjectInfo";
-		static constexpr const char* const undoBeginGroup = "ak::wwise::core::undo::beginGroup";
-		static constexpr const char* const undoCancelGroup = "ak::wwise::core::undo::cancelGroup";
-		static constexpr const char* const undoEndGroup = "ak::wwise::core::undo::endGroup";
-		static constexpr const char* const objectPasteProperties = "ak::wwise::core::object::pasteProperties";
-		static constexpr const char* const getInfo = "ak::wwise::core::getInfo";
-		static constexpr const char* const getSelectedObjects = "ak::wwise::ui::getSelectedObjects";
-		static constexpr const char* const commandsExecute = "ak::wwise::ui::commands::execute";
+		static constexpr const char* const projectLoaded = "ak.wwise.core.project.loaded";
+		static constexpr const char* const projectPostClosed = "ak.wwise.core.project.postClosed";
+		static constexpr const char* const objectPostDeleted = "ak.wwise.core.object.postDeleted";
+		static constexpr const char* const objectNameChanged = "ak.wwise.core.object.nameChanged";
+		static constexpr const char* const objectCreated = "ak.wwise.core.object.created";
+		static constexpr const char* const objectGet = "ak.wwise.core.object.get";
+		static constexpr const char* const audioImport = "ak.wwise.core.audio.import";
+		static constexpr const char* const getProjectInfo = "ak.wwise.core.getProjectInfo";
+		static constexpr const char* const undoBeginGroup = "ak.wwise.core.undo.beginGroup";
+		static constexpr const char* const undoCancelGroup = "ak.wwise.core.undo.cancelGroup";
+		static constexpr const char* const undoEndGroup = "ak.wwise.core.undo.endGroup";
+		static constexpr const char* const objectPasteProperties = "ak.wwise.core.object.pasteProperties";
+		static constexpr const char* const getInfo = "ak.wwise.core.getInfo";
+		static constexpr const char* const getSelectedObjects = "ak.wwise.ui.getSelectedObjects";
+		static constexpr const char* const commandsExecute = "ak.wwise.ui.commands.execute";
 	} // namespace WaapiCommands
 
 	WaapiClientWatcher::WaapiClientWatcher(juce::ValueTree appState, WaapiClient& waapiClient, WaapiClientWatcherConfig waapiClientWatcherConfig)

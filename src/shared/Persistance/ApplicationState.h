@@ -52,12 +52,12 @@ namespace AK::WwiseTransfer::ApplicationState
 		auto previewItems = juce::ValueTree(IDs::previewItems);
 		applicationState.appendChild(previewItems, nullptr);
 
-		auto physicalFolder = Import::HierarchyMappingNode("$project", Wwise::ObjectType::PhysicalFolder);
+		auto virtualFolder = Import::HierarchyMappingNode("$project", Wwise::ObjectType::VirtualFolder);
 		auto soundSfx = Import::HierarchyMappingNode("$region", Wwise::ObjectType::SoundSFX);
 
 		auto hierarchyMapping = juce::ValueTree(IDs::hierarchyMapping);
 		hierarchyMapping.setProperty(IDs::selectedRow, 0, nullptr);
-		hierarchyMapping.appendChild(ImportHelper::hierarchyMappingNodeToValueTree(physicalFolder), nullptr);
+		hierarchyMapping.appendChild(ImportHelper::hierarchyMappingNodeToValueTree(virtualFolder), nullptr);
 		hierarchyMapping.appendChild(ImportHelper::hierarchyMappingNodeToValueTree(soundSfx), nullptr);
 
 		applicationState.appendChild(hierarchyMapping, nullptr);

@@ -38,6 +38,7 @@ namespace AK::WwiseTransfer
 		, wwiseProjectSupport(applicationState, waapiClient)
 		, collapsedUI(applicationState, IDs::collapsedUI, nullptr)
 		, logger(applicationName)
+		, tooltipWindow(this)
 	{
 		using namespace MainComponentConstants;
 

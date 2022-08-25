@@ -2,119 +2,121 @@
 
                  ReaWwise™ END USER LICENSE AGREEMENT (EULA)
 
-1. License Grant. AUDIOKINETIC Inc. (“AUDIOKINETIC”) grants you a worldwide,
-   non-exclusive, revocable, non-sublicensable and non transferable license to:
-   (a) install, use and reproduce, by making a reasonable number of copies of,
-   ReaWwise on devices owned or controlled by you for the sole purpose of
-   facilitating integration between REAPER and AUDIOKINETIC Wwise Technology, and
-   (b) modify and create derivative works of ReaWwise and the ReaWwise source
-   code for the sole purpose of facilitating integration between REAPER and
-   AUDIOKINETIC Wwise Technology.
+   1. License Grant. AUDIOKINETIC Inc. (“AUDIOKINETIC”) grants you a worldwide,
+      non-exclusive, revocable, non-sublicensable and non transferable license
+      to: (a) install, use and reproduce, by making a reasonable number of
+      copies of, ReaWwise on devices owned or controlled by you for the sole
+      purpose of facilitating integration between REAPER and AUDIOKINETIC Wwise
+      Technology, and (b) modify and create derivative works of ReaWwise and the
+      ReaWwise source code for the sole purpose of facilitating integration
+      between AUDIOKINETIC Wwise Technology and other software applications.
 
-2. Updates. After you have downloaded and installed ReaWwise, occasional prompts
-   will request to install updates. Although you will not have to run them
-   immediately, it is recommended to stay up to date.
+   2. Updates. After you have downloaded and installed ReaWwise, occasional
+      prompts will request to install updates. Although you will not have to run
+      them immediately, it is recommended to stay up to date.
 
-3. Exclusion of certain Open Source Components.  If any portion of ReaWwise is
-   listed as a third party open source component in the ReaWwise documentation,
-   such portion of ReaWwise will be governed by and subject to the terms of the
-   relevant open source license reproduced in the documentation and not subject
-   to terms of this agreement.
+   3. Exclusion of certain Open Source Components. If any portion of ReaWwise is
+      listed as a third party open source component in the ReaWwise
+      documentation, such portion of ReaWwise will be governed by and subject to
+      the terms of the relevant open source license reproduced in the
+      documentation and not subject to terms of this agreement.
 
-4. Other Software.  ReaWwise is designed to work in conjunction with other third
-   party software. This agreement does not provide you with any rights to such
-   third party software, and you have the sole responsibility to acquire and
-   comply with any additional licenses to such third party software.
+   4. Other Software. ReaWwise is designed to work in conjunction with other
+      third party software. This agreement does not provide you with any rights
+      to such third party software, and you have the sole responsibility to
+      acquire and comply with any additional licenses to such third party
+      software.
 
-5. Title.  Title, ownership rights, and intellectual property rights in ReaWwise
-   shall remain with AUDIOKINETIC.  You are granted no rights in ReaWwise other
-   than the rights expressly set forth above.  ReaWwise is protected by
-   intellectual property rights include copyright and trade secret laws and
-   treaties.
+   5. Title. Title, ownership rights, and intellectual property rights in
+      ReaWwise shall remain with AUDIOKINETIC.  You are granted no rights in
+      ReaWwise other than the rights expressly set forth above.  ReaWwise is
+      protected by intellectual property rights include copyright and trade
+      secret laws and treaties.
 
-6. Restrictions.  Except as provided herein, you may not (a) modify, translate,
-   or create derivative works based on ReaWwise; (b) rent, lease, grant a
-   security interest in, or otherwise transfer rights to ReaWwise; or (c) remove
-   any proprietary notices in ReaWwise or any software, documentation or other
-   materials in it or supplied with it.
+   6. Restrictions. Except as provided herein, you may not (a) modify,
+      translate, or create derivative works based on ReaWwise; (b) rent, lease,
+      grant a security interest in, or otherwise transfer rights to ReaWwise; or
+      (c) remove any proprietary notices in ReaWwise or any software,
+      documentation or other materials in it or supplied with it.
 
-7. Support Services.  AUDIOKINETIC will not provide any technical support for
-   ReaWwise.
+   7. Support Services. AUDIOKINETIC will not provide any technical support for
+      ReaWwise.
 
-8. Improvements to the Source Code. You will make reasonable efforts to share
-   information about the source code changes you make to the source code, in
-   order for AUDIOKINETIC to be able to improve ReaWwise.
+   8. Improvements to the Source Code. You will make reasonable efforts to share
+      information about the source code changes you make to the source code, in
+      order for AUDIOKINETIC to be able to improve ReaWwise.
 
-9. Title to the Source Code Changes. Title to your source code changes, and all
-   rights in and to any intellectual property right therein, shall at all times
-   remain with you.  Delivery by you to AUDIOKINETIC of your source code changes
-   shall be deemed to include an assignment to AUDIOKINETIC of all of your
-   rights, title and interest therein, pursuant to which AUDIOKINETIC may
-   incorporate such changes in the public version of ReaWwise at its sole
-   discretion. Nothing herein shall affect or impair AUDIOKINETIC’s ownership
-   rights in the ReaWwise.
+   9. Title to the Source Code Changes. Title to your source code changes, and
+      all rights in and to any intellectual property right therein, shall at all
+      times remain with you. Delivery by you to AUDIOKINETIC of your source code
+      changes shall be deemed to include an assignment to AUDIOKINETIC of all of
+      your rights, title and interest therein, pursuant to which AUDIOKINETIC
+      may incorporate such changes in the public version of ReaWwise EULA (Aug
+      2022) ReaWwise at its sole discretion. Nothing herein shall affect or
+      impair AUDIOKINETIC’s ownership rights in the ReaWwise.
 
-10. No Patent or other Exclusive Rights.  You may not file any patent
-    application (either standalone or as part of a broader application) or
-    otherwise seek protection for any source code change (including without
-    limitation any derivative works of the ReaWwise source code such as or
-    forming part of a plug-in application) which could prevent either
-    AUDIOKINETIC or another licensee of ReaWwise to use or, solely in case of
-    AUDIOKINETIC, commercialize changes made by AUDIOKINETIC or such other
-    licensee to the source code which are the same or similar to your source
-    code changes.
+  10. No Patent or other Exclusive Rights. You may not file any patent
+      application (either standalone or as part of a broader application) or
+      otherwise seek protection for any source code change (including without
+      limitation any derivative works of the ReaWwise source code such as or
+      forming part of a plug-in application) which could prevent either
+      AUDIOKINETIC or another licensee of ReaWwise to use or, solely in case of
+      AUDIOKINETIC, commercialize changes made by AUDIOKINETIC or such other
+      licensee to the source code which are the same or similar to your source
+      code changes.
 
-11. Disclaimer of Warranty. ReaWwise is provided on an “AS IS” basis, without
-    warranty of any kind, including without limitation the warranties of
-    merchantability, fitness fora particular purpose and non-infringement.
-    AUDIOKINETIC does not warrant that ReaWwise will be error-free or that it
-    will work without interruption. The entire risk as to the quality,
-    performance and non-infringement of ReaWwise is borne by You. This
-    disclaimer of warranty constitutes an essential part of this agreement. SOME
-    JURISDICTIONS DO NOT ALLOW EXCLUSIONS OF AN IMPLIED WARRANTY, SO THIS
-    DISCLAIMER MAY NOT APPLY TO YOU AND YOU MAYHAVE OTHER LEGAL RIGHTS THAT VARY
-    BY JURISDICTION.
+  11. Disclaimer of Warranty. ReaWwise is provided on an “AS IS” basis, without
+      warranty of any kind, including without limitation the warranties of
+      merchantability, fitness for a particular purpose and non-infringement.
+      AUDIOKINETIC does not warrant that ReaWwise will be error-free or that it
+      will work without interruption. The entire risk as to the quality,
+      performance and non-infringement of ReaWwise is borne by You. This
+      disclaimer of warranty constitutes an essential part of this agreement.
+      SOME JURISDICTIONS DO NOT ALLOW EXCLUSIONS OF AN IMPLIED WARRANTY, SO THIS
+      DISCLAIMER MAY NOT APPLY TO YOU AND YOU MAY HAVE OTHER LEGAL RIGHTS THAT
+      VARY BY JURISDICTION.
 
-12. Termination.  AUDIOKINETIC, in its sole discretion, has the right to
-    terminate this license. This license will terminate automatically if you
-    fail to comply with the restrictions described herein. On termination, you
-    must destroy all copies of ReaWwise in your possession.
+  12. Termination. AUDIOKINETIC, in its sole discretion, has the right to
+      terminate this license. This license will terminate automatically if you
+      fail to comply with the restrictions described herein. On termination, you
+      must destroy all copies of ReaWwise in your possession.
 
-13. Export and Sanctions.  You agree to comply with all export laws,
-    restrictions, national security controls and regulations of the Canada,
-    United States, or other applicable national or foreign agency or authority,
-    and not to export or re-export, or allow the export or re-export of any
-    proprietary information or any copy or direct product thereof in violation
-    of any such restrictions, laws or regulations. If you are the subject of
-    economic sanctions of the Canadian or United States government, you cannot
-    use ReaWwise. If you become the subject of economic sanctions of the
-    Canadian or United States government during, we have the right to terminate
-    this license.
+  13. Export and Sanctions. You agree to comply with all export laws,
+      restrictions, national security controls and regulations of the Canada,
+      United States, or other applicable national or foreign agency or
+      authority, and not to export or re-export, or allow the export or
+      re-export of any proprietary information or any copy or direct product
+      thereof in violation of any such restrictions, laws or regulations. If you
+      are the subject of economic sanctions of the Canadian or United States
+      government, you cannot use ReaWwise. If you become the subject of economic
+      sanctions of the Canadian or United States government during, we have the
+      right to terminate this license.
 
-14. LIMITATION OF LIABILITY.  IN NO EVENT WILL AUDIOKINETIC'S LIABILITY ARISING
-    OUT OF OR RELATED TO THIS AGREEMENT OR REAWWISE EXCEED ONE HUNDRED DOLLARS.
-    IN NO EVENT WILL EITHER PARTY HAVE ANY LIABILITY FOR ANY INDIRECT,
-    INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED AND BASED ON
-    ANY THEORY OF LIABILITY, WHETHER FOR BREACH OF CONTRACT,
-    TORT (INCLUDING NEGLIGENCE) OR OTHERWISE, ARISING OUT OF OR RELATED TO THIS
-    AGREEMENT, INCLUDING BUT NOT LIMITED TO LOSS OF ANTICIPATED PROFITS OR
-    BUSINESS INTERRUPTION, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-    THESE LIMITATIONS WILL APPLY NOTWITHSTANDING ANY FAILURE OF ESSENTIAL
-    PURPOSE OF ANY LIMITED REMEDY. THE PARTIES AGREE THAT THE FOREGOING
-    LIMITATIONS REPRESENT A REASONABLE ALLOCATION OF RISK UNDER THIS AGREEMENT.
+  14. LIMITATION OF LIABILITY. IN NO EVENT WILL AUDIOKINETIC'S LIABILITY
+      ARISING OUT OF OR RELATED TO THIS AGREEMENT OR REAWWISE EXCEED ONE HUNDRED
+      DOLLARS. IN NO EVENT WILL EITHER PARTY HAVE ANY LIABILITY FOR ANY
+      INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED
+      AND BASED ON ANY THEORY OF LIABILITY, WHETHER FOR BREACH OF CONTRACT, TORT
+      (INCLUDING NEGLIGENCE) OR OTHERWISE, ARISING OUT OF OR RELATED TO THIS
+      AGREEMENT, INCLUDING BUT NOT LIMITED TO LOSS OF ANTICIPATED PROFITS OR
+      BUSINESS INTERRUPTION, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+      THESE LIMITATIONS WILL APPLY NOTWITHSTANDING ANY FAILURE OF ESSENTIAL
+      PURPOSE OF ANY LIMITED REMEDY. THE PARTIES AGREE THAT THE FOREGOING
+      ReaWwise EULA (Aug 2022) LIMITATIONS REPRESENT A REASONABLE ALLOCATION OF
+      RISK UNDER THIS AGREEMENT.
 
-15. Miscellaneous.  This agreement represents the complete agreement concerning
-    this license and may be amended only by writing executed by both parties.
-    If any provision of this agreement is held to be unenforceable, such
-    provision shall be reformed only to the extent necessary to make it
-    enforceable. This agreement will be governed by and construed under the laws
-    of the province of Quebec and the laws of Canada applicable therein and the
-    parties hereto submit to the exclusive jurisdiction of the courts of Province
-    of Quebec, District of Montreal.
+  15. Miscellaneous. This agreement represents the complete agreement
+      concerning this license and may be amended only by writing executed by
+      both parties. If any provision of this agreement is held to be
+      unenforceable, such provision shall be reformed only to the extent
+      necessary to make it enforceable. This agreement will be governed by and
+      construed under the laws of the province of Quebec and the laws of Canada
+      applicable therein and the parties hereto submit to the exclusive
+      jurisdiction of the courts of Province of Quebec, District of Montreal.
 
-16. Language.  You confirm that a French version of this Agreement has been
-    remitted to you. It is the express wish of the parties to be bound only by
-    the English version of such agreement. Vous confirmez que la version
-    française de cette entente vous a été remise. Les parties expriment leur
-    volonté expresse d’être liées seulement par la version anglaise de cette
-    entente.
+  16. Language. You confirm that a French version of this Agreement has been
+      remitted to you. It is the express wish of the parties to be bound only by
+      the English version of such agreement. Vous confirmez que la version
+      française de cette entente vous a été remise. Les parties expriment leur
+      volonté expresse d’être liées seulement par la version anglaise de cette
+      entente.

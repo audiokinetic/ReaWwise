@@ -8,9 +8,16 @@ endif()
 
 project(ReaWwise)
 
-file(GLOB_RECURSE EXTENSION_SOURCES
-    "${PROJECT_SOURCE_DIR}/*.h"
-    "${PROJECT_SOURCE_DIR}/*.cpp")
+if(WIN32)
+    file(GLOB_RECURSE EXTENSION_SOURCES
+        "${PROJECT_SOURCE_DIR}/*.h"
+        "${PROJECT_SOURCE_DIR}/*.cpp")
+else()
+    file(GLOB_RECURSE EXTENSION_SOURCES
+        "${PROJECT_SOURCE_DIR}/*.h"
+        "${PROJECT_SOURCE_DIR}/*.cpp"
+        "${PROJECT_SOURCE_DIR}/*.mm")
+endif()
 
 add_library(${PROJECT_NAME} SHARED)
 

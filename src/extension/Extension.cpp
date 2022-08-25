@@ -10,6 +10,10 @@
 #include <tuple>
 #include <variant>
 
+#ifdef __APPLE__
+#include "MacHelpers.h"
+#endif
+
 namespace AK::ReaWwise
 {
 	static bool juceInitialised = false;
@@ -50,8 +54,7 @@ namespace AK::ReaWwise
 				mainWindow->addToDesktop(mainWindow->getDesktopWindowStyleFlags(), reaperContext->getMainHwnd());
 #else
 				mainWindow->addToDesktop(mainWindow->getDesktopWindowStyleFlags(), 0);
-				juce::ComponentPeer* componentPeer = mainWindow->getPeer();
-				componentPeer->setAlwaysOnTop(true);
+				MacHelpers::makeWindowFloatingPanel(dynamic_cast<juce::Component*>(mainWindow.get()));
 #endif
 			}
 

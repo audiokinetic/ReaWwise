@@ -181,7 +181,7 @@ namespace AK::WwiseTransfer
 		                             .withTitle("Import Summary")
 		                             .withMessage(message)
 		                             .withButton("View Details")
-		                             .withButton("Dismiss");
+		                             .withButton("Close");
 
 		auto onDialogBtnClicked = [this, summary = summary, importTaskOptions = importTaskOptions](int result)
 		{

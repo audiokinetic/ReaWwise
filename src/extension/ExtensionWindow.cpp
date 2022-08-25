@@ -24,11 +24,13 @@ namespace AK::ReaWwise
 
 		mainContentComponent.reset(new WwiseTransfer::MainComponent(dawContext, JUCE_APPLICATION_NAME_STRING));
 
+#ifdef WIN32
 		if(!mainContentComponent->hasScaleFactorOverride())
 		{
 			auto scaleFactor = juce::Desktop::getInstance().getDisplays().getMainDisplay().dpi / standardDPI;
 			juce::Desktop::getInstance().setGlobalScaleFactor(scaleFactor);
 		}
+#endif
 
 		setContentNonOwned(mainContentComponent.get(), true);
 		centreWithSize(width, height);

@@ -28,8 +28,6 @@ namespace AK::WwiseTransfer
 	{
 		using namespace PersistanceSupportConstants;
 
-		juce::String projectId = applicationState[IDs::projectId];
-
 		auto treeType = treeWhosePropertyHasChanged.getType();
 
 		if(treeType == IDs::application && property == IDs::sessionName)
@@ -115,37 +113,32 @@ namespace AK::WwiseTransfer
 		// not provide much performance gain.
 		using namespace PersistanceSupportConstants;
 
-		juce::String projectId = applicationState[IDs::projectId];
+		juce::ValueTree stateToBeSaved(IDs::application);
 
-		if(projectId.isNotEmpty())
+		for(const auto& field : fieldsToPersist)
+			stateToBeSaved.setPropertyExcludingListener(this, field, applicationState[field], nullptr);
+
+		juce::ValueTree hierarchyMappingToBeSaved(IDs::hierarchyMapping);
+		auto hierarchyMapping = applicationState.getChildWithName(IDs::hierarchyMapping).createCopy();
+
+		for(int i = 0; i < hierarchyMapping.getNumChildren(); ++i)
 		{
-			juce::ValueTree stateToBeSaved(IDs::application);
+			juce::ValueTree hierarchyMappingNodeToBeSaved(IDs::hierarchyMappingNode);
 
-			for(const auto& field : fieldsToPersist)
-				stateToBeSaved.setPropertyExcludingListener(this, field, applicationState[field], nullptr);
+			for(const auto& field : hierarchyMappingNodeFieldsToPersist)
+				hierarchyMappingNodeToBeSaved.setPropertyExcludingListener(this, field, hierarchyMapping.getChild(i)[field], nullptr);
 
-			juce::ValueTree hierarchyMappingToBeSaved(IDs::hierarchyMapping);
-			auto hierarchyMapping = applicationState.getChildWithName(IDs::hierarchyMapping).createCopy();
+			hierarchyMappingToBeSaved.addChild(hierarchyMappingNodeToBeSaved, i, nullptr);
+		}
 
-			for(int i = 0; i < hierarchyMapping.getNumChildren(); ++i)
-			{
-				juce::ValueTree hierarchyMappingNodeToBeSaved(IDs::hierarchyMappingNode);
+		stateToBeSaved.appendChild(hierarchyMappingToBeSaved, nullptr);
 
-				for(const auto& field : hierarchyMappingNodeFieldsToPersist)
-					hierarchyMappingNodeToBeSaved.setPropertyExcludingListener(this, field, hierarchyMapping.getChild(i)[field], nullptr);
+		juce::ValueTree savedState = dawContext.retrieveState();
 
-				hierarchyMappingToBeSaved.addChild(hierarchyMappingNodeToBeSaved, i, nullptr);
-			}
-
-			stateToBeSaved.appendChild(hierarchyMappingToBeSaved, nullptr);
-
-			juce::ValueTree savedState = dawContext.retrieveState();
-
-			if(!stateToBeSaved.isEquivalentTo(savedState))
-			{
-				dawContext.saveState(stateToBeSaved);
-				stateCache[dawContext.getSessionName()] = stateToBeSaved;
-			}
+		if(!stateToBeSaved.isEquivalentTo(savedState))
+		{
+			dawContext.saveState(stateToBeSaved);
+			stateCache[dawContext.getSessionName()] = stateToBeSaved;
 		}
 	}
 } // namespace AK::WwiseTransfer

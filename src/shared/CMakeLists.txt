@@ -36,6 +36,12 @@ else()
     set(BUILD_NUMBER "Local")
 endif()
 
+if(DEFINED ENV{BUILD_COMMIT_HASH})
+    # Build machine builds in detached state
+    # Get branch name from build param (will be main for release builds)
+    set(BRANCH_NAME $ENV{BUILD_COMMIT_HASH})
+endif()
+
 set(VERSION_STRING "${VERSION} ${COMMIT_HASH}")
 
 string(TIMESTAMP year "%Y")

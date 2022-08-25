@@ -196,7 +196,7 @@ namespace AK::WwiseTransfer
 		if(cellEnabled && !validCell)
 		{
 			g.setColour(juce::Colour(juce::Colours::red).withAlpha(alpha));
-			g.drawRect(0, 0, width, height);
+			g.drawRect(1, 1, width - 1, height - 1);
 		}
 	}
 
