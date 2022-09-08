@@ -19,32 +19,6 @@ namespace AK::ReaWwise
 		const juce::String applicationKey = "ReaWwise";
 	} // namespace ReaperContextConstants
 
-	struct RenderInfo
-	{
-		juce::String resolvedRenderPath;
-		juce::String resolvedRenderPathWithOriginalsSubfolder;
-		juce::String finalRenderPath;
-	};
-
-	struct TimeRange
-	{
-		double start{};
-		double end{};
-
-		bool overlaps(const TimeRange& other)
-		{
-			return start <= other.end && end >= other.start;
-		}
-	};
-
-	struct ReaperMarker
-	{
-		const char* name;
-		bool isRegion;
-		TimeRange timeRange;
-		int index;
-	};
-
 	ReaperContext::ReaperContext(reaper_plugin_info_t* pluginInfo)
 		: pluginInfo(pluginInfo)
 		, defaultRenderDirectory(juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("REAPER Media"))
@@ -81,9 +55,8 @@ namespace AK::ReaWwise
 
 		auto projectInfo = getProjectInfo();
 
-		auto applicationStateString = applicationState.toXmlString();
-		auto applicationStateStringSize = juce::String(applicationStateString.getNumBytesAsUTF8());
-
+		const auto applicationStateString = applicationState.toXmlString();
+		const auto applicationStateStringSize = juce::String(applicationStateString.getNumBytesAsUTF8());
 		if(setProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateSizeKey.toUTF8(), applicationStateStringSize.toUTF8()) &&
 			setProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateKey.toUTF8(), applicationStateString.toUTF8()))
 		{
@@ -98,27 +71,20 @@ namespace AK::ReaWwise
 	{
 		using namespace ReaperContextConstants;
 
-		juce::ValueTree state;
-
 		auto projectInfo = getProjectInfo();
 
-		std::string buffer(ReaperContextConstants::defaultBufferSize, '\0');
+		std::string buffer(defaultBufferSize, '\0');
 		getProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateSizeKey.toUTF8(), &buffer[0], buffer.size());
 
-		auto stateSize = std::strtoll(&buffer[0], nullptr, 10);
+		const auto stateSize = std::strtoll(&buffer[0], nullptr, 10);
+		if(stateSize == 0)
+			return {};
 
-		if(stateSize != 0)
-		{
-			buffer.resize(stateSize);
+		buffer.resize(stateSize);
+		if(getProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateKey.toUTF8(), &buffer[0], buffer.size()))
+			return juce::ValueTree::fromXml(buffer);
 
-			if(getProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateKey.toUTF8(), &buffer[0], buffer.size()))
-			{
-				auto valueTree = juce::ValueTree::fromXml(buffer);
-				state = valueTree;
-			}
-		}
-
-		return state;
+		return {};
 	}
 
 	int ReaperContext::callerVersion()
@@ -167,19 +133,67 @@ namespace AK::ReaWwise
 		return false;
 	}
 
-	void ReaperContext::renderImportItems()
+	void ReaperContext::renderItems()
 	{
 		main_OnCommand(42230, 0);
 	}
 
-	std::vector<WwiseTransfer::Import::Item> ReaperContext::getImportItems(WwiseTransfer::Import::Options options)
+	std::vector<WwiseTransfer::Import::Item> ReaperContext::getItemsForImport(const WwiseTransfer::Import::Options& options)
 	{
-		using namespace ReaperContextConstants;
+		std::vector<WwiseTransfer::Import::Item> importItems;
+
+		auto importItemsForPreview = getItemsForPreview(options);
+		if(importItemsForPreview.size() == 0)
+			return importItems;
 
 		auto projectInfo = getProjectInfo();
 
-		auto renderDirectoryPath = getProjectString(projectInfo.projectReference, "RENDER_FILE", defaultBufferSize);
-		auto renderPattern = getProjectString(projectInfo.projectReference, "RENDER_PATTERN", defaultBufferSize);
+		// In the following section, we retrieve render stats from reaper. We need to estimate the size of the buffer so that
+		// no heap corruption occurs when reaper tries to write to the buffer we give it. Unfortunately, there is no way
+		// for us to know the exact size of this buffer should be. And, it seems like reaper blindly writes to this buffer
+		// as we can not send it a buffer size.
+
+		// Assuming that volume levels are in [-1000, 1000], this is the max length for an entry for one render would be:
+		// FILE:{audioFilePath};PEAK:-0000.000000;LRA:-0000.000000;LUFSMMAX:-0000.000000;LUFSSMAX:-0000.000000;LUFSI:-0000.000000;
+		// This is roughly 105 chars + the audioFileName
+		// Lets use 150 for extra chars just to leave some room for error.
+		const int extra = 150;
+
+		juce::String renderDirectory = getProjectString(projectInfo.projectReference, "RENDER_FILE");
+
+		int totalBufferSize = (renderDirectory.length() + projectInfo.projectPath.length() + extra) * static_cast<int>(importItemsForPreview.size());
+		for(const auto& item : importItemsForPreview)
+		{
+			totalBufferSize += item.audioFilePath.length();
+		}
+
+		juce::StringArray temp;
+		juce::String renderStats = getProjectString(projectInfo.projectReference, "RENDER_STATS", totalBufferSize);
+		temp.addTokens(renderStats, ";", "");
+
+		juce::StringArray finalRenderPaths;
+
+		// Not all items in here are paths. Paths are prefixed with "FILE:"
+		for(auto item : temp)
+		{
+			if(item.startsWith("FILE:"))
+				finalRenderPaths.add(item.trimCharactersAtStart("FILE:"));
+		}
+
+		for(int i = 0; i < importItemsForPreview.size(); ++i)
+		{
+			importItems.push_back({importItemsForPreview[i].path, importItemsForPreview[i].originalsSubFolder, importItemsForPreview[i].audioFilePath, finalRenderPaths[i]});
+		}
+
+		return importItems;
+	}
+
+	std::vector<WwiseTransfer::Import::PreviewItem> ReaperContext::getItemsForPreview(const WwiseTransfer::Import::Options& options)
+	{
+		auto projectInfo = getProjectInfo();
+
+		auto renderDirectoryPath = getProjectString(projectInfo.projectReference, "RENDER_FILE");
+		auto renderPattern = getProjectString(projectInfo.projectReference, "RENDER_PATTERN");
 
 		// There are several scenarios where the render pattern could be empty
 		// 1. When the project hasn't been saved (reaper uses "untitled")
@@ -211,74 +225,32 @@ namespace AK::ReaWwise
 			renderDirectory = defaultRenderDirectory.getChildFile(renderDirectoryPath);
 		}
 
-		auto renderDirectoryPathPart = renderDirectoryPath.isNotEmpty() ? renderDirectoryPath + juce::File::getSeparatorString() : "";
-		auto originalsSubfolderPathPart = options.originalsSubfolder.isNotEmpty() ? options.originalsSubfolder + juce::File::getSeparatorString() : "";
-
-		auto resolvedRenderPaths = getItemListFromRenderPattern(projectInfo.projectReference, renderDirectoryPathPart + renderPattern);
-		auto resolvedRenderPathsWithOriginalsSubfolder = getItemListFromRenderPattern(projectInfo.projectReference, renderDirectoryPathPart + originalsSubfolderPathPart + renderPattern);
-
+		const auto originalsSubfolderPathPart = options.originalsSubfolder.isNotEmpty() ? options.originalsSubfolder + juce::File::getSeparatorString() : "";
+		const auto resolvedRenderPaths = getItemListFromRenderPattern(projectInfo.projectReference, renderPattern, false);
+		const auto resolvedRenderPathsWithOriginalsSubfolder = getItemListFromRenderPattern(projectInfo.projectReference, originalsSubfolderPathPart + renderPattern, false);
 		if(resolvedRenderPaths.size() != resolvedRenderPathsWithOriginalsSubfolder.size())
 		{
 			juce::Logger::writeToLog("Reaper: Mismatch between resolvedRenderPaths and resolvedRenderPathsWithOriginalsSubfolder");
 			return {};
 		}
 
-		// Estimate the size of render stats so we can pass reaper the propper buffer size
-		int totalBufferSize = 0;
-		int extra = 150; // Each path may come with aditional render statistics (peak information).
-		for(const auto& resolvedRenderPath : resolvedRenderPaths)
-		{
-			totalBufferSize += resolvedRenderPath.length() + extra;
-		}
-
-		// Get list of files that where rendered during the last render run using the current render settings and render pattern
-		// These file names may differ from the resolved render paths due to silent renaming.
-		juce::StringArray finalRenderPaths;
-
-		if(totalBufferSize > 0)
-		{
-			juce::String renderStats = getProjectString(projectInfo.projectReference, "RENDER_STATS", totalBufferSize);
-
-			juce::StringArray temp;
-			temp.addTokens(renderStats, ";", "");
-
-			// Not all items in here are paths. Paths are prefixed with "FILE:"
-			for(auto item : temp)
-			{
-				if(item.startsWith("FILE:"))
-					finalRenderPaths.add(item.trimCharactersAtStart("FILE:"));
-			}
-		}
-
-		std::vector<WwiseTransfer::Import::Item> importItems;
-
-		auto resolvePattern = options.importDestination + options.hierarchyMappingPath;
-
+		const auto resolvePattern = options.importDestination + options.hierarchyMappingPath;
 		std::vector<juce::String> resolvedObjectPaths = getItemListFromRenderPattern(projectInfo.projectReference, resolvePattern, false);
-
 		if(resolvedObjectPaths.size() != resolvedRenderPaths.size() || resolvedObjectPaths.size() != resolvedRenderPathsWithOriginalsSubfolder.size())
 		{
 			juce::Logger::writeToLog("Reaper: Mismatch between resolvedObjectPaths, resolvedRenderPaths and resolvedRenderPathsWithOriginalsSubfolder");
 			return {};
 		}
 
+		std::vector<WwiseTransfer::Import::PreviewItem> importItems;
 		for(int i = 0; i < resolvedObjectPaths.size(); ++i)
 		{
-			juce::String objectPath(resolvedObjectPaths[i].upToLastOccurrenceOf(".", false, false));
-
-			juce::File parentDirectory = juce::File(resolvedRenderPathsWithOriginalsSubfolder[i])
-			                                 .getParentDirectory();
-
-			juce::String currentOriginalsSubfolder = parentDirectory == renderDirectory ? "" : parentDirectory.getRelativePathFrom(renderDirectory);
-
-			auto objectName = WwiseTransfer::WwiseHelper::pathToObjectName(objectPath);
-
-			importItems.emplace_back(objectName,
-				WwiseTransfer::Wwise::ObjectType::SoundSFX,
-				objectPath,
-				currentOriginalsSubfolder,
-				resolvedRenderPaths[i],
-				finalRenderPaths[i]);
+			const auto objectPath = resolvedObjectPaths[i].upToLastOccurrenceOf(".", false, false);
+			const auto resolvedRenderPath = renderDirectory.getChildFile(resolvedRenderPaths[i]).getFullPathName();
+			const auto resolvedRenderPathWithOriginalsSubfolder = renderDirectory.getChildFile(resolvedRenderPathsWithOriginalsSubfolder[i]);
+			const auto parentDirectory = resolvedRenderPathWithOriginalsSubfolder.getParentDirectory().getRelativePathFrom(renderDirectory);
+			const auto originalsSubfolder = parentDirectory == "." ? "" : parentDirectory;
+			importItems.push_back({objectPath, originalsSubfolder, resolvedRenderPath});
 		}
 
 		return importItems;
@@ -286,54 +258,35 @@ namespace AK::ReaWwise
 
 	juce::String ReaperContext::getProjectString(ReaProject* project, const char* key, int bufferSize)
 	{
-		std::string buffer(bufferSize, '\0');
+		// getSetProjectInfo_String is unsafe since we cannot specify the size of the buffer that it must fill.
+		// There are a few cases where we are unable to predict the size required, so we use a large value and hope for the best.
+		std::string buffer((std::max)(bufferSize, ReaperContextConstants::defaultBufferSize), '\0');
+		if(!getSetProjectInfo_String(project, key, &buffer[0], false))
+			return {};
 
-		if(getSetProjectInfo_String(project, key, &buffer[0], false))
-		{
-			auto end = buffer.find('\0');
-			buffer.resize(end);
-			return buffer;
-		}
-
-		return juce::String();
+		return buffer;
 	}
 
 	ProjectInfo ReaperContext::getProjectInfo()
 	{
 		std::string buffer(ReaperContextConstants::defaultBufferSize, '\0');
 
-		ReaProject* projectReference;
+		// The buffer sent to enumProjects will contain the project path.
+		auto projectReference = enumProjects(-1, &buffer[0], buffer.size());
+		if(!projectReference || buffer.empty())
+			return {};
 
-		// The buffer sent to enumProjects will contain the project path. It is a requirement that a project file ends with the .rpp (case insensitive) file extension.
-		while((projectReference = enumProjects(-1, &buffer[0], buffer.size())) && !juce::String(buffer).endsWithIgnoreCase(".rpp"))
-		{
-			if(buffer.size() > 10 << 20 || buffer.empty())
-			{
-				jassertfalse;
+		const juce::File projectFile(buffer);
 
-				return {};
-			}
-			else
-			{
-				try
-				{
-					buffer.resize(2 * buffer.size());
-				}
-				catch(std::bad_alloc&)
-				{
-					jassertfalse;
-
-					return {};
-				}
-			}
-		}
-
-		juce::File projectFile(buffer);
+		// REAPER requires that a project file ends with the .rpp (case insensitive) file extension.
+		if(projectFile.getFileExtension().compareIgnoreCase(".rpp") != 0)
+			return {};
 
 		return {
 			projectReference,
 			projectFile.getFileNameWithoutExtension(),
-			projectFile.getFullPathName()};
+			projectFile.getFullPathName()
+		};
 	}
 
 	std::vector<juce::String> ReaperContext::getItemListFromRenderPattern(ReaProject* project, const juce::String& pattern, bool suppressIllegalPaths)

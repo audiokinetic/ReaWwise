@@ -21,7 +21,7 @@ ReaWwise is a REAPER extension that sound designers can use to transfer audio fi
 ### Manual installation
 1. Go to the the [releases page](https://github.com/audiokinetic/ReaWwise/releases), then download the extension file (reaper_reawwise.dll for Windows or reaper_reawwise.dylib for Mac).
 
-2. Copy the extension to the REAPER UserPlugins directory.
+2. Copy the extension to the REAPER [UserPlugins directory](#userplugins-directory).
 
 3. If REAPER is running, restart the application. The extension is available in the Extensions menu.
 
@@ -48,16 +48,31 @@ ReaWwise is a REAPER extension that sound designers can use to transfer audio fi
 git clone https://github.com/audiokinetic/ReaWwise.git
 cd ReaWwise
 git submodule update --init
-mkdir build
-cmake --build ./build --target ReaWwise --config Release
+cmake -B build
+cmake --build build --target ReaWwise --config Release
 ```
-After the binary is built, move it to the REAPER UserPlugins directory. If REAPER is open, restart the application. The extension is available in the **Extensions** menu.
+After the binary is built, move it to the REAPER [UserPlugins directory](#userplugins-directory). If REAPER is open, restart the application. The extension is available in the **Extensions** menu.
+
+## Basic Usage
+1. Open your REAPER and Wwise projects.
+2. Configure your REAPER render settings appropriately. The render settings determine which files will be transferred to Wwise.
+3. Open ReaWwise and configure settings such as the Originals Subfolder (optional), Import Destination, Wwise Structures, and so on.
+4. Preview the audio files and Wwise objects to be transfered in the Preview Panel.
+4. Click **Transfer To Wwise** to transfer the audio files and create the corresponding Wwise objects.
+
+## UserPlugins Directory
+- Windows:  %appdata%\REAPER\UserPlugins
+- Mac: ~/Library/Application Support/REAPER/UserPlugins
 
 ## Other Resources
 Refer to the [ReaWwise User Guide](https://audiokinetic.com/library/reawwise) for more information regarding usage, installation and troubleshooting of the extension.
 
+For general questions about usage, refer to Audiokinetic's [Community Q&A](https://www.audiokinetic.com/qa/ask).
+
 ## Contributing
-The repository is not open to pull request but in the case of a bug report, bugfix or a suggestions, please feel free to [open an issue](https://github.com/this/ReaWwise/issues).
+The repository is not open to pull request but in the case of a bug report, bugfix or a suggestions, please feel free to [open an issue](https://github.com/audiokinetic/ReaWwise/issues).
+
+Feature requests can also be submitted to the [feature request section](https://www.audiokinetic.com/qa/feature-requests/) of Audiokinetic's Community Q&A. Use ReaWwise as the Category when submitting a question.
 
 ## Legal
 Copyright © 2020 [Audiokinetic Inc.](https://audiokinetic.com) All rights reserved.

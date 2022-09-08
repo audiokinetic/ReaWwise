@@ -270,7 +270,7 @@ namespace AK::WwiseTransfer
 		return Unsubscribe(in_subscriptionId, out_result, in_timeoutMs);
 	}
 
-	bool WaapiClient::isConnected()
+	bool WaapiClient::isConnected() const
 	{
 		return IsConnected();
 	}
@@ -304,68 +304,6 @@ namespace AK::WwiseTransfer
 								 juce::NewLine() + juce::String("result: ") + out_result);
 
 		return status;
-	}
-
-	Waapi::Response<Waapi::ObjectResponseSet> WaapiClient::getObjects(const std::set<juce::String>& objectPaths)
-	{
-		using namespace WwiseAuthoringAPI;
-
-		Waapi::Response<Waapi::ObjectResponseSet> response;
-
-		if(!objectPaths.empty())
-		{
-			juce::String waql("where ");
-
-			for(auto it = objectPaths.begin(); it != objectPaths.end(); ++it)
-			{
-				if(it != objectPaths.begin())
-					waql << " or ";
-				waql << "path = \""
-					 << *it
-					 << "\"";
-			}
-
-			const auto args = AkJson::Map{
-				{
-					"waql",
-					AkVariant{waql.toStdString()},
-				},
-			};
-
-			static const auto options = AkJson::Map{
-				{
-					"return",
-					AkJson::Array{
-						AkVariant{"id"},
-						AkVariant{"name"},
-						AkVariant{"type"},
-						AkVariant{"path"},
-					},
-				},
-			};
-
-			AkJson result;
-			response.status = call(WaapiCommands::objectGet, args, options, result);
-
-			if(response.status)
-			{
-				if(result.HasKey("return"))
-				{
-					auto objects = result["return"].GetArray();
-
-					for(auto& object : objects)
-					{
-						response.result.emplace(object);
-					}
-				}
-			}
-			else
-			{
-				response.errorMessage << WaapiHelper::getErrorMessage(result);
-			}
-		}
-
-		return response;
 	}
 
 	Waapi::Response<Waapi::ObjectResponseSet> WaapiClient::import(const std::vector<Waapi::ImportItemRequest>& importItemsRequest, Import::ContainerNameExistsOption containerNameExistsOption, const juce::String& objectLanguage)
@@ -498,6 +436,7 @@ namespace AK::WwiseTransfer
 					AkVariant{"name"},
 					AkVariant{"type"},
 					AkVariant{"path"},
+					AkVariant{"workunitType"},
 				},
 			},
 		};
@@ -547,6 +486,7 @@ namespace AK::WwiseTransfer
 
 		return response;
 	}
+
 	Waapi::Response<std::vector<juce::String>> WaapiClient::getProjectLanguages()
 	{
 		using namespace WwiseAuthoringAPI;
@@ -669,6 +609,7 @@ namespace AK::WwiseTransfer
 					AkVariant{"name"},
 					AkVariant{"type"},
 					AkVariant{"path"},
+					AkVariant{"workunitType"},
 				},
 			},
 		};

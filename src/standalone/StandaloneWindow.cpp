@@ -28,6 +28,11 @@ namespace AK::WwiseTransfer
 		setVisible(true);
 	}
 
+	StandaloneWindow::~StandaloneWindow()
+	{
+		juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+	}
+
 	int StandaloneWindow::getDesktopWindowStyleFlags() const
 	{
 		return juce::ComponentPeer::windowHasCloseButton | juce::ComponentPeer::windowHasTitleBar |

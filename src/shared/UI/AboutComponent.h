@@ -10,6 +10,7 @@ namespace AK::WwiseTransfer
 	{
 	public:
 		AboutComponent(const juce::String& applicationName);
+		~AboutComponent() override;
 
 		void resized() override;
 		void paint(juce::Graphics& g);
@@ -26,6 +27,8 @@ namespace AK::WwiseTransfer
 		juce::HyperlinkButton documentationLink;
 		juce::HyperlinkButton releaseNotesLink;
 		juce::HyperlinkButton licensingLink;
+
+		juce::TooltipWindow tooltipWindow;
 
 		std::unique_ptr<juce::Drawable> wwiseIcon;
 	};

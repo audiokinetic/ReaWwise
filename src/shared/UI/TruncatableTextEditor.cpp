@@ -26,7 +26,6 @@ namespace AK::WwiseTransfer
 	void TruncatableTextEditor::resized()
 	{
 		juce::TextEditor::resized();
-
 		resetText();
 	}
 
@@ -37,24 +36,28 @@ namespace AK::WwiseTransfer
 
 	void TruncatableTextEditor::resetText()
 	{
-		auto indent = getLeftIndent() * 4;
+		juce::String text{ "..." };
+		const auto indent = getLeftIndent() * 4;
+		const auto ellipsisWidth = getFont().getStringWidth(text);
+		const auto width = getWidth();
+		const auto trueTextSpace = width - ellipsisWidth - indent;
 
-		juce::String text = valueToTruncate.getValue();
-
-		auto trueTextSpace = getWidth() - juce::Font().getStringWidth("...") - indent;
-
-		if(text.isNotEmpty() && juce::Font().getStringWidth(text) > trueTextSpace)
+		if(trueTextSpace > 0)
 		{
-			auto midPoint = 0;
-			while(juce::Font().getStringWidth(text) > trueTextSpace)
+			text = valueToTruncate.getValue();
+			if(text.isNotEmpty() && getFont().getStringWidth(text) > trueTextSpace)
 			{
-				midPoint = juce::roundFloatToInt(float(text.length()) / 2.0f);
-				text = text.substring(0, midPoint) + text.substring(midPoint + 1);
-			}
+				int midPoint{};
+				while(getFont().getStringWidth(text) > trueTextSpace)
+				{
+					midPoint = text.length() / 2;
+					text = text.substring(0, midPoint) + text.substring(midPoint + 1);
+				}
 
-			text = text.substring(0, midPoint) + "..." + text.substring(midPoint);
+				text = text.substring(0, midPoint) + "..." + text.substring(midPoint);
+			}
 		}
 
 		setText(text);
-	};
+	}
 } // namespace AK::WwiseTransfer

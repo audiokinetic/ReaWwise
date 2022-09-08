@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/DawContext.h"
-#include "UI/MainComponent.h"
+#include "Theme/CustomLookAndFeel.h"
 
 namespace AK::ReaWwise
 {
@@ -9,12 +9,15 @@ namespace AK::ReaWwise
 	{
 	public:
 		ExtensionWindow(WwiseTransfer::DawContext& dawContext);
+		~ExtensionWindow() override;
 
 		int getDesktopWindowStyleFlags() const override;
 		void userTriedToCloseWindow() override;
 
+	protected:
+		void resized() override;
+
 	private:
-		std::unique_ptr<WwiseTransfer::MainComponent> mainContentComponent;
 		WwiseTransfer::CustomLookAndFeel lookAndFeel;
 	};
 } // namespace AK::ReaWwise

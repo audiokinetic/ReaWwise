@@ -23,8 +23,9 @@ namespace AK::ReaWwise
 		juce::String getSessionName() override;
 		bool saveState(juce::ValueTree applicationState) override;
 		juce::ValueTree retrieveState() override;
-		void renderImportItems() override;
-		std::vector<WwiseTransfer::Import::Item> getImportItems(WwiseTransfer::Import::Options options) override;
+		void renderItems() override;
+		std::vector<WwiseTransfer::Import::PreviewItem> getItemsForPreview(const WwiseTransfer::Import::Options& options) override;
+		std::vector<WwiseTransfer::Import::Item> getItemsForImport(const WwiseTransfer::Import::Options& options) override;
 
 		// Reaper api for public use
 		bool isValid();
@@ -51,7 +52,7 @@ namespace AK::ReaWwise
 	private:
 		std::vector<juce::String> splitDoubleNullTerminatedString(const char*);
 		std::vector<juce::String> getItemListFromRenderPattern(ReaProject* project, const juce::String& pattern, bool suppressIllegalPaths = true);
-		juce::String getProjectString(ReaProject* project, const char* key, int bufferSize);
+		juce::String getProjectString(ReaProject* project, const char* key, int bufferSize = 0);
 		ProjectInfo getProjectInfo();
 
 		juce::File defaultRenderDirectory;

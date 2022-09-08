@@ -234,7 +234,7 @@ namespace AK::WwiseTransfer
 	{
 		using namespace ImportPreviewComponentConstants;
 
-		auto previewItem = ImportHelper::valueTreeToPreviewItem(tree);
+		auto previewItem = ImportHelper::valueTreeToPreviewItemNode(tree);
 
 		std::array<juce::String, 4> cellText{
 			previewItem.name,
@@ -258,7 +258,7 @@ namespace AK::WwiseTransfer
 
 		g.setFont(CustomLookAndFeelConstants::smallFontSize);
 
-		if(trueColumnWidth > 0)
+		if(trueColumnWidth > iconSize)
 		{
 			icon->drawWithin(g, juce::Rectangle<float>(iconSize, iconSize).reduced(iconPadding, iconPadding), juce::RectanglePlacement::centred, 1);
 
@@ -312,7 +312,7 @@ namespace AK::WwiseTransfer
 
 	juce::String ValueTreeItem::getComparisonTextForColumn(int column)
 	{
-		auto previewItem = ImportHelper::valueTreeToPreviewItem(tree);
+		auto previewItem = ImportHelper::valueTreeToPreviewItemNode(tree);
 
 		switch(column)
 		{

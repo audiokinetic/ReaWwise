@@ -53,9 +53,9 @@ namespace AK::WwiseTransfer::ImportHelper
 			valueTree[IDs::objectLanguage]);
 	}
 
-	inline Import::PreviewItem valueTreeToPreviewItem(juce::ValueTree valueTree)
+	inline Import::PreviewItemNode valueTreeToPreviewItemNode(juce::ValueTree valueTree)
 	{
-		return Import::PreviewItem{
+		return Import::PreviewItemNode{
 			valueTree[IDs::objectName],
 			juce::VariantConverter<Wwise::ObjectType>::fromVar(valueTree[IDs::objectType]),
 			juce::VariantConverter<Import::ObjectStatus>::fromVar(valueTree[IDs::objectStatus]),
@@ -64,7 +64,7 @@ namespace AK::WwiseTransfer::ImportHelper
 		};
 	}
 
-	inline juce::ValueTree previewItemToValueTree(const juce::String& path, Import::PreviewItem previewItem)
+	inline juce::ValueTree previewItemNodeToValueTree(const juce::String& path, Import::PreviewItemNode previewItem)
 	{
 		juce::ValueTree valueTree(path);
 		valueTree.setProperty(IDs::objectName, previewItem.name, nullptr);
@@ -201,7 +201,7 @@ namespace AK::WwiseTransfer::ImportHelper
 		}
 	}
 
-	inline unsigned int importItemsToHash(const std::vector<Import::Item>& importItems)
+	inline unsigned int importPreviewItemsToHash(const std::vector<Import::PreviewItem>& importItems)
 	{
 		AK::FNVHash32 hash;
 

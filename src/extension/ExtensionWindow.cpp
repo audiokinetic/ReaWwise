@@ -22,7 +22,7 @@ namespace AK::ReaWwise
 
 		juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
 
-		mainContentComponent.reset(new WwiseTransfer::MainComponent(dawContext, JUCE_APPLICATION_NAME_STRING));
+		auto mainContentComponent = new WwiseTransfer::MainComponent(dawContext, JUCE_APPLICATION_NAME_STRING);
 
 #ifdef WIN32
 		if(!mainContentComponent->hasScaleFactorOverride())
@@ -32,10 +32,15 @@ namespace AK::ReaWwise
 		}
 #endif
 
-		setContentNonOwned(mainContentComponent.get(), true);
+		setContentOwned(mainContentComponent, true);
 		centreWithSize(width, height);
 		setResizable(true, true);
 		setResizeLimits(minWidth, minHeight, (std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)());
+	}
+
+	ExtensionWindow::~ExtensionWindow()
+	{
+		juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 	}
 
 	int ExtensionWindow::getDesktopWindowStyleFlags() const
@@ -49,4 +54,10 @@ namespace AK::ReaWwise
 	{
 		setVisible(false);
 	}
+
+	void ExtensionWindow::resized()
+	{
+		juce::ResizableWindow::resized();
+	}
+
 } // namespace AK::ReaWwise

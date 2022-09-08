@@ -9,6 +9,7 @@ namespace AK::WwiseTransfer
 	{
 	public:
 		StandaloneWindow();
+		~StandaloneWindow() override;
 
 		int getDesktopWindowStyleFlags() const override;
 		void userTriedToCloseWindow() override;

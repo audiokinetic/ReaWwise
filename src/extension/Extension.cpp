@@ -3,6 +3,9 @@
 #include "ExtensionWindow.h"
 #include "ReaperContext.h"
 
+#include "Core/WaapiClient.h"
+#include "Theme/CustomLookAndFeel.h"
+
 #include <JSONHelpers.h>
 #include <juce_events/juce_events.h>
 #include <memory>
@@ -727,7 +730,7 @@ namespace AK::ReaWwise
 		if(!reaperContext->registerFunction("hookcommand", (void*)onHookCommand))
 		{
 			return 0;
-		};
+		}
 
 		if(!reaperContext->registerFunction("hookcustommenu", (void*)onHookCustomMenu))
 		{

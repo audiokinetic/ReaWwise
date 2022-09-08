@@ -48,6 +48,40 @@ namespace AK::WwiseTransfer
 		audioFileNameExistsComboBox.getSelectedIdAsValue().referTo(audioFilenameExists.getPropertyAsValue());
 		applyTemplateComboBox.getSelectedIdAsValue().referTo(applyTemplate.getPropertyAsValue());
 
+		auto containerNameExistsComboBoxOnChange = [this]
+		{
+			const char* tooltip = "";
+			switch(static_cast<Import::ContainerNameExistsOption>(containerNameExistsComboBox.getSelectedId()))
+			{
+				case Import::ContainerNameExistsOption::UseExisting:
+					tooltip = "Retains the existing sounds but adds the transferred files as source audio "
+					          "files. The new files do not become the main audio sources for the existing "
+					          "objects unless they have identical names to the existing sources, and "
+					          "therefore overwrite them.";
+					break;
+
+				case Import::ContainerNameExistsOption::CreateNew:
+					tooltip = "Creates new sounds with increments appended to the names, for example "
+					          "SoundName_01. The existing sounds are not affected, unless the existing audio "
+					          "sources have the same names as the newly transferred files. In that case, the "
+					          "new sources overwrite the existing ones.";
+					break;
+
+				case Import::ContainerNameExistsOption::Replace:
+					tooltip = "Deletes and recreates the sounds, with the transferred files as sources.";
+					break;
+
+				default:
+					jassertfalse;
+					break;
+			}
+
+			containerNameExistsComboBox.setTooltip(tooltip);
+		};
+
+		containerNameExistsComboBoxOnChange();
+		containerNameExistsComboBox.onChange = containerNameExistsComboBoxOnChange;
+
 		addAndMakeVisible(containerNameExistsLabel);
 		addAndMakeVisible(audioFileNameExistsLabel);
 		addAndMakeVisible(applyTemplateLabel);

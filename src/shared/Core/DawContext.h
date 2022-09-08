@@ -15,7 +15,8 @@ namespace AK::WwiseTransfer
 		virtual juce::String getSessionName() = 0;
 		virtual bool saveState(juce::ValueTree applicationState) = 0;
 		virtual juce::ValueTree retrieveState() = 0;
-		virtual void renderImportItems() = 0;
-		virtual std::vector<Import::Item> getImportItems(Import::Options options) = 0;
+		virtual void renderItems() = 0;
+		virtual std::vector<Import::PreviewItem> getItemsForPreview(const Import::Options& options) = 0;
+		virtual std::vector<Import::Item> getItemsForImport(const Import::Options& options) = 0;
 	};
 } // namespace AK::WwiseTransfer

@@ -40,43 +40,25 @@ namespace AK::WwiseTransfer::Import
 		New
 	};
 
-	struct Item
+	struct PreviewItem
 	{
-		Item(const juce::String& name, Wwise::ObjectType type, const juce::String& path, const juce::String& originalsSubFolder, const juce::String& audioFilePath, const juce::String& renderFilePath)
-			: name(name)
-			, type(type)
-			, path(path)
-			, originalsSubFolder(originalsSubFolder)
-			, audioFilePath(audioFilePath)
-			, renderFilePath(renderFilePath)
-		{
-		}
-
-		juce::String name;
-		Wwise::ObjectType type;
 		juce::String path;
 		juce::String originalsSubFolder;
 		juce::String audioFilePath;
+	};
+
+	struct Item : public PreviewItem
+	{
 		juce::String renderFilePath;
 	};
 
-	struct PreviewItem
+	struct PreviewItemNode
 	{
 		juce::String name;
-		Wwise::ObjectType type;
-		ObjectStatus objectStatus;
+		Wwise::ObjectType type{};
+		ObjectStatus objectStatus{};
 		juce::String audioFilePath;
-		WavStatus wavStatus;
-	};
-
-	struct PreviewItemNode : public Item
-	{
-		PreviewItemNode(const Item& item)
-			: Item(item.name, item.type, item.path, item.originalsSubFolder, item.audioFilePath, item.renderFilePath)
-		{
-		}
-
-		std::unordered_map<juce::String, PreviewItemNode> children;
+		WavStatus wavStatus{};
 	};
 
 	struct HierarchyMappingNode

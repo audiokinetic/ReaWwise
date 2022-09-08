@@ -40,7 +40,7 @@ namespace AK::WwiseTransfer
 		, languageSubfolder(appState, IDs::languageSubfolder, nullptr)
 	{
 		auto featureSupport = appState.getChildWithName(IDs::featureSupport);
-		waqlEnabled.referTo(featureSupport, IDs::sessionName, nullptr);
+		waqlEnabled.referTo(featureSupport, IDs::waqlEnabled, nullptr);
 
 		applicationState.addListener(this);
 	}
@@ -80,9 +80,9 @@ namespace AK::WwiseTransfer
 
 			if(importOptions && previewOptions)
 			{
-				auto importItemsFromDaw = dawContext.getImportItems(*importOptions);
+				auto importItemsFromDaw = dawContext.getItemsForPreview(*importOptions);
 
-				auto currentImportItemsFromDawHash = ImportHelper::importItemsToHash(importItemsFromDaw);
+				auto currentImportItemsFromDawHash = ImportHelper::importPreviewItemsToHash(importItemsFromDaw);
 
 				if(lastImportItemsFromDawHash != currentImportItemsFromDawHash || previewOptionsChanged)
 				{
@@ -113,7 +113,7 @@ namespace AK::WwiseTransfer
 								auto name = WwiseHelper::pathToObjectName(pathWithoutType);
 								auto type = WwiseHelper::pathToObjectType(ancestorPath);
 
-								child = ImportHelper::previewItemToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, "", Import::WavStatus::Unknown});
+								child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, "", Import::WavStatus::Unknown});
 
 								currentNode.appendChild(child, nullptr);
 								pathToValueTreeMapping[pathWithoutType] = child;
@@ -144,7 +144,7 @@ namespace AK::WwiseTransfer
 								wavStatus = Import::WavStatus::New;
 						}
 
-						auto child = ImportHelper::previewItemToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, originalsWav, wavStatus});
+						auto child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, originalsWav, wavStatus});
 
 						currentNode.appendChild(child, nullptr);
 						pathToValueTreeMapping[pathWithoutType] = child;
@@ -171,7 +171,7 @@ namespace AK::WwiseTransfer
 
 							if(it != pathToValueTreeMappingLocal.end())
 							{
-								auto previewItem = ImportHelper::valueTreeToPreviewItem(it->second);
+								auto previewItem = ImportHelper::valueTreeToPreviewItemNode(it->second);
 
 								if(existingObject.type != Wwise::ObjectType::Sound || previewOptions->containerNameExists == Import::ContainerNameExistsOption::UseExisting)
 									previewItem.objectStatus = Import::ObjectStatus::NoChange;
@@ -185,7 +185,7 @@ namespace AK::WwiseTransfer
 									previewItem.type = existingObject.type;
 								}
 
-								it->second.copyPropertiesFrom(ImportHelper::previewItemToValueTree(existingObject.path, previewItem), nullptr);
+								it->second.copyPropertiesFrom(ImportHelper::previewItemNodeToValueTree(existingObject.path, previewItem), nullptr);
 							}
 						}
 					}

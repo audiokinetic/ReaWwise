@@ -28,6 +28,7 @@ namespace AK::WwiseTransfer
 	AboutComponent::AboutComponent(const juce::String& applicationName)
 		: copyRightSymbol(juce::CharPointer_UTF8("\xa9"))
 		, wwiseIcon(juce::Drawable::createFromImageData(BinaryData::wwise_icon_svg, BinaryData::wwise_icon_svgSize))
+		, tooltipWindow(this)
 
 	{
 		using namespace AboutComponentConstants;
@@ -72,6 +73,11 @@ namespace AK::WwiseTransfer
 		versionLabel.setTooltip("Wwise SDK: " + juce::String(AK_WWISE_VST_VERSION_FULL) + juce::newLine +
 								"Branch: " + juce::String(BRANCH_NAME) + juce::newLine +
 								"Build: " + juce::String(BUILD_NUMBER));
+	}
+
+	AboutComponent::~AboutComponent()
+	{
+		setLookAndFeel(nullptr);
 	}
 
 	void AboutComponent::resized()

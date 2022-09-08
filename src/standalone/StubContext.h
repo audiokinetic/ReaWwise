@@ -10,12 +10,17 @@ namespace AK::WwiseTransfer
 		: public DawContext
 	{
 	public:
-		std::vector<Import::Item> getImportItems(Import::Options options) override
+		std::vector<Import::PreviewItem> getItemsForPreview(const Import::Options& options) override
 		{
-			return std::vector<Import::Item>{Import::Item("test", Wwise::ObjectType::SoundSFX, "\\A\\B\\C", juce::String(), juce::String(), juce::String())};
+			return std::vector<Import::PreviewItem>{{"\\A\\B\\C", juce::String(), juce::String()}};
 		}
 
-		void renderImportItems() override
+		std::vector<Import::Item> getItemsForImport(const Import::Options& options) override
+		{
+			return std::vector<Import::Item>{{"\\A\\B\\C", juce::String(), juce::String(), juce::String()}};
+		}
+
+		void renderItems() override
 		{
 		}
 
@@ -23,12 +28,12 @@ namespace AK::WwiseTransfer
 		juce::String getSessionName() override
 		{
 			return juce::String();
-		};
+		}
 
 		bool saveState(juce::ValueTree applicationState) override
 		{
 			return true;
-		};
+		}
 
 		juce::ValueTree retrieveState() override
 		{

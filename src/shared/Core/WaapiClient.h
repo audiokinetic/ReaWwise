@@ -74,7 +74,7 @@ namespace AK::WwiseTransfer
 		bool connect(const char* in_uri, unsigned int in_port, WwiseAuthoringAPI::disconnectHandler_t disconnectHandler = nullptr, int in_timeoutMs = -1);
 		bool subscribe(const char* in_uri, const WwiseAuthoringAPI::AkJson& in_options, WampEventCallback in_callback, uint64_t& out_subscriptionId, WwiseAuthoringAPI::AkJson& out_result, int in_timeoutMs = -1);
 		bool unsubscribe(const uint64_t& in_subscriptionId, WwiseAuthoringAPI::AkJson& out_result, int in_timeoutMs = -1);
-		bool isConnected();
+		bool isConnected() const;
 		void disconnect();
 		bool call(const char* in_uri, const WwiseAuthoringAPI::AkJson& in_args, const WwiseAuthoringAPI::AkJson& in_options, WwiseAuthoringAPI::AkJson& out_result, int in_timeoutMs = -1);
 		bool call(const char* in_uri, const char* in_args, const char* in_options, std::string& out_result, int in_timeoutMs = -1);
@@ -83,7 +83,6 @@ namespace AK::WwiseTransfer
 		Waapi::Response<Waapi::ProjectInfo> getProjectInfo();
 		Waapi::Response<Waapi::ObjectResponse> getSelectedObject();
 		Waapi::Response<Waapi::ObjectResponseSet> pasteProperties(const Waapi::PastePropertiesRequest& pastePropertiesRequest);
-		Waapi::Response<Waapi::ObjectResponseSet> getObjects(const std::set<juce::String>& objectPaths);
 		Waapi::Response<Waapi::ObjectResponseSet> import(const std::vector<Waapi::ImportItemRequest>& importItemsRequest, Import::ContainerNameExistsOption containerNameExistsOption, const juce::String& objectLanguage);
 		Waapi::Response<Waapi::ObjectResponseSet> getObjectAncestorsAndDescendants(const juce::String& objectPath);
 		Waapi::Response<Waapi::ObjectResponseSet> getObjectAncestorsAndDescendantsLegacy(const juce::String& objectPath);
@@ -135,17 +134,6 @@ namespace AK::WwiseTransfer
 			auto onJobExecute = [this, pastePropertiesRequest = pastePropertiesRequest]()
 			{
 				return pasteProperties(pastePropertiesRequest);
-			};
-
-			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);
-		}
-
-		template <typename Callback>
-		void getObjectsAsync(const std::set<juce::String>& objectPaths, const Callback& callback)
-		{
-			auto onJobExecute = [this, objectPaths = objectPaths]()
-			{
-				return getObjects(objectPaths);
 			};
 
 			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);

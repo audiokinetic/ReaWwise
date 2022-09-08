@@ -71,20 +71,21 @@ namespace AK::WwiseTransfer
 	{
 		using namespace ImportControlsComponentConstants;
 
-		juce::Logger::writeToLog("Sending render request to daw");
+		// Disbale the import button while rendering
+		importButton.setEnabled(false);
 
-		dawContext.renderImportItems();
+		juce::Logger::writeToLog("Sending render request to DAW");
+		dawContext.renderItems();
 
-		auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)));
+		const auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)));
+		const Import::Options opts(importDestination, originalsSubFolder, hierarchyMappingPath);
+		const auto importItems = dawContext.getItemsForImport(opts);
 
-		Import::Options opts(importDestination, originalsSubFolder, hierarchyMappingPath);
-
-		auto importItems = dawContext.getImportItems(opts);
-
-		auto showRenameWarning = false, showRenderFailed = false;
-		if(importItems.size())
+		bool showRenameWarning = false;
+		bool showRenderFailed = false;
+		if(importItems.size() > 0)
 		{
-			for(auto& importItem : importItems)
+			for(const auto& importItem : importItems)
 			{
 				if(importItem.renderFilePath.isEmpty())
 				{
@@ -98,10 +99,24 @@ namespace AK::WwiseTransfer
 				}
 			}
 		}
+		else
+		{
+			juce::Logger::writeToLog("No items to import.");
+			importButton.setEnabled(true);
+			return;
+		}
 
-		auto hierarchyMappingNodeList = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
+		if(showRenderFailed)
+		{
+			const juce::String message("One or more files failed to render.");
+			juce::Logger::writeToLog(message);
+			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Import Aborted", message);
+			importButton.setEnabled(true);
+			return;
+		}
 
-		Import::Task::Options importTaskOptions{
+		const auto hierarchyMappingNodeList = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
+		const Import::Task::Options importTaskOptions{
 			importItems,
 			containerNameExistsOption,
 			applyTemplateOption,
@@ -114,56 +129,54 @@ namespace AK::WwiseTransfer
 		auto onImportComplete = [this, importTaskOptions = importTaskOptions](const Import::Summary& importSummary)
 		{
 			showImportSummary(importSummary, importTaskOptions);
+			importButton.setEnabled(true);
 		};
 
 		importTask.reset(new ImportTask(waapiClient, importTaskOptions, onImportComplete));
 
-		if(showRenderFailed)
+		if(!showRenameWarning || !applicationProperties.getShowSilentIncrementWarning())
 		{
-			juce::String message("One or more files failed to render.");
-
-			juce::Logger::writeToLog(message);
-
-			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Import Aborted", message);
-		}
-		else if(showRenameWarning && applicationProperties.getShowSilentIncrementWarning())
-		{
-			juce::String message("Several file names where silently incremented to avoid overwriting during the render process.");
-
-			juce::Logger::writeToLog(message);
-
-			auto onDialogBtnClicked = [this, importItems = importItems](int result)
-			{
-				applicationProperties.setShowSilentIncrementWarning(!showSilentIncrementWarningToggle.getToggleState());
-
-				if(result == MessageBoxOption::Continue)
-				{
-					importTask->launchThread();
-				}
-			};
-
-			auto messageBoxOptions = juce::MessageBoxOptions()
-			                             .withTitle("Action Required")
-			                             .withMessage(message)
-			                             .withButton("Continue")
-			                             .withButton("Cancel");
-
-			juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
-
-			auto modalManager = juce::ModalComponentManager::getInstance();
-			auto alertWindow = dynamic_cast<juce::AlertWindow*>(modalManager->getModalComponent(0));
-			alertWindow->addCustomComponent(&showSilentIncrementWarningToggle);
-
-			// Reset and reposition the toggle button
-			showSilentIncrementWarningToggle.setToggleState(false, true);
-			auto bounds = showSilentIncrementWarningToggle.getBounds();
-			bounds.setX(showSilentIncrementWarningToggleMarginLeft);
-			showSilentIncrementWarningToggle.setBounds(bounds);
-		}
-		else
-		{
+			juce::Logger::writeToLog("Importing files...");
 			importTask->launchThread();
+			return;
 		}
+
+		const juce::String message("Several file names where silently incremented to avoid overwriting during the render process.");
+		juce::Logger::writeToLog(message);
+
+		auto onDialogBtnClicked = [this, importItems = importItems](int result)
+		{
+			applicationProperties.setShowSilentIncrementWarning(!showSilentIncrementWarningToggle.getToggleState());
+
+			if(result == MessageBoxOption::Continue)
+			{
+				juce::Logger::writeToLog("Importing files...");
+				importTask->launchThread();
+				return;
+			}
+
+			juce::Logger::writeToLog("Import aborted.");
+			importTask.reset();
+			importButton.setEnabled(true);
+		};
+
+		auto messageBoxOptions = juce::MessageBoxOptions()
+			                            .withTitle("Action Required")
+			                            .withMessage(message)
+			                            .withButton("Continue")
+			                            .withButton("Cancel");
+
+		juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
+
+		auto modalManager = juce::ModalComponentManager::getInstance();
+		auto alertWindow = dynamic_cast<juce::AlertWindow*>(modalManager->getModalComponent(0));
+		alertWindow->addCustomComponent(&showSilentIncrementWarningToggle);
+
+		// Reset and reposition the toggle button
+		showSilentIncrementWarningToggle.setToggleState(false, true);
+		auto bounds = showSilentIncrementWarningToggle.getBounds();
+		bounds.setX(showSilentIncrementWarningToggleMarginLeft);
+		showSilentIncrementWarningToggle.setBounds(bounds);
 	}
 
 	void ImportControlsComponent::showImportSummary(const Import::Summary& summary, const Import::Task::Options& importTaskOptions)

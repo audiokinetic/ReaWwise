@@ -1,6 +1,6 @@
 #include "Helpers/ImportHelper.h"
-#include "Model/Import.h"
 #include "Model/IDs.h"
+#include "Model/Import.h"
 
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -52,8 +52,7 @@ namespace AK::WwiseTransfer::Test
 				propertyTemplatePathEnabled,
 				propertyTemplatePathValid,
 				propertyTemplatePathErrorMsg,
-				language
-			);
+				language);
 
 			return hierarchyMappingNode;
 		}
@@ -108,49 +107,37 @@ namespace AK::WwiseTransfer::Test
 			return valueTree;
 		}
 
-		inline Import::PreviewItem generatePreviewItem() const
+		inline Import::PreviewItemNode generatePreviewItem() const
 		{
 			return {
 				objectName,
 				objectType,
 				objectStatus,
 				audioFilePath,
-				wavStatus
-			};
+				wavStatus};
 		}
 	};
 
-	struct TestImportItemValues
+	struct TestImportPreviewItemValues
 	{
-		juce::String name;
-		Wwise::ObjectType type;
 		juce::String path;
 		juce::String originalsSubFolder;
 		juce::String audioFilePath;
-		juce::String renderFilePath;
 
-		TestImportItemValues(int index = 0)
+		TestImportPreviewItemValues(int index = 0)
 		{
 			juce::String strIndex(index);
-			name = "TestName_" + strIndex;
-			type = Wwise::ObjectType::PhysicalFolder;
 			path = "\\test\\item\\path_" + strIndex;
 			originalsSubFolder = "testFolder";
 			audioFilePath = "\\test\\item\\audio\\path_" + strIndex;
-			renderFilePath = "\\test\\item\\render\\path_" + strIndex;
 		}
 
-		inline Import::Item generateImportItem() const
+		inline Import::PreviewItem generateImportPreviewItem() const
 		{
-			return
-			{
-				name,
-				type,
+			return {
 				path,
 				originalsSubFolder,
-				audioFilePath,
-				renderFilePath
-			};
+				audioFilePath};
 		}
 	};
 

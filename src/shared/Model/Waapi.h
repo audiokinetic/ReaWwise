@@ -31,6 +31,15 @@ namespace AK::WwiseTransfer::Waapi
 			, path(json.HasKey("path") ? json["path"].GetVariant().GetString() : "")
 			, originalWavFilePath(json.HasKey("sound:originalWavFilePath") ? json["sound:originalWavFilePath"].GetVariant().GetString() : "")
 		{
+			if(json.HasKey("workunitType"))
+			{
+				auto workUnitType = json["workunitType"].GetVariant().GetString();
+
+				if(path == "\\Actor-Mixer Hierarchy")
+					type = Wwise::ObjectType::ActorMixer;
+				else if(workUnitType == "folder")
+					type = Wwise::ObjectType::PhysicalFolder;
+			}
 		}
 
 		ObjectResponse() = default;
@@ -47,7 +56,7 @@ namespace AK::WwiseTransfer::Waapi
 
 		juce::String id;
 		juce::String name;
-		Wwise::ObjectType type;
+		Wwise::ObjectType type{ Wwise::ObjectType::Unknown };
 		juce::String path;
 		juce::String originalWavFilePath;
 	};

@@ -17,7 +17,7 @@ namespace AK::WwiseTransfer::Test
 		auto nodes = std::vector<Import::HierarchyMappingNode>();
 		auto testValuesVector = std::vector<TestTreeHierarchyValues>();
 
-		for (int index = 0; index < indexLimit; index++)
+		for(int index = 0; index < indexLimit; index++)
 		{
 			auto testValues = TestTreeHierarchyValues(index);
 			testValuesVector.emplace_back(testValues);
@@ -27,7 +27,7 @@ namespace AK::WwiseTransfer::Test
 
 		auto valueTrees = ImportHelper::hierachyMappingNodeListToValueTree(nodes);
 
-		for (int index = 0; index < indexLimit; index++)
+		for(int index = 0; index < indexLimit; index++)
 		{
 			testValueTreeEquality(valueTrees.getChild(index), testValuesVector[index]);
 		}
@@ -42,11 +42,11 @@ namespace AK::WwiseTransfer::Test
 		testHierarchyMappingEquality(hierarchyMapping, testValues);
 	}
 
-	TEST_CASE("valueTreeToPreviewItem")
+	TEST_CASE("valueTreeToPreviewItemNode")
 	{
 		auto testValues = TestTreePreviewItemValues();
 		auto valueTree = testValues.generateValueTree();
-		auto previewItem = ImportHelper::valueTreeToPreviewItem(valueTree);
+		auto previewItem = ImportHelper::valueTreeToPreviewItemNode(valueTree);
 
 		REQUIRE(previewItem.audioFilePath == testValues.audioFilePath);
 		REQUIRE(previewItem.name == testValues.objectName);
@@ -55,13 +55,13 @@ namespace AK::WwiseTransfer::Test
 		REQUIRE(previewItem.wavStatus == testValues.wavStatus);
 	}
 
-	TEST_CASE("previewItemToValueTree")
+	TEST_CASE("previewItemNodeToValueTree")
 	{
 		auto testValues = TestTreePreviewItemValues();
 		auto previewItem = testValues.generatePreviewItem();
 		auto testPath = "\\test\\path";
 
-		auto valueTree = ImportHelper::previewItemToValueTree(testPath, previewItem);
+		auto valueTree = ImportHelper::previewItemNodeToValueTree(testPath, previewItem);
 
 		REQUIRE(valueTree.getType().toString() == testPath);
 		REQUIRE(valueTree.getProperty(IDs::objectName) == testValues.objectName);
@@ -77,7 +77,7 @@ namespace AK::WwiseTransfer::Test
 		auto valueTrees = juce::ValueTree("root");
 		auto testValuesVector = std::vector<TestTreeHierarchyValues>();
 
-		for (int index = 0; index < indexLimit; index++)
+		for(int index = 0; index < indexLimit; index++)
 		{
 			auto testValues = TestTreeHierarchyValues(index);
 			testValuesVector.emplace_back(testValues);
@@ -87,7 +87,7 @@ namespace AK::WwiseTransfer::Test
 
 		auto hierarchyList = ImportHelper::valueTreeToHierarchyMappingNodeList(valueTrees);
 
-		for (int index = 0; index < indexLimit; index++)
+		for(int index = 0; index < indexLimit; index++)
 		{
 			testHierarchyMappingEquality(hierarchyList[index], testValuesVector[index]);
 		}
@@ -99,7 +99,7 @@ namespace AK::WwiseTransfer::Test
 		auto nodes = std::vector<Import::HierarchyMappingNode>();
 		auto testValuesVector = std::vector<TestTreeHierarchyValues>();
 
-		for (int index = 0; index < indexLimit; index++)
+		for(int index = 0; index < indexLimit; index++)
 		{
 			auto testValues = TestTreeHierarchyValues(index);
 			testValuesVector.emplace_back(testValues);
@@ -113,7 +113,7 @@ namespace AK::WwiseTransfer::Test
 		pathList.addTokens(fullPath, "\\", "");
 		pathList.removeEmptyStrings();
 
-		for (int index = 0; index < pathList.size(); index++)
+		for(int index = 0; index < pathList.size(); index++)
 		{
 			REQUIRE(pathList[index].contains(testValuesVector[index].objectName));
 			REQUIRE(pathList[index].contains(WwiseHelper::objectTypeToReadableString(testValuesVector[index].objectType)));
@@ -172,35 +172,34 @@ namespace AK::WwiseTransfer::Test
 		REQUIRE(ImportHelper::wavStatusToReadableString(Import::WavStatus::Unknown) == "");
 	}
 
-	TEST_CASE("importItemsToHash")
+	TEST_CASE("importPreviewItemsToHash")
 	{
-
 		SECTION("Equality Check")
 		{
 			auto itemCount = GENERATE(0, 1, 3, 1000);
-			auto testItems = std::vector<Import::Item>();
-			for (int index = 0; index < itemCount; index++)
+			auto testItems = std::vector<Import::PreviewItem>();
+			for(int index = 0; index < itemCount; index++)
 			{
-				auto testValue = TestImportItemValues(index);
-				auto testItem = testValue.generateImportItem();
+				auto testValue = TestImportPreviewItemValues(index);
+				auto testItem = testValue.generateImportPreviewItem();
 
 				testItems.emplace_back(testItem);
 			}
 
-			REQUIRE(ImportHelper::importItemsToHash(testItems) == ImportHelper::importItemsToHash(testItems));
+			REQUIRE(ImportHelper::importPreviewItemsToHash(testItems) == ImportHelper::importPreviewItemsToHash(testItems));
 		}
 		SECTION("Difference Check")
 		{
 			auto evenIndex = GENERATE(2, 3, 2000, 2001);
-			auto testItems1 = std::vector<Import::Item>();
-			auto testItems2 = std::vector<Import::Item>();
+			auto testItems1 = std::vector<Import::PreviewItem>();
+			auto testItems2 = std::vector<Import::PreviewItem>();
 
-			for (int index = 0; index < evenIndex; index++)
+			for(int index = 0; index < evenIndex; index++)
 			{
-				auto testValue = TestImportItemValues(index);
-				auto testItem = testValue.generateImportItem();
+				auto testValue = TestImportPreviewItemValues(index);
+				auto testItem = testValue.generateImportPreviewItem();
 
-				if (index % 2 == 0)
+				if(index % 2 == 0)
 				{
 					testItems1.emplace_back(testItem);
 				}
@@ -210,7 +209,7 @@ namespace AK::WwiseTransfer::Test
 				}
 			}
 
-			REQUIRE(ImportHelper::importItemsToHash(testItems1) != ImportHelper::importItemsToHash(testItems2));
+			REQUIRE(ImportHelper::importPreviewItemsToHash(testItems1) != ImportHelper::importPreviewItemsToHash(testItems2));
 		}
 	}
 } // namespace AK::WwiseTransfer::Test
