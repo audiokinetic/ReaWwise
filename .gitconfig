@@ -1,4 +1,0 @@
-[gitreview]
-    remote = origin      # Only use origin as remote, eliminates need for remote 'gerrit'
-    track = true         # Uses the upstream branch tracked as target for the review
-    rebase = false       # No rebase by default, you can still rebase manually on review with -r
