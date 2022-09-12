@@ -42,6 +42,7 @@ if(NOT DEFINED ENV{BUILD_NUMBER})
     endif()
 endif()
 
+
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME reaper_reawwise)
 
@@ -73,22 +74,18 @@ target_compile_definitions(${PROJECT_NAME}
     PRIVATE
         REAPERAPI_MINIMAL
         REAPERAPI_WANT_GetMainHwnd
-        REAPERAPI_WANT_ShowConsoleMsg
         REAPERAPI_WANT_AddExtensionsMainMenu
         REAPERAPI_WANT_EnumProjects
         REAPERAPI_WANT_GetSetProjectInfo_String
-        REAPERAPI_WANT_GetProjectName
         REAPERAPI_WANT_ResolveRenderPattern
-        REAPERAPI_WANT_EnumProjectMarkers2
-        REAPERAPI_WANT_EnumRegionRenderMatrix
-        REAPERAPI_WANT_GetParentTrack
-        REAPERAPI_WANT_GetTrackName
         REAPERAPI_WANT_Main_OnCommand
-        REAPERAPI_WANT_GetProjectPathEx
-        REAPERAPI_WANT_ShowMessageBox
         REAPERAPI_WANT_GetProjExtState
         REAPERAPI_WANT_SetProjExtState
         REAPERAPI_WANT_MarkProjectDirty
+        REAPERAPI_WANT_realloc_cmd_register_buf
+        REAPERAPI_WANT_realloc_cmd_clear
+        REAPERAPI_WANT_GetProjectStateChangeCount
+        REAPERAPI_WANT_GetSetProjectInfo
         JUCE_APPLICATION_NAME_STRING="${PROJECT_NAME}"
         JUCE_STANDALONE_APPLICATION=0
 )

@@ -27,7 +27,9 @@ namespace AK::WwiseTransfer
 		juce::CachedValue<bool> importDestinationValid;
 		juce::CachedValue<juce::String> importDestination;
 		juce::CachedValue<juce::String> originalsSubFolder;
+		juce::CachedValue<juce::String> originalsFolder;
 		juce::CachedValue<juce::String> projectPath;
+		juce::CachedValue<juce::String> languageSubfolder;
 		juce::CachedValue<Import::ContainerNameExistsOption> containerNameExistsOption;
 		juce::CachedValue<Import::ApplyTemplateOption> applyTemplateOption;
 		juce::ValueTree hierarchyMapping;
@@ -35,6 +37,7 @@ namespace AK::WwiseTransfer
 		juce::CachedValue<juce::String> selectObjectsOnImportCommand;
 		juce::CachedValue<bool> applyTemplateFeatureEnabled;
 		juce::CachedValue<bool> undoGroupFeatureEnabled;
+		juce::CachedValue<bool> waqlEnabled;
 
 		WaapiClient& waapiClient;
 		DawContext& dawContext;

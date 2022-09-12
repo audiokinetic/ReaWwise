@@ -6,6 +6,15 @@
 
 namespace AK::WwiseTransfer
 {
+	namespace PresetMenuComponentConstants
+	{
+		constexpr auto loadFlags = juce::FileBrowserComponent::openMode |
+			juce::FileBrowserComponent::canSelectFiles;
+		constexpr auto saveFlags = juce::FileBrowserComponent::saveMode |
+			juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::warnAboutOverwriting;
+		constexpr auto fileFilter = "*.xml";
+	} // namespace PresetMenuComponentConstants
+
 	PresetMenuComponent::PresetMenuComponent(juce::ValueTree appState, ApplicationProperties& applicationProperties, const juce::String& applicationName)
 		: CustomDrawableButton("PresetMenuButton", juce::Drawable::createFromImageData(BinaryData::General_FolderWithTriangle_Normal_svg, BinaryData::General_FolderWithTriangle_Normal_svgSize))
 		, hierarchyMapping(appState.getChildWithName(IDs::hierarchyMapping))
@@ -23,22 +32,42 @@ namespace AK::WwiseTransfer
 
 	void PresetMenuComponent::showMenu()
 	{
-		auto opts = juce::PopupMenu::Options()
-		                .withTargetComponent(this);
+		using namespace PresetMenuComponentConstants;
 
 		juce::PopupMenu presetMenu;
 		presetMenu.setLookAndFeel(&getLookAndFeel());
 
 		auto onSavePreset = [this]
 		{
-			savePreset();
+			fileChooser = std::make_unique<juce::FileChooser>("Save preset...", presetFolder, fileFilter);
+
+			auto onFileChosen = [this](const juce::FileChooser& chooser)
+			{
+				auto file = chooser.getResult();
+				file.create();
+
+				const auto presetData = PersistanceHelper::hierarchyMappingToPresetData(hierarchyMapping);
+				file.replaceWithText(presetData);
+				applicationProperties.addRecentHierarchyMappingPreset(file.getFullPathName());
+			};
+
+			fileChooser->launchAsync(saveFlags, onFileChosen);
 		};
 
 		presetMenu.addItem("Save Preset...", onSavePreset);
 
 		auto onLoadPreset = [this]
 		{
-			loadPresetWithFilePicker();
+			fileChooser = std::make_unique<juce::FileChooser>("Select preset...", presetFolder, fileFilter);
+
+			auto onFileChosen = [this](const juce::FileChooser& chooser)
+			{
+				auto presetFile = chooser.getResult();
+				if (presetFile.exists())
+					loadPreset(presetFile);
+			};
+
+			fileChooser->launchAsync(loadFlags, onFileChosen);
 		};
 
 		presetMenu.addItem("Load Preset...", onLoadPreset);
@@ -68,22 +97,8 @@ namespace AK::WwiseTransfer
 
 		presetMenu.addSubMenu("Recent Preset", recentMenu, !recentPresets.isEmpty());
 
+		const auto opts = juce::PopupMenu::Options().withTargetComponent(this);
 		presetMenu.showMenuAsync(opts);
-	}
-
-	void PresetMenuComponent::loadPresetWithFilePicker()
-	{
-		fileChooser = std::make_unique<juce::FileChooser>("Select preset...", presetFolder, "*.xml");
-
-		auto onFileChosen = [this](const juce::FileChooser& chooser)
-		{
-			auto presetFile = chooser.getResult();
-
-			if(presetFile.exists())
-				loadPreset(presetFile);
-		};
-
-		fileChooser->launchAsync(juce::FileBrowserComponent::openMode, onFileChosen);
 	}
 
 	void PresetMenuComponent::loadPreset(const juce::File& presetFile)
@@ -99,26 +114,8 @@ namespace AK::WwiseTransfer
 		else
 		{
 			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Load Preset", "Unable to load preset! The preset file is corrupt.");
+			applicationProperties.removeRecentHierarchyMappingPreset(presetFile.getFullPathName());
 		}
 	}
 
-	void PresetMenuComponent::savePreset()
-	{
-		fileChooser = std::make_unique<juce::FileChooser>("Save preset...", presetFolder, "*.xml");
-
-		auto onFileChosen = [this](const juce::FileChooser& chooser)
-		{
-			auto presetData = PersistanceHelper::hierarchyMappingToPresetData(hierarchyMapping);
-
-			auto file = chooser.getResult();
-
-			file.create();
-
-			file.replaceWithText(presetData);
-
-			applicationProperties.addRecentHierarchyMappingPreset(file.getFullPathName());
-		};
-
-		fileChooser->launchAsync(juce::FileBrowserComponent::saveMode, onFileChosen);
-	}
 } // namespace AK::WwiseTransfer

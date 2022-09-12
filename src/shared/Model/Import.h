@@ -3,6 +3,8 @@
 #include "Model/IDs.h"
 #include "Model/Wwise.h"
 
+#include <algorithm>
+
 namespace AK::WwiseTransfer::Import
 {
 	enum class ContainerNameExistsOption : int
@@ -90,14 +92,14 @@ namespace AK::WwiseTransfer::Import
 		}
 
 		juce::String name;
-		bool nameValid;
+		bool nameValid{};
 		juce::String nameErrorMessage;
-		Wwise::ObjectType type;
-		bool typeValid;
+		Wwise::ObjectType type{};
+		bool typeValid{};
 		juce::String typeErrorMessage;
 		juce::String propertyTemplatePath;
-		bool propertyTemplatePathEnabled;
-		bool propertyTemplatePathValid;
+		bool propertyTemplatePathEnabled{};
+		bool propertyTemplatePathValid{};
 		juce::String propertyTemplatePathErrorMessage;
 		juce::String language;
 	};
@@ -120,19 +122,36 @@ namespace AK::WwiseTransfer::Import
 	{
 		struct Object
 		{
-			Wwise::ObjectType type;
-			juce::String originalWavFilePath;
+			juce::String id;
+			Wwise::ObjectType type{};
 			juce::String propertyTemplatePath;
-			bool newlyCreated{false};
+			juce::String originalWavFilePath;
+			Import::WavStatus wavStatus{};
+			Import::ObjectStatus objectStatus{};
 		};
 
 		std::map<juce::String, Object> objects;
-
-		int objectsCreated{0};
-		int audioFilesImported{0};
-		int objectTemplatesApplied{0};
-
 		juce::String errorMessage;
+
+		using PathObjectPair = std::pair<juce::String, Object>;
+
+		int getNumObjectsCreated() const
+		{
+			auto predicate = [](const PathObjectPair& pathObjectPair)
+			{
+				return pathObjectPair.second.objectStatus == Import::ObjectStatus::New;
+			};
+			return std::count_if(objects.begin(), objects.end(), predicate);
+		}
+
+		int getNumObjectTemplatesApplied() const
+		{
+			auto predicate = [](const PathObjectPair& pathObjectPair)
+			{
+				return pathObjectPair.second.propertyTemplatePath.isNotEmpty();
+			};
+			return std::count_if(objects.begin(), objects.end(), predicate);
+		}
 	};
 
 	namespace Task
@@ -140,15 +159,16 @@ namespace AK::WwiseTransfer::Import
 		struct Options
 		{
 			std::vector<Import::Item> importItems;
-			Import::ContainerNameExistsOption containerNameExistsOption;
-			Import::ApplyTemplateOption applyTemplateOption;
+			Import::ContainerNameExistsOption containerNameExistsOption{};
+			Import::ApplyTemplateOption applyTemplateOption{Import::ApplyTemplateOption::Always};
 			juce::String importDestination;
 			std::vector<Import::HierarchyMappingNode> hierarchyMappingNodeList;
+			juce::String originalsFolder;
+			juce::String languageSubfolder;
 			juce::String selectObjectsOnImportCommand;
 			bool applyTemplateFeatureEnabled{false};
 			bool undoGroupFeatureEnabled{false};
 			bool waqlEnabled{false};
-			juce::String objectLanguage;
 		};
 	} // namespace Task
 } // namespace AK::WwiseTransfer::Import

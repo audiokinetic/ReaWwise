@@ -164,7 +164,7 @@ namespace AK::WwiseTransfer::ApplicationState
 		// TODO: Should error be reported on parent or child?
 		auto hierarchyMappingNodeList = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
 
-		for(int i = 0; i < hierarchyMappingNodeList.size(); ++i)
+		for(std::size_t i = 0; i < hierarchyMappingNodeList.size(); ++i)
 		{
 			auto& child = hierarchyMappingNodeList.at(i);
 

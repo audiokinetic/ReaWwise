@@ -2,17 +2,13 @@
 
 #include "AK/WwiseAuthoringAPI/AkAutobahn/AkJson.h"
 #include "AK/WwiseAuthoringAPI/AkAutobahn/Client.h"
-#include "AK/WwiseAuthoringAPI/waapi.h"
 #include "Helpers/WaapiHelper.h"
 #include "Model/Import.h"
 #include "Model/Waapi.h"
 #include "Model/Wwise.h"
 
 #include <juce_core/juce_core.h>
-#include <juce_data_structures/juce_data_structures.h>
 #include <juce_events/juce_events.h>
-#include <optional>
-#include <set>
 
 namespace AK::WwiseTransfer
 {
@@ -166,6 +162,28 @@ namespace AK::WwiseTransfer
 			auto onJobExecute = [this]()
 			{
 				return getOriginalsFolder();
+			};
+
+			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);
+		}
+
+		template <typename Callback>
+		void getObjectAncestorsAndDescendantsAsync(const juce::String& objectPath, Callback& callback)
+		{
+			auto onJobExecute = [objectPath, this]()
+			{
+				return getObjectAncestorsAndDescendants(objectPath);
+			};
+
+			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);
+		}
+
+		template <typename Callback>
+		void getObjectAncestorsAndDescendantsLegacyAsync(const juce::String& objectPath, Callback& callback)
+		{
+			auto onJobExecute = [objectPath, this]()
+			{
+				return getObjectAncestorsAndDescendantsLegacy(objectPath);
 			};
 
 			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);

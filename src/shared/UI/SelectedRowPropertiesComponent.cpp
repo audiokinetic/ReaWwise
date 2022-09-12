@@ -20,7 +20,7 @@ namespace AK::WwiseTransfer
 		constexpr int syncButtonWidth = 36;
 		constexpr int propertyTemplateToggleButtonWidth = 22;
 		constexpr int lineThickness = 2;
-		constexpr std::initializer_list<Wwise::ObjectType> objectTypes{Wwise::ObjectType::ActorMixer, Wwise::ObjectType::AudioFileSource, Wwise::ObjectType::BlendContainer,
+		constexpr std::initializer_list<Wwise::ObjectType> objectTypes{Wwise::ObjectType::BlendContainer,
 			Wwise::ObjectType::PhysicalFolder, Wwise::ObjectType::RandomContainer, Wwise::ObjectType::SequenceContainer, Wwise::ObjectType::SoundSFX,
 			Wwise::ObjectType::SoundVoice, Wwise::ObjectType::SwitchContainer, Wwise::ObjectType::VirtualFolder, Wwise::ObjectType::WorkUnit};
 		const juce::String pastePropertiesToolTip = "Paste properties are only available when connected to Wwise 2022+";
@@ -36,8 +36,6 @@ namespace AK::WwiseTransfer
 		, propertyTemplatePathSyncButton("PropertyTemplatePathSyncButton", juce::Drawable::createFromImageData(BinaryData::General_GetFromWwise_Normal_svg, BinaryData::General_GetFromWwise_Normal_svgSize))
 	{
 		using namespace SelectedRowPropertiesComponentConstants;
-
-		// setText("Selected Row Properties");
 
 		setText("Selected Row Properties");
 

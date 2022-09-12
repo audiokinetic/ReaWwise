@@ -10,6 +10,11 @@ namespace AK::WwiseTransfer
 		: public DawContext
 	{
 	public:
+		bool sessionChanged() override
+		{
+			return false;
+		}
+
 		std::vector<Import::PreviewItem> getItemsForPreview(const Import::Options& options) override
 		{
 			return std::vector<Import::PreviewItem>{{"\\A\\B\\C", juce::String(), juce::String()}};

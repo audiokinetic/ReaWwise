@@ -32,7 +32,7 @@ namespace AK::WwiseTransfer
 	void Logger::addListener(IListener& listener)
 	{
 		listeners.add(&listener);
-	};
+	}
 
 	void Logger::removeListener(IListener& listener)
 	{

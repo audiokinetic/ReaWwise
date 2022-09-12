@@ -1,9 +1,8 @@
 #define REAPERAPI_IMPLEMENT
 
+#include "Core/WaapiClient.h"
 #include "ExtensionWindow.h"
 #include "ReaperContext.h"
-
-#include "Core/WaapiClient.h"
 #include "Theme/CustomLookAndFeel.h"
 
 #include <JSONHelpers.h>
@@ -20,8 +19,11 @@
 namespace AK::ReaWwise
 {
 	static bool juceInitialised = false;
+	static constexpr int defaultBufferSize = 4096;
+	static constexpr int largeBufferSize = 4 * 1024 * 1024;
 	static std::unique_ptr<ExtensionWindow> mainWindow;
 	static std::unique_ptr<ReaperContext> reaperContext;
+	static std::unique_ptr<ReaperPluginInterface> reaperPluginInterface;
 	static std::string returnString;
 	static std::string emptyReturnString;
 	static double returnDouble;
@@ -54,10 +56,10 @@ namespace AK::ReaWwise
 			{
 				mainWindow = std::make_unique<ExtensionWindow>(*reaperContext);
 #ifdef WIN32
-				mainWindow->addToDesktop(mainWindow->getDesktopWindowStyleFlags(), reaperContext->getMainHwnd());
+				mainWindow->addToDesktop(mainWindow->getDesktopWindowStyleFlags(), reaperPluginInterface->getMainHwnd());
 #else
 				mainWindow->addToDesktop(mainWindow->getDesktopWindowStyleFlags(), 0);
-				MacHelpers::makeWindowFloatingPanel(dynamic_cast<juce::Component*>(mainWindow.get()));
+				// MacHelpers::makeWindowFloatingPanel(dynamic_cast<juce::Component*>(mainWindow.get()));
 #endif
 			}
 
@@ -707,43 +709,193 @@ namespace AK::ReaWwise
 
 	static int initialize(reaper_plugin_info_t* pluginInfo)
 	{
-		reaperContext = std::make_unique<ReaperContext>(pluginInfo);
+		class ReaperPluginImplementation : public ReaperPluginInterface
+		{
+		public:
+			ReaperPluginImplementation(reaper_plugin_info_t* pluginInfo)
+				: pluginInfo(pluginInfo)
+			{
+				_getMainHwnd = decltype(GetMainHwnd)(pluginInfo->GetFunc("GetMainHwnd"));
+				_addExtensionsMainMenu = decltype(AddExtensionsMainMenu)(pluginInfo->GetFunc("AddExtensionsMainMenu"));
+				_enumProjects = decltype(EnumProjects)(pluginInfo->GetFunc("EnumProjects"));
+				_getSetProjectInfo_String = decltype(GetSetProjectInfo_String)(pluginInfo->GetFunc("GetSetProjectInfo_String"));
+				_resolveRenderPattern = decltype(ResolveRenderPattern)(pluginInfo->GetFunc("ResolveRenderPattern"));
+				_main_OnCommand = decltype(Main_OnCommand)(pluginInfo->GetFunc("Main_OnCommand"));
+				_getProjExtState = decltype(GetProjExtState)(pluginInfo->GetFunc("GetProjExtState"));
+				_setProjExtState = decltype(SetProjExtState)(pluginInfo->GetFunc("SetProjExtState"));
+				_markProjectDirty = decltype(MarkProjectDirty)(pluginInfo->GetFunc("MarkProjectDirty"));
+				_getProjectStateChangeCount = decltype(GetProjectStateChangeCount)(pluginInfo->GetFunc("GetProjectStateChangeCount"));
+				_getSetProjectInfo = decltype(GetSetProjectInfo)(pluginInfo->GetFunc("GetSetProjectInfo"));
+				_realloc_cmd_register_buf = decltype(realloc_cmd_register_buf)(pluginInfo->GetFunc("realloc_cmd_register_buf"));
+				_realloc_cmd_clear = decltype(realloc_cmd_clear)(pluginInfo->GetFunc("realloc_cmd_clear"));
+			}
+
+			~ReaperPluginImplementation() override = default;
+
+			int getCallerVersion() const override
+			{
+				return pluginInfo->caller_version;
+			}
+
+			int registerFunction(const char* name, void* infoStruct) const override
+			{
+				return pluginInfo->Register(name, infoStruct);
+			}
+
+			bool isValid() const override
+			{
+				if(_getMainHwnd &&
+					_addExtensionsMainMenu &&
+					_enumProjects &&
+					_getSetProjectInfo_String &&
+					_resolveRenderPattern &&
+					_main_OnCommand &&
+					_getProjExtState &&
+					_setProjExtState &&
+					_markProjectDirty &&
+					_getProjectStateChangeCount &&
+					_getSetProjectInfo)
+					return true;
+
+				return false;
+			}
+
+			void* getMainHwnd() override
+			{
+				return _getMainHwnd();
+			}
+
+			bool addExtensionsMainMenu() override
+			{
+				return _addExtensionsMainMenu();
+			}
+
+			ReaProject* enumProjects(int idx, char* projfnOutOptional, int projfnOutOptional_sz) override
+			{
+				return _enumProjects(idx, projfnOutOptional, projfnOutOptional_sz);
+			}
+
+			juce::String getProjectString(ReaProject* proj, const char* key) override
+			{
+				juce::String projectString;
+
+				if (realloc_cmd_register_buf && realloc_cmd_clear)
+				{
+					// For REAPER 6.68+
+					char buffer[defaultBufferSize];
+					char* bufferPtr = buffer;
+
+					int bufferSize = (int)sizeof(buffer);
+
+					int token = realloc_cmd_register_buf(&bufferPtr, &bufferSize);
+
+					if (_getSetProjectInfo_String(proj, key, bufferPtr, false))
+						projectString = juce::String(bufferPtr, bufferSize);
+
+					realloc_cmd_clear(token);
+				}
+				else
+				{
+					static std::string buffer(largeBufferSize, '\0');
+
+					if (_getSetProjectInfo_String(proj, key, &buffer[0], false))
+						projectString = buffer;
+				}
+
+				return projectString;
+			}
+
+			int resolveRenderPattern(ReaProject* project, const char* path, const char* pattern, char* targets, int targets_sz) override
+			{
+				return _resolveRenderPattern(project, path, pattern, targets, targets_sz);
+			}
+
+			void main_OnCommand(int command, int flag) override
+			{
+				_main_OnCommand(command, flag);
+			}
+
+			int getProjExtState(ReaProject* proj, const char* extname, const char* key, char* valOutNeedBig, int valOutNeedBig_sz) override
+			{
+				return _getProjExtState(proj, extname, key, valOutNeedBig, valOutNeedBig_sz);
+			}
+
+			int setProjExtState(ReaProject* proj, const char* extname, const char* key, const char* value) override
+			{
+				return _setProjExtState(proj, extname, key, value);
+			}
+
+			void markProjectDirty(ReaProject* proj) override
+			{
+				return _markProjectDirty(proj);
+			}
+
+			int getProjectStateChangeCount(ReaProject* proj) override
+			{
+				return _getProjectStateChangeCount(proj);
+			}
+
+			double getSetProjectInfo(ReaProject* proj, const char* desc, double value, bool is_set) override
+			{
+				return _getSetProjectInfo(proj, desc, value, is_set);
+			}
+
+		private:
+			reaper_plugin_info_t* pluginInfo;
+
+			decltype(GetMainHwnd) _getMainHwnd;
+			decltype(AddExtensionsMainMenu) _addExtensionsMainMenu;
+			decltype(EnumProjects) _enumProjects;
+			decltype(GetSetProjectInfo_String) _getSetProjectInfo_String;
+			decltype(ResolveRenderPattern) _resolveRenderPattern;
+			decltype(Main_OnCommand) _main_OnCommand;
+			decltype(GetProjExtState) _getProjExtState;
+			decltype(SetProjExtState) _setProjExtState;
+			decltype(MarkProjectDirty) _markProjectDirty;
+			decltype(GetProjectStateChangeCount) _getProjectStateChangeCount;
+			decltype(GetSetProjectInfo) _getSetProjectInfo;
+			decltype(realloc_cmd_register_buf) _realloc_cmd_register_buf;
+			decltype(realloc_cmd_clear) _realloc_cmd_clear;
+		};
+
+		reaperPluginInterface = std::make_unique<ReaperPluginImplementation>(pluginInfo);
+		reaperContext = std::make_unique<ReaperContext>(*reaperPluginInterface);
 
 		// Should actually report errors to the user somehow
-		if(reaperContext->callerVersion() != REAPER_PLUGIN_VERSION)
+		if(reaperPluginInterface->getCallerVersion() != REAPER_PLUGIN_VERSION)
 		{
 			return 0;
 		}
 
 		// Checks that all function pointers needed from reaper are valid
-		if(!reaperContext->isValid())
+		if(!reaperPluginInterface->isValid())
 		{
 			return 0;
 		}
 
-		openReaperWwiseTransferCommandId = reaperContext->registerFunction("command_id", (void*)"openReaperWwiseTransferCommand");
+		openReaperWwiseTransferCommandId = reaperPluginInterface->registerFunction("command_id", (void*)"openReaperWwiseTransferCommand");
 		if(!openReaperWwiseTransferCommandId)
 		{
 			return 0;
 		}
 
-		if(!reaperContext->registerFunction("hookcommand", (void*)onHookCommand))
+		if(!reaperPluginInterface->registerFunction("hookcommand", (void*)onHookCommand))
 		{
 			return 0;
 		}
 
-		if(!reaperContext->registerFunction("hookcustommenu", (void*)onHookCustomMenu))
+		if(!reaperPluginInterface->registerFunction("hookcustommenu", (void*)onHookCustomMenu))
 		{
 			return 0;
 		}
 
-		reaperContext->addExtensionsMainMenu();
+		reaperPluginInterface->addExtensionsMainMenu();
 
 		for(const auto& apiFunctionDefinition : Scripting::apiFunctionDefinitions)
 		{
-			reaperContext->registerFunction(apiFunctionDefinition.Api, (void*)apiFunctionDefinition.FunctionPointer);
-			reaperContext->registerFunction(apiFunctionDefinition.ApiVarArg, (void*)apiFunctionDefinition.FunctionPointerVarArg);
-			reaperContext->registerFunction(apiFunctionDefinition.ApiDef, (void*)apiFunctionDefinition.FunctionSignature);
+			reaperPluginInterface->registerFunction(apiFunctionDefinition.Api, (void*)apiFunctionDefinition.FunctionPointer);
+			reaperPluginInterface->registerFunction(apiFunctionDefinition.ApiVarArg, (void*)apiFunctionDefinition.FunctionPointerVarArg);
+			reaperPluginInterface->registerFunction(apiFunctionDefinition.ApiDef, (void*)apiFunctionDefinition.FunctionSignature);
 		}
 
 		return 1;

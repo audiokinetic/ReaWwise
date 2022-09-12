@@ -12,6 +12,7 @@ namespace AK::WwiseTransfer
 	public:
 		virtual ~DawContext() = default;
 
+		virtual bool sessionChanged() = 0;
 		virtual juce::String getSessionName() = 0;
 		virtual bool saveState(juce::ValueTree applicationState) = 0;
 		virtual juce::ValueTree retrieveState() = 0;

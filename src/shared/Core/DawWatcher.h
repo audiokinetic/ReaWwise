@@ -8,7 +8,8 @@
 namespace AK::WwiseTransfer
 {
 	class DawWatcher
-		: private juce::Thread
+		: private juce::Timer
+		, public juce::AsyncUpdater
 		, private juce::ValueTree::Listener
 	{
 	public:
@@ -18,11 +19,14 @@ namespace AK::WwiseTransfer
 		void start();
 		void stop();
 
+	private:
+		juce::ValueTree applicationState;
 		juce::ValueTree hierarchyMapping;
+		juce::ValueTree previewItems;
+
 		juce::CachedValue<juce::String> importDestination;
 		juce::CachedValue<juce::String> originalsSubfolder;
 		juce::CachedValue<Import::ContainerNameExistsOption> containerNameExists;
-		juce::CachedValue<bool> wwiseObjectsChanged;
 		juce::CachedValue<bool> previewLoading;
 		juce::CachedValue<juce::String> sessionName;
 		juce::CachedValue<bool> waqlEnabled;
@@ -30,24 +34,18 @@ namespace AK::WwiseTransfer
 		juce::CachedValue<juce::String> originalsFolder;
 		juce::CachedValue<juce::String> languageSubfolder;
 
-		juce::ValueTree previewItems;
-
-		unsigned int lastImportItemsFromDawHash;
-		Import::ContainerNameExistsOption lastContainerNameExists;
-		juce::String lastProjectPath;
-
-	private:
-		juce::ValueTree applicationState;
-
-		std::atomic<bool> previewOptionsChanged;
-
 		DawContext& dawContext;
 		WaapiClient& waapiClient;
-		int refreshInterval;
 
-		void run() override;
-		void setPreviewLoading(bool isPreviewLoading);
-		void updateSessionName();
+		unsigned int lastImportItemsHash;
+		int refreshInterval;
+		bool previewOptionsChanged;
+
+		void timerCallback() override;
 		void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
+		void valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded) override;
+		void valueTreeChildRemoved(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved) override;
+		void valueTreeChildOrderChanged(juce::ValueTree& parentTreeWhoseChildrenHaveMoved, int oldIndex, int newIndex) override;
+		void handleAsyncUpdate() override;
 	};
 } // namespace AK::WwiseTransfer

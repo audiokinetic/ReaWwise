@@ -14,6 +14,7 @@ namespace AK::WwiseTransfer
 		int getPreviewRefreshInterval();
 		juce::StringArray getRecentHierarchyMappingPresets();
 		void addRecentHierarchyMappingPreset(const juce::String& path);
+		void removeRecentHierarchyMappingPreset(const juce::String& path);
 		void clearRecentHierarchyMappingPresets();
 		double getScaleFactorOverride();
 		bool getShowSilentIncrementWarning();

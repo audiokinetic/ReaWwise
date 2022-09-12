@@ -3,6 +3,8 @@
 #include "Helpers/ImportHelper.h"
 #include "Model/IDs.h"
 
+#include <set>
+
 namespace AK::WwiseTransfer
 {
 	enum MessageBoxOption
@@ -24,6 +26,8 @@ namespace AK::WwiseTransfer
 		, importDestinationValid(applicationState, IDs::importDestinationValid, nullptr)
 		, importDestination(applicationState, IDs::importDestination, nullptr)
 		, originalsSubFolder(applicationState, IDs::originalsSubfolder, nullptr)
+		, originalsFolder(applicationState, IDs::originalsFolder, nullptr)
+		, languageSubfolder(applicationState, IDs::languageSubfolder, nullptr)
 		, projectPath(applicationState, IDs::projectPath, nullptr)
 		, containerNameExistsOption(applicationState, IDs::containerNameExists, nullptr)
 		, applyTemplateOption(applicationState, IDs::applyTemplate, nullptr)
@@ -39,6 +43,7 @@ namespace AK::WwiseTransfer
 		selectObjectsOnImportCommand.referTo(featureSupport, IDs::selectObjectsOnImportCommand, nullptr);
 		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
 		undoGroupFeatureEnabled.referTo(featureSupport, IDs::undoGroupFeatureEnabled, nullptr);
+		waqlEnabled.referTo(featureSupport, IDs::waqlEnabled, nullptr);
 
 		importButton.setButtonText("Transfer to Wwise");
 
@@ -67,18 +72,54 @@ namespace AK::WwiseTransfer
 		importButton.setBounds(getLocalBounds());
 	}
 
+	namespace
+	{
+		bool RenderDirContentModified(const std::set<juce::File>& directorySet, const juce::Time& lastWriteTime)
+		{
+			for(const auto& directory : directorySet)
+			{
+				for(const auto& file : directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false))
+				{
+					if(file.getLastModificationTime() > lastWriteTime)
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+	} // namespace
+
 	void ImportControlsComponent::onImportButtonClick()
 	{
 		using namespace ImportControlsComponentConstants;
 
-		// Disbale the import button while rendering
+		// Disable the import button while rendering
 		importButton.setEnabled(false);
+
+		const auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)));
+		const Import::Options opts(importDestination, originalsSubFolder, hierarchyMappingPath);
+
+		const auto previewItems = dawContext.getItemsForPreview(opts);
+		std::set<juce::File> directorySet;
+		for(const auto item : previewItems)
+		{
+			directorySet.insert(juce::File(item.audioFilePath).getParentDirectory());
+		}
+		auto lastModificationTime = juce::Time::getCurrentTime();
 
 		juce::Logger::writeToLog("Sending render request to DAW");
 		dawContext.renderItems();
 
-		const auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)));
-		const Import::Options opts(importDestination, originalsSubFolder, hierarchyMappingPath);
+		if(!RenderDirContentModified(directorySet, lastModificationTime))
+		{
+			const juce::String message("One or more files failed to render.");
+			juce::Logger::writeToLog(message);
+			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Import Aborted", message);
+			importButton.setEnabled(true);
+			return;
+		}
+
 		const auto importItems = dawContext.getItemsForImport(opts);
 
 		bool showRenameWarning = false;
@@ -92,7 +133,8 @@ namespace AK::WwiseTransfer
 					showRenderFailed = true;
 					break;
 				}
-				else if(importItem.audioFilePath != importItem.renderFilePath)
+
+				if(importItem.audioFilePath != importItem.renderFilePath)
 				{
 					showRenameWarning = true;
 					break;
@@ -122,9 +164,12 @@ namespace AK::WwiseTransfer
 			applyTemplateOption,
 			importDestination,
 			hierarchyMappingNodeList,
+			originalsFolder,
+			languageSubfolder,
 			selectObjectsOnImportCommand,
 			applyTemplateFeatureEnabled,
-			undoGroupFeatureEnabled};
+			undoGroupFeatureEnabled,
+			waqlEnabled};
 
 		auto onImportComplete = [this, importTaskOptions = importTaskOptions](const Import::Summary& importSummary)
 		{
@@ -161,10 +206,10 @@ namespace AK::WwiseTransfer
 		};
 
 		auto messageBoxOptions = juce::MessageBoxOptions()
-			                            .withTitle("Action Required")
-			                            .withMessage(message)
-			                            .withButton("Continue")
-			                            .withButton("Cancel");
+		                             .withTitle("Action Required")
+		                             .withMessage(message)
+		                             .withButton("Continue")
+		                             .withButton("Cancel");
 
 		juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
 
@@ -183,9 +228,9 @@ namespace AK::WwiseTransfer
 	{
 		juce::String message;
 
-		message << summary.objectsCreated << " object(s) created.";
-		message << juce::NewLine() << summary.objectTemplatesApplied << " object template(s) applied.";
-		message << juce::NewLine() << summary.audioFilesImported << " audio files(s) imported.";
+		message << summary.getNumObjectsCreated() << " object(s) created.";
+		message << juce::NewLine() << summary.getNumObjectTemplatesApplied() << " object template(s) applied.";
+		message << juce::NewLine() << importTaskOptions.importItems.size() << " audio files(s) imported.";
 
 		if(summary.errorMessage.isNotEmpty())
 			message << juce::NewLine() << summary.errorMessage;
@@ -225,15 +270,17 @@ namespace AK::WwiseTransfer
 		importSummaryFile.appendText("Container Name Exists: " + ImportHelper::containerNameExistsOptionToReadableString(importTaskOptions.containerNameExistsOption) + "\n");
 		importSummaryFile.appendText("Apply Template: " + ImportHelper::applyTemplateOptionToReadableString(importTaskOptions.applyTemplateOption) + "\n\n");
 
-		importSummaryFile.appendText("Objects created: " + juce::String(summary.objectsCreated) + "\n");
-		importSummaryFile.appendText("Object Templates Applied: " + juce::String(summary.objectTemplatesApplied) + "\n");
-		importSummaryFile.appendText("Audio Files Imported: " + juce::String(summary.audioFilesImported) + "\n\n");
+		importSummaryFile.appendText("Objects created: " + juce::String(summary.getNumObjectsCreated()) + "\n");
+		importSummaryFile.appendText("Object Templates Applied: " + juce::String(summary.getNumObjectTemplatesApplied()) + "\n");
+		importSummaryFile.appendText("Audio Files Imported: " + juce::String(importTaskOptions.importItems.size()) + "\n\n");
 
-		importSummaryFile.appendText("<table><tr><th>Object Path</th><th>Type</th><th>Created</th><th>Originals Wav</th><th>Property Template Applied</th></tr>");
+		importSummaryFile.appendText("<table><tr><th>Object Path</th><th>Type</th><th>Object Status</th><th>Originals Wav</th><th>Wav Status</th><th>Property Template Applied</th></tr>");
 
 		for(const auto& [objectPath, object] : summary.objects)
 		{
-			importSummaryFile.appendText("<tr><td>" + objectPath + "</td><td>" + WwiseHelper::objectTypeToReadableString(object.type) + "</td><td>" + (object.newlyCreated ? "X" : "") + "</td><td>" + object.originalWavFilePath + "</td><td>" + object.propertyTemplatePath + "</td></tr>");
+			importSummaryFile.appendText("<tr><td>" + objectPath + "</td><td>" + WwiseHelper::objectTypeToReadableString(object.type) + "</td>" +
+										 "<td>" + ImportHelper::objectStatusToReadableString(object.objectStatus) + "</td><td>" + object.originalWavFilePath + "</td>" +
+										 "<td>" + ImportHelper::wavStatusToReadableString(object.wavStatus) + "</td><td>" + object.propertyTemplatePath + "</td></tr>");
 		}
 
 		importSummaryFile.appendText("</table></pre>");

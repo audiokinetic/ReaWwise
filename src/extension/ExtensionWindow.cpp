@@ -1,5 +1,4 @@
 #include "ExtensionWindow.h"
-
 #include "UI/MainComponent.h"
 
 #include <limits>

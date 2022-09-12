@@ -4,9 +4,7 @@
 #include "Model/IDs.h"
 
 #include <JSONHelpers.h>
-#include <algorithm>
 #include <juce_events/juce_events.h>
-#include <memory>
 #include <set>
 
 namespace AK::WwiseTransfer
@@ -436,6 +434,7 @@ namespace AK::WwiseTransfer
 					AkVariant{"name"},
 					AkVariant{"type"},
 					AkVariant{"path"},
+					AkVariant{"sound:originalWavFilePath"},
 					AkVariant{"workunitType"},
 				},
 			},
@@ -609,6 +608,7 @@ namespace AK::WwiseTransfer
 					AkVariant{"name"},
 					AkVariant{"type"},
 					AkVariant{"path"},
+					AkVariant{"sound:originalWavFilePath"},
 					AkVariant{"workunitType"},
 				},
 			},

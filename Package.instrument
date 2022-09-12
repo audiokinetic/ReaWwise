@@ -60,8 +60,6 @@
 		<fail message="Requires the 'BUILD_NUMBER' property to be set." if="${BUILD_NUMBER is None}" />
 		<fail message="Requires the 'WWISE_VERSION' property to be set." if="${WWISE_VERSION is None}" />
 		<fail message="Requires the 'VERSION' property to be set." if="${VERSION is None}" />
-		<fail message="Requires the 'MAC_NAS_PATH' property to be set." if="${MAC_NAS_PATH is None}" />
-		<fail message="Requires the 'WINDOWS_NAS_PATH' property to be set." if="${WINDOWS_NAS_PATH is None}" />
 
 		<property name="REAPER_WWISE_TRANSFER_VERSION" value="${WWISE_BUILD_NUMBER}.${BUILD_NUMBER}" />
 
@@ -83,8 +81,6 @@
 		<fail message="Requires the 'BUILD_NUMBER' property to be set." if="${BUILD_NUMBER is None}" />
 		<fail message="Requires the 'WWISE_VERSION' property to be set." if="${WWISE_VERSION is None}" />
 		<fail message="Requires the 'VERSION' property to be set." if="${VERSION is None}" />
-		<fail message="Requires the 'MAC_NAS_PATH' property to be set." if="${MAC_NAS_PATH is None}" />
-		<fail message="Requires the 'WINDOWS_NAS_PATH' property to be set." if="${WINDOWS_NAS_PATH is None}" />
 
 		<property name="REAPER_WWISE_TRANSFER_VERSION" value="${WWISE_BUILD_NUMBER}.${BUILD_NUMBER}" />
 		<property name="CONFIG" value="Release" />

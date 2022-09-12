@@ -50,10 +50,8 @@ namespace AK::WwiseTransfer
 				auto pathWithoutObjectTypes = WwiseHelper::pathToPathWithoutObjectTypes(importItem.path);
 				objectsInExtension.insert(pathWithoutObjectTypes);
 
-				for(auto ancestorPath : WwiseHelper::pathToAncestorPaths(pathWithoutObjectTypes))
-				{
+				for(const auto& ancestorPath : WwiseHelper::pathToAncestorPaths(pathWithoutObjectTypes))
 					objectsInExtension.insert(ancestorPath);
-				}
 			}
 
 			// Will be eventullay compared to the results of the import to figure out what was newly created
@@ -77,37 +75,84 @@ namespace AK::WwiseTransfer
 						// Ignore sounds that would be newly created. We need to get their paths from the import response because they may change.
 						if(options.containerNameExistsOption != Import::ContainerNameExistsOption::CreateNew || object.type != Wwise::ObjectType::Sound)
 						{
-							summary.objects[object.path].type = object.type;
-							summary.objects[object.path].newlyCreated = false;
+							auto& summaryObject = summary.objects[object.path];
+							summaryObject.type = object.type;
+							summaryObject.id = object.id;
 						}
 					}
-				};
+				}
 
-				if(options.undoGroupFeatureEnabled)
-					waapiClient.beginUndoGroup();
+				const ScopedUndoGroup scopedundogroup(waapiClient, options.undoGroupFeatureEnabled);
 
 				juce::String objectLanguage = ImportTaskContants::defaultObjectLanguage;
 				if(options.hierarchyMappingNodeList.back().type == Wwise::ObjectType::SoundVoice)
 					objectLanguage = options.hierarchyMappingNodeList.back().language;
 
+				// Check if wav files will be replaced. Only works if we have the originals folder.
+				// Basically checks to see if the audio file is already present in the originals folder.
+				std::set<juce::String> existingAudioFiles;
+
+				if(options.originalsFolder.isNotEmpty())
+				{
+					for(const auto& importItemRequest : importItemRequests)
+					{
+						// Build the final file path
+						auto pathInWwise = options.originalsFolder + options.languageSubfolder + juce::File::getSeparatorString() +
+						                   importItemRequest.originalsSubFolder + juce::File::getSeparatorString() +
+						                   juce::File(importItemRequest.renderFilePath).getFileName();
+
+						if(juce::File(pathInWwise).exists())
+							existingAudioFiles.emplace(pathInWwise);
+
+						for(const auto& existingObject : existingObjectsResponse.result)
+						{
+							if(existingObject.originalWavFilePath == pathInWwise)
+							{
+								auto& summaryObject = summary.objects[existingObject.path];
+								summaryObject.id = existingObject.id;
+								summaryObject.originalWavFilePath = pathInWwise;
+								summaryObject.wavStatus = Import::WavStatus::Replaced;
+								summaryObject.type = existingObject.type;
+							}
+						}
+					}
+				}
+
 				auto importResponse = waapiClient.import(importItemRequests, options.containerNameExistsOption, objectLanguage);
 
 				if(importResponse.status)
 				{
-					// Anything that is returned here was newly created
+					// Result will include newly created and existing (affected) objects
 					for(const auto& object : importResponse.result)
 					{
-						summary.objectsCreated++;
+						// Check against existing objects to see if object was truely newly created
+						auto it = summary.objects.find(object.path);
 
-						summary.objects[object.path].type = object.type;
-						summary.objects[object.path].newlyCreated = true;
-
-						// Audio file sources represent imported wav files
-						if(object.type == Wwise::ObjectType::AudioFileSource)
+						if(it == summary.objects.end())
 						{
-							summary.audioFilesImported++;
+							auto& summaryObject = summary.objects[object.path];
+							summaryObject.objectStatus = Import::ObjectStatus::New;
+							summaryObject.type = object.type;
+							summaryObject.originalWavFilePath = object.originalWavFilePath;
 
-							summary.objects[object.path].originalWavFilePath = object.originalWavFilePath;
+							if(object.originalWavFilePath.isNotEmpty())
+							{
+								// Some objects are associated with an originalWavFilePath that may have been replaced.
+								auto it = existingAudioFiles.find(object.originalWavFilePath);
+								if(it != existingAudioFiles.end())
+								{
+									summary.objects[object.path].wavStatus = Import::WavStatus::Replaced;
+								}
+								else
+								{
+									summary.objects[object.path].wavStatus = Import::WavStatus::New;
+								}
+							}
+						}
+						// If the object was found but the id is different, it was replaced
+						else if(it->second.id != object.id)
+						{
+							summary.objects[object.path].objectStatus = Import::ObjectStatus::Replaced;
 						}
 					}
 
@@ -143,16 +188,13 @@ namespace AK::WwiseTransfer
 
 								auto it = depthToTemplatePropertyPathMap.find(depth);
 
-								if(it != depthToTemplatePropertyPathMap.end() && (options.applyTemplateOption == Import::ApplyTemplateOption::Always || object.newlyCreated))
-								{
+								if(it != depthToTemplatePropertyPathMap.end() && (options.applyTemplateOption == Import::ApplyTemplateOption::Always || object.objectStatus == Import::ObjectStatus::New))
 									propertyTemplatePathToObjectMapping[it->second].emplace_back(objectPath);
-								}
 							}
 
 							for(const auto& [source, targets] : propertyTemplatePathToObjectMapping)
 							{
-								auto response = waapiClient.pasteProperties({source, targets});
-
+								const auto response = waapiClient.pasteProperties({source, targets});
 								if(!response.status)
 								{
 									summary.errorMessage << juce::NewLine() << response.errorMessage;
@@ -160,11 +202,7 @@ namespace AK::WwiseTransfer
 								else
 								{
 									for(const auto& target : targets)
-									{
-										summary.objectTemplatesApplied++;
-
 										summary.objects[target].propertyTemplatePath = source;
-									}
 								}
 							}
 						}
@@ -193,9 +231,6 @@ namespace AK::WwiseTransfer
 				summary.errorMessage << juce::NewLine() << existingObjectsResponse.errorMessage;
 			}
 
-			if(options.undoGroupFeatureEnabled)
-				waapiClient.endUndoGroup("Import and Apply Paste Properties");
-
 			auto onCallAsync = [this, summary = summary]
 			{
 				callback(summary);
@@ -205,6 +240,26 @@ namespace AK::WwiseTransfer
 		}
 
 	private:
+		struct ScopedUndoGroup final
+		{
+			WaapiClient& waapiClient;
+			bool enabled{false};
+
+			ScopedUndoGroup(WaapiClient& waapiClient, bool enable)
+				: waapiClient(waapiClient)
+				, enabled(enable)
+			{
+				if(enable)
+					waapiClient.beginUndoGroup();
+			}
+
+			~ScopedUndoGroup()
+			{
+				if(enabled)
+					waapiClient.endUndoGroup("Import and Apply Paste Properties");
+			}
+		};
+
 		WaapiClient& waapiClient;
 		Import::Task::Options options;
 		Callback callback;

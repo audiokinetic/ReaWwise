@@ -3,17 +3,20 @@
 	xmlns:tar="attrib://tar"
 	xmlns:zip="attrib://7z">
 
+	<!-- This file is located with the BuildTools in the Configs folder. -->
+	<import path="CommonConfigurations.distribute" />
+
 	<tasks>
-		<task name="ReaperWwiseTransfer.Mac" export-path="${MAC_NAS_PATH}/ReaperWwiseTransfer/${VERSION}/${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}/Artifacts" zip:archive-name="ReaperWwiseTransfer_MacOS_${CONFIG}">
+		<task name="ReaperWwiseTransfer.Mac" export-path="${BUILDS_LOCATION}/ReaperWwiseTransfer/${VERSION}/${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}/Artifacts" zip:archive-name="ReaperWwiseTransfer_MacOS_${CONFIG}">
 			<includegroup>Binary</includegroup>
 		</task>
-		<task name="ReaperWwiseTransfer.Windows" export-path="${WINDOWS_NAS_PATH}\ReaperWwiseTransfer\${VERSION}\${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}\Artifacts" zip:archive-name="ReaperWwiseTransfer_Windows_${CONFIG}">
+		<task name="ReaperWwiseTransfer.Windows" export-path="${BUILDS_LOCATION}\ReaperWwiseTransfer\${VERSION}\${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}\Artifacts" zip:archive-name="ReaperWwiseTransfer_Windows_${CONFIG}">
 			<includegroup>Binary</includegroup>
 		</task>
-		<task name="ReaperWwiseTransferBinaryBundles.Windows" export-path="${WINDOWS_NAS_PATH}\ReaperWwiseTransfer\${VERSION}\${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}\Bundles" zip:archive-name="ReaperWwiseTransfer_${VERSION}_Build${BUILD_NUMBER}_Windows">
+		<task name="ReaperWwiseTransferBinaryBundles.Windows" export-path="${BUILDS_LOCATION}\ReaperWwiseTransfer\${VERSION}\${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}\Bundles" zip:archive-name="ReaperWwiseTransfer_${VERSION}_Build${BUILD_NUMBER}_Windows">
 			<includegroup>BinaryBundlesWindows</includegroup>
 		</task>
-		<task name="ReaperWwiseTransferBinaryBundles.Mac" export-path="${MAC_NAS_PATH}/ReaperWwiseTransfer/${VERSION}/${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}/Bundles" zip:archive-name="ReaperWwiseTransfer_${VERSION}_Build${BUILD_NUMBER}_MacOS">
+		<task name="ReaperWwiseTransferBinaryBundles.Mac" export-path="${BUILDS_LOCATION}/ReaperWwiseTransfer/${VERSION}/${WWISE_VERSION}.${REAPER_WWISE_TRANSFER_VERSION}/Bundles" zip:archive-name="ReaperWwiseTransfer_${VERSION}_Build${BUILD_NUMBER}_MacOS">
 			<includegroup>BinaryBundlesMac</includegroup>
 		</task>
 	</tasks>

@@ -22,9 +22,7 @@ namespace AK::WwiseTransfer
 		ApplicationProperties& applicationProperties;
 
 		void showMenu();
-		void loadPresetWithFilePicker();
 		void loadPreset(const juce::File& filename);
-		void savePreset();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PresetMenuComponent)
 	};

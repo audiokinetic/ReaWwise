@@ -21,23 +21,22 @@ namespace AK::WwiseTransfer
 	};
 
 	DawWatcher::DawWatcher(juce::ValueTree appState, WaapiClient& waapiClient, DawContext& dawContext, int refreshInterval)
-		: juce::Thread("DawWatcher")
-		, applicationState(appState)
+		: applicationState(appState)
 		, hierarchyMapping(appState.getChildWithName(IDs::hierarchyMapping))
+		, previewItems(appState.getChildWithName(IDs::previewItems))
 		, importDestination(appState, IDs::importDestination, nullptr)
 		, originalsSubfolder(appState, IDs::originalsSubfolder, nullptr)
 		, containerNameExists(appState, IDs::containerNameExists, nullptr)
-		, wwiseObjectsChanged(appState, IDs::wwiseObjectsChanged, nullptr)
 		, previewLoading(appState, IDs::previewLoading, nullptr)
-		, dawContext(dawContext)
-		, waapiClient(waapiClient)
-		, previewItems(appState.getChildWithName(IDs::previewItems))
-		, refreshInterval(refreshInterval)
-		, lastImportItemsFromDawHash(0)
 		, sessionName(appState, IDs::sessionName, nullptr)
 		, projectPath(appState, IDs::projectPath, nullptr)
 		, originalsFolder(appState, IDs::originalsFolder, nullptr)
 		, languageSubfolder(appState, IDs::languageSubfolder, nullptr)
+		, dawContext(dawContext)
+		, waapiClient(waapiClient)
+		, lastImportItemsHash(0)
+		, refreshInterval(refreshInterval)
+		, previewOptionsChanged(false)
 	{
 		auto featureSupport = appState.getChildWithName(IDs::featureSupport);
 		waqlEnabled.referTo(featureSupport, IDs::waqlEnabled, nullptr);
@@ -52,194 +51,194 @@ namespace AK::WwiseTransfer
 
 	void DawWatcher::start()
 	{
-		startThread();
+		startTimer(refreshInterval);
 	}
 
 	void DawWatcher::stop()
 	{
-		stopThread(-1);
+		stopTimer();
 	}
 
-	void DawWatcher::run()
+	void DawWatcher::timerCallback()
 	{
-		while(!threadShouldExit())
+		sessionName = dawContext.getSessionName();
+
+		if(dawContext.sessionChanged())
 		{
-			updateSessionName();
+			triggerAsyncUpdate();
+		}
+	}
 
-			std::optional<Import::Options> importOptions;
-			std::optional<PreviewOptions> previewOptions;
+	void DawWatcher::handleAsyncUpdate()
+	{
+		const auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping));
+		const auto importItems = dawContext.getItemsForPreview({importDestination, originalsSubfolder, hierarchyMappingPath});
 
+		const auto importItemsHash = ImportHelper::importPreviewItemsToHash(importItems);
+
+		if(importItemsHash != lastImportItemsHash || previewOptionsChanged)
+		{
+			previewOptionsChanged = false;
+
+			std::set<juce::String> objectPaths;
+			std::unordered_map<juce::String, juce::ValueTree> pathToValueTreeMapping;
+
+			juce::ValueTree rootNode(IDs::previewItems);
+
+			// Build tree based on import items and their ancestors
+			for(const auto& importItem : importItems)
 			{
-				juce::MessageManager::Lock l;
+				auto currentNode = rootNode;
 
-				auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping));
-
-				importOptions = Import::Options(importDestination, originalsSubfolder, hierarchyMappingPath);
-				previewOptions = PreviewOptions{containerNameExists, projectPath, originalsFolder, waqlEnabled, languageSubfolder};
-			}
-
-			if(importOptions && previewOptions)
-			{
-				auto importItemsFromDaw = dawContext.getItemsForPreview(*importOptions);
-
-				auto currentImportItemsFromDawHash = ImportHelper::importPreviewItemsToHash(importItemsFromDaw);
-
-				if(lastImportItemsFromDawHash != currentImportItemsFromDawHash || previewOptionsChanged)
+				for(const auto& ancestorPath : WwiseHelper::pathToAncestorPaths(importItem.path))
 				{
-					setPreviewLoading(true);
-					previewOptionsChanged.store(false);
+					auto pathWithoutType = WwiseHelper::pathToPathWithoutObjectTypes(ancestorPath);
+					auto child = currentNode.getChildWithName(pathWithoutType);
 
-					lastImportItemsFromDawHash = currentImportItemsFromDawHash;
-
-					std::set<juce::String> objectPaths;
-					std::unordered_map<juce::String, juce::ValueTree> pathToValueTreeMapping;
-
-					juce::ValueTree rootNode(IDs::previewItems);
-
-					// Build tree based on import items and their ancestors
-					for(const auto& importItem : importItemsFromDaw)
+					if(!child.isValid())
 					{
-						auto currentNode = rootNode;
-
-						for(const auto& ancestorPath : WwiseHelper::pathToAncestorPaths(importItem.path))
-						{
-							auto pathWithoutType = WwiseHelper::pathToPathWithoutObjectTypes(ancestorPath);
-							auto child = currentNode.getChildWithName(pathWithoutType);
-
-							if(!child.isValid())
-							{
-								objectPaths.insert(pathWithoutType);
-
-								auto name = WwiseHelper::pathToObjectName(pathWithoutType);
-								auto type = WwiseHelper::pathToObjectType(ancestorPath);
-
-								child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, "", Import::WavStatus::Unknown});
-
-								currentNode.appendChild(child, nullptr);
-								pathToValueTreeMapping[pathWithoutType] = child;
-							}
-
-							currentNode = child;
-						}
-
-						auto pathWithoutType = WwiseHelper::pathToPathWithoutObjectTypes(importItem.path);
 						objectPaths.insert(pathWithoutType);
 
-						auto name = WwiseHelper::pathToObjectName(importItem.path);
-						auto type = WwiseHelper::pathToObjectType(importItem.path);
+						auto name = WwiseHelper::pathToObjectName(pathWithoutType);
+						auto type = WwiseHelper::pathToObjectType(ancestorPath);
 
-						auto originalsWav = previewOptions->languageSubfolder + juce::File::getSeparatorChar() +
-						                    (importItem.originalsSubFolder.isNotEmpty() ? importItem.originalsSubFolder + juce::File::getSeparatorChar() : "") +
-						                    juce::File(importItem.audioFilePath).getFileName();
-
-						auto wavStatus = Import::WavStatus::Unknown;
-
-						if(previewOptions->originalsFolder.isNotEmpty())
-						{
-							auto absoluteWavPath = juce::File(previewOptions->originalsFolder).getChildFile(originalsWav);
-
-							if(absoluteWavPath.exists())
-								wavStatus = Import::WavStatus::Replaced;
-							else
-								wavStatus = Import::WavStatus::New;
-						}
-
-						auto child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, originalsWav, wavStatus});
+						child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, "", Import::WavStatus::Unknown});
 
 						currentNode.appendChild(child, nullptr);
 						pathToValueTreeMapping[pathWithoutType] = child;
 					}
 
-					Waapi::Response<Waapi::ObjectResponseSet> response;
-
-					if(importOptions->importDestination.isNotEmpty())
-					{
-						if(previewOptions->waqlEnabled)
-							response = waapiClient.getObjectAncestorsAndDescendants(importOptions->importDestination);
-						else
-							response = waapiClient.getObjectAncestorsAndDescendantsLegacy(importOptions->importDestination);
-					}
-
-					if(response.status)
-					{
-						auto pathToValueTreeMappingLocal = pathToValueTreeMapping;
-
-						// Update original tree with information from existing objects
-						for(const auto& existingObject : response.result)
-						{
-							auto it = pathToValueTreeMappingLocal.find(existingObject.path);
-
-							if(it != pathToValueTreeMappingLocal.end())
-							{
-								auto previewItem = ImportHelper::valueTreeToPreviewItemNode(it->second);
-
-								if(existingObject.type != Wwise::ObjectType::Sound || previewOptions->containerNameExists == Import::ContainerNameExistsOption::UseExisting)
-									previewItem.objectStatus = Import::ObjectStatus::NoChange;
-								else if(previewOptions->containerNameExists == Import::ContainerNameExistsOption::Replace)
-									previewItem.objectStatus = Import::ObjectStatus::Replaced;
-								else if(previewOptions->containerNameExists == Import::ContainerNameExistsOption::CreateNew)
-									previewItem.objectStatus = Import::ObjectStatus::NewRenamed;
-
-								if(previewItem.type == Wwise::ObjectType::Unknown)
-								{
-									previewItem.type = existingObject.type;
-								}
-
-								it->second.copyPropertiesFrom(ImportHelper::previewItemNodeToValueTree(existingObject.path, previewItem), nullptr);
-							}
-						}
-					}
-
-					// Update preview tree. This will cause the preview to update itself if there is new content
-					auto onCallAsync = [this, rootNode = rootNode]
-					{
-						if(!previewItems.isEquivalentTo(rootNode))
-							previewItems.copyPropertiesAndChildrenFrom(rootNode, nullptr);
-					};
-
-					juce::MessageManager::callAsync(onCallAsync);
-
-					setPreviewLoading(false);
+					currentNode = child;
 				}
+
+				auto pathWithoutType = WwiseHelper::pathToPathWithoutObjectTypes(importItem.path);
+				objectPaths.insert(pathWithoutType);
+
+				auto name = WwiseHelper::pathToObjectName(importItem.path);
+				auto type = WwiseHelper::pathToObjectType(importItem.path);
+
+				auto originalsWav = languageSubfolder + juce::File::getSeparatorChar() +
+				                    (importItem.originalsSubFolder.isNotEmpty() ? importItem.originalsSubFolder + juce::File::getSeparatorChar() : "") +
+				                    juce::File(importItem.audioFilePath).getFileName();
+
+				auto wavStatus = Import::WavStatus::Unknown;
+
+				if(originalsFolder.get().isNotEmpty())
+				{
+					auto absoluteWavPath = juce::File(originalsFolder).getChildFile(originalsWav);
+
+					if(absoluteWavPath.exists())
+						wavStatus = Import::WavStatus::Replaced;
+					else
+						wavStatus = Import::WavStatus::New;
+				}
+
+				auto child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, originalsWav, wavStatus});
+
+				currentNode.appendChild(child, nullptr);
+				pathToValueTreeMapping[pathWithoutType] = child;
 			}
 
-			wait(refreshInterval);
+			auto onGetObjectAncestorsAndDescendants = [this, pathToValueTreeMapping, rootNode](const Waapi::Response<Waapi::ObjectResponseSet>& response)
+			{
+				if(response.status)
+				{
+					// Update original tree with information from existing objects
+					for(const auto& existingObject : response.result)
+					{
+						auto it = pathToValueTreeMapping.find(existingObject.path);
+
+						if(it != pathToValueTreeMapping.end())
+						{
+							auto previewItem = ImportHelper::valueTreeToPreviewItemNode(it->second);
+
+							if(existingObject.type != Wwise::ObjectType::Sound || containerNameExists == Import::ContainerNameExistsOption::UseExisting)
+								previewItem.objectStatus = Import::ObjectStatus::NoChange;
+							else if(containerNameExists == Import::ContainerNameExistsOption::Replace)
+								previewItem.objectStatus = Import::ObjectStatus::Replaced;
+							else if(containerNameExists == Import::ContainerNameExistsOption::CreateNew)
+								previewItem.objectStatus = Import::ObjectStatus::NewRenamed;
+
+							if(previewItem.type == Wwise::ObjectType::Unknown)
+							{
+								previewItem.type = existingObject.type;
+							}
+
+							juce::ValueTree localCopy = it->second;
+							localCopy.copyPropertiesFrom(ImportHelper::previewItemNodeToValueTree(existingObject.path, previewItem), nullptr);
+						}
+					}
+				}
+
+				if(!previewItems.isEquivalentTo(rootNode))
+					previewItems.copyPropertiesAndChildrenFrom(rootNode, nullptr);
+
+				previewLoading = false;
+			};
+
+			if(importDestination.get().isNotEmpty())
+			{
+				previewLoading = true;
+
+				if(waqlEnabled)
+					waapiClient.getObjectAncestorsAndDescendantsAsync(importDestination, onGetObjectAncestorsAndDescendants);
+				else
+					waapiClient.getObjectAncestorsAndDescendantsLegacyAsync(importDestination, onGetObjectAncestorsAndDescendants);
+			}
+			else
+			{
+				Waapi::Response<Waapi::ObjectResponseSet> emptyResponse;
+				onGetObjectAncestorsAndDescendants(emptyResponse);
+			}
 		}
-	}
-
-	void DawWatcher::setPreviewLoading(bool isPreviewLoading)
-	{
-		auto onCallAsync = [this, isPreviewLoading]
-		{
-			previewLoading = isPreviewLoading;
-		};
-
-		juce::MessageManager::callAsync(onCallAsync);
-	}
-
-	void DawWatcher::updateSessionName()
-	{
-		auto name = dawContext.getSessionName();
-
-		auto updateSessionName = [this, name = name]
-		{
-			sessionName = name;
-		};
-
-		juce::MessageManager::callAsync(updateSessionName);
 	}
 
 	void DawWatcher::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 	{
 		static std::initializer_list<juce::Identifier> properties{IDs::containerNameExists, IDs::projectPath, IDs::originalsFolder,
-			IDs::wwiseObjectsChanged, IDs::waqlEnabled, IDs::languageSubfolder};
+			IDs::wwiseObjectsChanged, IDs::waqlEnabled, IDs::languageSubfolder, IDs::originalsFolder, IDs::importDestination, IDs::originalsSubfolder};
 
-		if(treeWhosePropertyHasChanged == applicationState && std::find(properties.begin(), properties.end(), property) != properties.end())
+		if(treeWhosePropertyHasChanged == applicationState && std::find(properties.begin(), properties.end(), property) != properties.end() ||
+			treeWhosePropertyHasChanged.getType() == IDs::hierarchyMappingNode)
 		{
-			previewOptionsChanged.store(true);
+			// Used to notify the next update iteration that the preview may contain items that have changed that would not be reflected
+			// in the importItems hash. Perhaps we can include these items in the hash in the future.
+			previewOptionsChanged = true;
 
 			if(property == IDs::wwiseObjectsChanged)
-				wwiseObjectsChanged = false;
+				applicationState.setPropertyExcludingListener(this, IDs::wwiseObjectsChanged, false, nullptr);
+
+			triggerAsyncUpdate();
+		}
+	}
+
+	void DawWatcher::valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded)
+	{
+		juce::ignoreUnused(childWhichHasBeenAdded);
+
+		if(parentTree.getType() == IDs::hierarchyMapping)
+		{
+			triggerAsyncUpdate();
+		}
+	}
+
+	void DawWatcher::valueTreeChildRemoved(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved)
+	{
+		juce::ignoreUnused(childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
+
+		if(parentTree.getType() == IDs::hierarchyMapping)
+		{
+			triggerAsyncUpdate();
+		}
+	}
+
+	void DawWatcher::valueTreeChildOrderChanged(juce::ValueTree& parentTreeWhoseChildrenHaveMoved, int oldIndex, int newIndex)
+	{
+		juce::ignoreUnused(oldIndex, newIndex);
+
+		if(parentTreeWhoseChildrenHaveMoved.getType() == IDs::hierarchyMapping)
+		{
+			triggerAsyncUpdate();
 		}
 	}
 } // namespace AK::WwiseTransfer

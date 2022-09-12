@@ -73,21 +73,30 @@ namespace AK::WwiseTransfer
 
 		return recentHierarchyMappingPresets;
 	}
+
 	void ApplicationProperties::addRecentHierarchyMappingPreset(const juce::String& path)
 	{
 		using namespace ApplicationPropertyConstants;
 
 		auto recentHierarchyMappingPresets = getRecentHierarchyMappingPresets();
-
 		if(recentHierarchyMappingPresets.contains(path))
-		{
 			recentHierarchyMappingPresets.removeString(path);
-		}
 
 		recentHierarchyMappingPresets.insert(0, path);
 
-		auto recentHierarchyMappingPresetsAsString = recentHierarchyMappingPresets.joinIntoString(";", 0, 10);
+		const auto recentHierarchyMappingPresetsAsString = recentHierarchyMappingPresets.joinIntoString(";", 0, 10);
+		getUserSettings()->setValue(recentHierarchyMappingPresetsPropertyName, recentHierarchyMappingPresetsAsString);
+	}
 
+	void ApplicationProperties::removeRecentHierarchyMappingPreset(const juce::String& path)
+	{
+		using namespace ApplicationPropertyConstants;
+
+		auto recentHierarchyMappingPresets = getRecentHierarchyMappingPresets();
+		if (recentHierarchyMappingPresets.contains(path))
+			recentHierarchyMappingPresets.removeString(path);
+
+		const auto recentHierarchyMappingPresetsAsString = recentHierarchyMappingPresets.joinIntoString(";", 0, 10);
 		getUserSettings()->setValue(recentHierarchyMappingPresetsPropertyName, recentHierarchyMappingPresetsAsString);
 	}
 
