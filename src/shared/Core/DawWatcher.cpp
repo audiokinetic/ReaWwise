@@ -32,6 +32,7 @@ namespace AK::WwiseTransfer
 		, projectPath(appState, IDs::projectPath, nullptr)
 		, originalsFolder(appState, IDs::originalsFolder, nullptr)
 		, languageSubfolder(appState, IDs::languageSubfolder, nullptr)
+		, waapiConnected(appState, IDs::waapiConnected, nullptr)
 		, dawContext(dawContext)
 		, waapiClient(waapiClient)
 		, lastImportItemsHash(0)
@@ -176,7 +177,7 @@ namespace AK::WwiseTransfer
 				previewLoading = false;
 			};
 
-			if(importDestination.get().isNotEmpty())
+			if(waapiConnected.get() && importDestination.get().isNotEmpty())
 			{
 				previewLoading = true;
 
@@ -196,7 +197,7 @@ namespace AK::WwiseTransfer
 	void DawWatcher::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 	{
 		static std::initializer_list<juce::Identifier> properties{IDs::containerNameExists, IDs::projectPath, IDs::originalsFolder,
-			IDs::wwiseObjectsChanged, IDs::waqlEnabled, IDs::languageSubfolder, IDs::originalsFolder, IDs::importDestination, IDs::originalsSubfolder};
+			IDs::wwiseObjectsChanged, IDs::waqlEnabled, IDs::languageSubfolder, IDs::originalsFolder, IDs::importDestination, IDs::originalsSubfolder, IDs::waapiConnected};
 
 		if(treeWhosePropertyHasChanged == applicationState && std::find(properties.begin(), properties.end(), property) != properties.end() ||
 			treeWhosePropertyHasChanged.getType() == IDs::hierarchyMappingNode)

@@ -70,7 +70,7 @@ namespace AK::WwiseTransfer::WwiseHelper
 		switch(objectType)
 		{
 		case ObjectType::ActorMixer:
-			return "Actor Mixer";
+			return "Actor-Mixer";
 		case ObjectType::AudioFileSource:
 			return "Audio File Source";
 		case ObjectType::BlendContainer:
@@ -104,7 +104,7 @@ namespace AK::WwiseTransfer::WwiseHelper
 
 		if(objectTypeAsString == "AudioFileSource" || objectTypeAsString == "Audio File Source")
 			return ObjectType::AudioFileSource;
-		else if(objectTypeAsString == "ActorMixer" || objectTypeAsString == "Actor Mixer")
+		else if(objectTypeAsString == "ActorMixer" || objectTypeAsString == "Actor Mixer" || objectTypeAsString == "Actor-Mixer")
 			return ObjectType::ActorMixer;
 		else if(objectTypeAsString == "BlendContainer" || objectTypeAsString == "Blend Container")
 			return ObjectType::BlendContainer;

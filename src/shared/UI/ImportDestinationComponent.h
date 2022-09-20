@@ -36,6 +36,9 @@ namespace AK::WwiseTransfer
 		void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
 		void handleAsyncUpdate() override;
 
+		juce::DrawableComposite objectTypeIconComposite;
+		std::unique_ptr<juce::Drawable> objectTypeIcon;
+
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImportDestinationComponent);
 	};
 } // namespace AK::WwiseTransfer

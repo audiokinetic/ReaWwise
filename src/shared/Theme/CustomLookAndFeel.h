@@ -20,10 +20,12 @@ namespace AK::WwiseTransfer
 	public:
 		CustomLookAndFeel();
 
-		const std::shared_ptr<juce::Drawable>& getIconForObjectType(Wwise::ObjectType objectType);
+		std::unique_ptr<juce::Drawable> getIconForObjectType(Wwise::ObjectType objectType);
 		juce::Colour getTextColourForObjectStatus(Import::ObjectStatus objectStatus);
 
 		void drawTextEditorOutline(juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override;
+
+		void fillTextEditorBackground(juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override;
 
 		void drawTableHeaderColumn(juce::Graphics& g, juce::TableHeaderComponent& header,
 			const juce::String& columnName, int /*columnId*/,
@@ -34,6 +36,9 @@ namespace AK::WwiseTransfer
 			const juce::Justification&, juce::GroupComponent&) override;
 
 		void drawTooltip(juce::Graphics&, const juce::String& text, int w, int h) override;
+
+		void drawComboBox(juce::Graphics& g, int width, int height, bool isButtonDown, int buttonX,
+			int buttonY, int buttonW, int buttonH, juce::ComboBox& box) override;
 
 		juce::Typeface::Ptr getTypefaceForFont(const juce::Font&) override;
 
@@ -58,6 +63,7 @@ namespace AK::WwiseTransfer
 		juce::Colour highlightedFillColor;
 		juce::Colour buttonBackgroundColor;
 		juce::Colour thinOutlineColor;
+		juce::Colour focusedOutlineColor;
 		juce::Colour tableHeaderBackgroundColor;
 		juce::Colour previewItemNoChangeColor;
 		juce::Colour previewItemNewColor;

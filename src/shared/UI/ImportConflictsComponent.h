@@ -19,11 +19,9 @@ namespace AK::WwiseTransfer
 
 	private:
 		juce::Label containerNameExistsLabel;
-		juce::Label audioFileNameExistsLabel;
 		juce::Label applyTemplateLabel;
 
 		juce::ComboBox containerNameExistsComboBox;
-		juce::ComboBox audioFileNameExistsComboBox;
 		juce::ComboBox applyTemplateComboBox;
 
 		juce::ValueTree applicationState;
@@ -35,10 +33,10 @@ namespace AK::WwiseTransfer
 
 		juce::CachedValue<juce::String> selectObjectsOnImportCommand;
 
-		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImportConflictsComponent);
-
 		void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
 		void handleAsyncUpdate() override;
 		void refreshComponent();
+
+		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImportConflictsComponent);
 	};
 } // namespace AK::WwiseTransfer

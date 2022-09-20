@@ -83,10 +83,10 @@ namespace AK::WwiseTransfer
 		void valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded);
 		void valueTreeChildRemoved(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved);
 
-		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImportPreviewComponent)
-
 		// Inherited via AsyncUpdater
 		void handleAsyncUpdate() override;
 		void refreshHeader();
+
+		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImportPreviewComponent)
 	};
 } // namespace AK::WwiseTransfer

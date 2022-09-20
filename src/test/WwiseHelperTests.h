@@ -8,8 +8,8 @@
 
 namespace AK::WwiseTransfer::Test
 {
-	std::unordered_map <Wwise::ObjectType, juce::String> objectTypeStringMap{
-		{Wwise::ObjectType::ActorMixer, "Actor Mixer"},
+	std::unordered_map<Wwise::ObjectType, juce::String> objectTypeStringMap{
+		{Wwise::ObjectType::ActorMixer, "Actor-Mixer"},
 		{Wwise::ObjectType::AudioFileSource, "Audio File Source"},
 		{Wwise::ObjectType::BlendContainer, "Blend Container"},
 		{Wwise::ObjectType::PhysicalFolder, "Physical Folder"},
@@ -21,10 +21,9 @@ namespace AK::WwiseTransfer::Test
 		{Wwise::ObjectType::VirtualFolder, "Virtual Folder"},
 		{Wwise::ObjectType::WorkUnit, "Work Unit"},
 		{Wwise::ObjectType::Sound, "Sound"},
-		{Wwise::ObjectType::Unknown, "Unknown"}
-	};
+		{Wwise::ObjectType::Unknown, "Unknown"}};
 
-	std::vector <Wwise::ObjectType> objectTypes{
+	std::vector<Wwise::ObjectType> objectTypes{
 		Wwise::ObjectType::ActorMixer,
 		Wwise::ObjectType::AudioFileSource,
 		Wwise::ObjectType::BlendContainer,
@@ -37,6 +36,5 @@ namespace AK::WwiseTransfer::Test
 		Wwise::ObjectType::VirtualFolder,
 		Wwise::ObjectType::WorkUnit,
 		Wwise::ObjectType::Sound,
-		Wwise::ObjectType::Unknown
-	};
-} // namespace AK::WwiseTransfer:Test
+		Wwise::ObjectType::Unknown};
+} // namespace AK::WwiseTransfer::Test

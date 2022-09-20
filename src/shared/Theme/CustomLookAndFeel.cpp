@@ -14,6 +14,7 @@ namespace AK::WwiseTransfer
 		, highlightedFillColor{0xff646464}
 		, buttonBackgroundColor{0xff5a5a5a}
 		, thinOutlineColor{0xff292929}
+		, focusedOutlineColor{0xffbc9770}
 		, tableHeaderBackgroundColor{0xff545454}
 		, previewItemNoChangeColor{0xff7d7d7d}
 		, previewItemNewColor{0xff29afff}
@@ -35,6 +36,8 @@ namespace AK::WwiseTransfer
 
 		setColour(juce::TextButton::buttonColourId, buttonBackgroundColor);
 		setColour(juce::TextEditor::outlineColourId, thinOutlineColor);
+		setColour(juce::TextEditor::focusedOutlineColourId, focusedOutlineColor);
+		setColour(juce::ComboBox::focusedOutlineColourId, focusedOutlineColor);
 		setColour(juce::ComboBox::outlineColourId, thinOutlineColor);
 		setColour(juce::TreeView::backgroundColourId, widgetBackgroundColor);
 		setColour(juce::TableHeaderComponent::backgroundColourId, tableHeaderBackgroundColor);
@@ -45,7 +48,7 @@ namespace AK::WwiseTransfer
 		setColour(juce::TooltipWindow::backgroundColourId, widgetBackgroundColor);
 	}
 
-	const std::shared_ptr<juce::Drawable>& CustomLookAndFeel::getIconForObjectType(Wwise::ObjectType objectType)
+	std::unique_ptr<juce::Drawable> CustomLookAndFeel::getIconForObjectType(Wwise::ObjectType objectType)
 	{
 		using namespace Wwise;
 
@@ -53,63 +56,51 @@ namespace AK::WwiseTransfer
 		{
 		case ObjectType::ActorMixer:
 		{
-			static std::shared_ptr<juce::Drawable> actorMixerIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_PhysicalFolder_nor_svg, BinaryData::ObjectIcons_PhysicalFolder_nor_svgSize));
-			return actorMixerIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_PhysicalFolder_nor_svg, BinaryData::ObjectIcons_PhysicalFolder_nor_svgSize);
 		}
 		case ObjectType::AudioFileSource:
 		{
-			static std::shared_ptr<juce::Drawable> actorMixerIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_AudioObjectSound_nor_svg, BinaryData::ObjectIcons_AudioObjectSound_nor_svgSize));
-			return actorMixerIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_AudioObjectSound_nor_svg, BinaryData::ObjectIcons_AudioObjectSound_nor_svgSize);
 		}
 		case ObjectType::BlendContainer:
 		{
-			static std::shared_ptr<juce::Drawable> blendContainerIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_BlendContainer_nor_svg, BinaryData::ObjectIcons_BlendContainer_nor_svgSize));
-			return blendContainerIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_BlendContainer_nor_svg, BinaryData::ObjectIcons_BlendContainer_nor_svgSize);
 		}
 		case ObjectType::PhysicalFolder:
 		{
-			static std::shared_ptr<juce::Drawable> physicalFolderIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_PhysicalFolder_nor_svg, BinaryData::ObjectIcons_PhysicalFolder_nor_svgSize));
-			return physicalFolderIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_PhysicalFolder_nor_svg, BinaryData::ObjectIcons_PhysicalFolder_nor_svgSize);
 		}
 		case ObjectType::RandomContainer:
 		{
-			static std::shared_ptr<juce::Drawable> randomContainerIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_RandomContainer_nor_svg, BinaryData::ObjectIcons_RandomContainer_nor_svgSize));
-			return randomContainerIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_RandomContainer_nor_svg, BinaryData::ObjectIcons_RandomContainer_nor_svgSize);
 		}
 		case ObjectType::SequenceContainer:
 		{
-			static std::shared_ptr<juce::Drawable> sequenceContainerIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_SequenceContainer_nor_svg, BinaryData::ObjectIcons_SequenceContainer_nor_svgSize));
-			return sequenceContainerIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_SequenceContainer_nor_svg, BinaryData::ObjectIcons_SequenceContainer_nor_svgSize);
 		}
 		case ObjectType::SoundSFX:
 		{
-			static std::shared_ptr<juce::Drawable> soundSFXIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_SoundFX_nor_svg, BinaryData::ObjectIcons_SoundFX_nor_svgSize));
-			return soundSFXIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_SoundFX_nor_svg, BinaryData::ObjectIcons_SoundFX_nor_svgSize);
 		}
 		case ObjectType::SoundVoice:
 		{
-			static std::shared_ptr<juce::Drawable> soundVoiceIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_SoundVoice_nor_svg, BinaryData::ObjectIcons_SoundVoice_nor_svgSize));
-			return soundVoiceIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_SoundVoice_nor_svg, BinaryData::ObjectIcons_SoundVoice_nor_svgSize);
 		}
 		case ObjectType::SwitchContainer:
 		{
-			static std::shared_ptr<juce::Drawable> switchContainerIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_SwitchContainer_nor_svg, BinaryData::ObjectIcons_SwitchContainer_nor_svgSize));
-			return switchContainerIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_SwitchContainer_nor_svg, BinaryData::ObjectIcons_SwitchContainer_nor_svgSize);
 		}
 		case ObjectType::VirtualFolder:
 		{
-			static std::shared_ptr<juce::Drawable> virtualFolderIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_Folder_nor_svg, BinaryData::ObjectIcons_Folder_nor_svgSize));
-			return virtualFolderIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_Folder_nor_svg, BinaryData::ObjectIcons_Folder_nor_svgSize);
 		}
 		case ObjectType::WorkUnit:
 		{
-			static std::shared_ptr<juce::Drawable> workUnitIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_Workunit_nor_svg, BinaryData::ObjectIcons_Workunit_nor_svgSize));
-			return workUnitIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_Workunit_nor_svg, BinaryData::ObjectIcons_Workunit_nor_svgSize);
 		}
 		default:
 		{
-			static std::shared_ptr<juce::Drawable> defaultIcon(juce::Drawable::createFromImageData(BinaryData::ObjectIcons_Folder_nor_svg, BinaryData::ObjectIcons_Folder_nor_svgSize));
-			return defaultIcon;
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_Folder_nor_svg, BinaryData::ObjectIcons_Folder_nor_svgSize);
 		}
 		}
 	}
@@ -218,26 +209,25 @@ namespace AK::WwiseTransfer
 			juce::Justification::centred, true);
 	}
 
-	juce::Typeface::Ptr CustomLookAndFeel::getTypefaceForFont(const juce::Font& font)
-	{
-		if(font.isBold())
-			return boldTypeFace;
-
-		return regularTypeFace;
-	}
-
 	void CustomLookAndFeel::drawTextEditorOutline(juce::Graphics& g, int width, int height, juce::TextEditor& textEditor)
 	{
-		if(dynamic_cast<juce::AlertWindow*>(textEditor.getParentComponent()) != nullptr || !textEditor.isEnabled() || textEditor.isReadOnly())
+		if(dynamic_cast<juce::AlertWindow*>(textEditor.getParentComponent()) != nullptr)
 			return;
 
 		const auto hasKeyboardFocus = textEditor.hasKeyboardFocus(true);
 
 		auto colour = textEditor.findColour(hasKeyboardFocus ? juce::TextEditor::focusedOutlineColourId : juce::TextEditor::outlineColourId);
-		auto lineThickness = hasKeyboardFocus ? 2 : 1;
+		auto lineThickness = 1;
 
 		g.setColour(colour);
 		g.drawRect(0, 0, width, height, lineThickness);
+	}
+
+	void CustomLookAndFeel::fillTextEditorBackground(juce::Graphics& g, int width, int height, juce::TextEditor& textEditor)
+	{
+		auto backgroundColor = textEditor.isReadOnly() ? windowBackgroundColor : textEditor.findColour(juce::TextEditor::backgroundColourId);
+
+		g.fillAll(backgroundColor);
 	}
 
 	void CustomLookAndFeel::drawTooltip(juce::Graphics& g, const juce::String& text, int width, int height)
@@ -261,6 +251,42 @@ namespace AK::WwiseTransfer
 		tl.createLayoutWithBalancedLineLengths(s, (float)maxToolTipWidth);
 
 		tl.draw(g, {static_cast<float>(width), static_cast<float>(height)});
+	}
+
+	void CustomLookAndFeel::drawComboBox(juce::Graphics& g, int width, int height, bool isButtonDown,
+		int buttonX, int buttonY, int buttonW, int buttonH, juce::ComboBox& box)
+	{
+		// Copied from juce_LookAndFeel_V4.cpp and added support for outlining the component when in focus
+
+		auto cornerSize = box.findParentComponentOfClass<juce::ChoicePropertyComponent>() != nullptr ? 0.0f : 3.0f;
+		juce::Rectangle<int> boxBounds(0, 0, width, height);
+
+		g.setColour(box.findColour(juce::ComboBox::backgroundColourId));
+		g.fillRoundedRectangle(boxBounds.toFloat(), cornerSize);
+
+		if(box.isEnabled() && box.hasKeyboardFocus(false))
+			g.setColour(box.findColour(juce::ComboBox::focusedOutlineColourId));
+		else
+			g.setColour(box.findColour(juce::ComboBox::outlineColourId));
+
+		g.drawRoundedRectangle(boxBounds.toFloat().reduced(0.5f, 0.5f), cornerSize, 1.0f);
+
+		juce::Rectangle<int> arrowZone(width - 30, 0, 20, height);
+		juce::Path path;
+		path.startNewSubPath((float)arrowZone.getX() + 3.0f, (float)arrowZone.getCentreY() - 2.0f);
+		path.lineTo((float)arrowZone.getCentreX(), (float)arrowZone.getCentreY() + 3.0f);
+		path.lineTo((float)arrowZone.getRight() - 3.0f, (float)arrowZone.getCentreY() - 2.0f);
+
+		g.setColour(box.findColour(juce::ComboBox::arrowColourId).withAlpha((box.isEnabled() ? 0.9f : 0.2f)));
+		g.strokePath(path, juce::PathStrokeType(2.0f));
+	}
+
+	juce::Typeface::Ptr CustomLookAndFeel::getTypefaceForFont(const juce::Font& font)
+	{
+		if(font.isBold())
+			return boldTypeFace;
+
+		return regularTypeFace;
 	}
 
 	juce::Font CustomLookAndFeel::getLabelFont(juce::Label& label)

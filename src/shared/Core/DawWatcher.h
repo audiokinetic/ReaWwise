@@ -33,6 +33,7 @@ namespace AK::WwiseTransfer
 		juce::CachedValue<juce::String> projectPath;
 		juce::CachedValue<juce::String> originalsFolder;
 		juce::CachedValue<juce::String> languageSubfolder;
+		juce::CachedValue<bool> waapiConnected;
 
 		DawContext& dawContext;
 		WaapiClient& waapiClient;

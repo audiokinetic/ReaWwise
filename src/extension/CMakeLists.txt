@@ -15,11 +15,13 @@ if(WIN32)
 else()
     file(GLOB_RECURSE EXTENSION_SOURCES
         "${PROJECT_SOURCE_DIR}/*.h"
-        "${PROJECT_SOURCE_DIR}/*.cpp"
-        "${PROJECT_SOURCE_DIR}/*.mm")
+        "${PROJECT_SOURCE_DIR}/*.cpp")
 endif()
 
 add_library(${PROJECT_NAME} SHARED)
+add_library(${PROJECT_NAME}_Static STATIC)
+
+set(PROJECT_LIST ${PROJECT_NAME} ${PROJECT_NAME}_Static)
 
 if(NOT DEFINED ENV{BUILD_NUMBER})
     if(APPLE)
@@ -42,19 +44,46 @@ if(NOT DEFINED ENV{BUILD_NUMBER})
     endif()
 endif()
 
-
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME reaper_reawwise)
 
-target_sources(${PROJECT_NAME} PRIVATE ${EXTENSION_SOURCES})
+foreach(PROJ ${PROJECT_LIST})
+    target_sources(${PROJ} PRIVATE ${EXTENSION_SOURCES})
+
+    target_include_directories(${PROJ}
+        PUBLIC
+            ${PROJECT_SOURCE_DIR}/
+    )
+
+    target_link_libraries(${PROJ}
+        PRIVATE
+            WwiseTransfer_Shared
+            Reaper
+    )
+
+    target_compile_definitions(${PROJ}
+        PRIVATE
+            REAPERAPI_MINIMAL
+            REAPERAPI_WANT_GetMainHwnd
+            REAPERAPI_WANT_AddExtensionsMainMenu
+            REAPERAPI_WANT_EnumProjects
+            REAPERAPI_WANT_GetSetProjectInfo_String
+            REAPERAPI_WANT_ResolveRenderPattern
+            REAPERAPI_WANT_Main_OnCommand
+            REAPERAPI_WANT_GetProjExtState
+            REAPERAPI_WANT_SetProjExtState
+            REAPERAPI_WANT_MarkProjectDirty
+            REAPERAPI_WANT_realloc_cmd_register_buf
+            REAPERAPI_WANT_realloc_cmd_clear
+            REAPERAPI_WANT_GetProjectStateChangeCount
+            REAPERAPI_WANT_GetSetProjectInfo
+            JUCE_APPLICATION_NAME_STRING="${PROJECT_NAME}"
+            JUCE_STANDALONE_APPLICATION=0
+            JUCE_REMOVE_COMPONENT_FROM_DESKTOP_ON_WM_DESTROY=1
+    )
+endforeach()
 
 find_package(Reaper REQUIRED)
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        WwiseTransfer_Shared
-        Reaper
-)
 
 if(APPLE)
     if(DEFINED ENV{CODE_SIGN_IDENTITY_ID} AND DEFINED ENV{DEVELOPMENT_TEAM_ID})
@@ -64,31 +93,10 @@ if(APPLE)
 
     find_package(Swell REQUIRED)
 
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-            Swell
-    )
+    foreach(PROJ ${PROJECT_LIST})
+        target_link_libraries(${PROJ} PRIVATE Swell)
+    endforeach()
 endif()
-
-target_compile_definitions(${PROJECT_NAME}
-    PRIVATE
-        REAPERAPI_MINIMAL
-        REAPERAPI_WANT_GetMainHwnd
-        REAPERAPI_WANT_AddExtensionsMainMenu
-        REAPERAPI_WANT_EnumProjects
-        REAPERAPI_WANT_GetSetProjectInfo_String
-        REAPERAPI_WANT_ResolveRenderPattern
-        REAPERAPI_WANT_Main_OnCommand
-        REAPERAPI_WANT_GetProjExtState
-        REAPERAPI_WANT_SetProjExtState
-        REAPERAPI_WANT_MarkProjectDirty
-        REAPERAPI_WANT_realloc_cmd_register_buf
-        REAPERAPI_WANT_realloc_cmd_clear
-        REAPERAPI_WANT_GetProjectStateChangeCount
-        REAPERAPI_WANT_GetSetProjectInfo
-        JUCE_APPLICATION_NAME_STRING="${PROJECT_NAME}"
-        JUCE_STANDALONE_APPLICATION=0
-)
 
 source_group(TREE ${PROJECT_SOURCE_DIR} PREFIX "Source Files" FILES ${EXTENSION_SOURCES})
 

@@ -4,31 +4,32 @@
 
 namespace AK::WwiseTransfer
 {
-	const juce::String ReaperWwiseTransferStandalone::getApplicationName()
+	const juce::String Standalone::getApplicationName()
 	{
 		return JUCE_APPLICATION_NAME_STRING;
 	}
 
-	const juce::String ReaperWwiseTransferStandalone::getApplicationVersion()
+	const juce::String Standalone::getApplicationVersion()
 	{
 		return JUCE_APPLICATION_VERSION_STRING;
 	}
 
-	bool ReaperWwiseTransferStandalone::moreThanOneInstanceAllowed()
+	bool Standalone::moreThanOneInstanceAllowed()
 	{
 		return false;
 	}
 
-	void ReaperWwiseTransferStandalone::initialise(const juce::String& commandLine)
+	void Standalone::initialise(const juce::String& commandLine)
 	{
 		juce::ignoreUnused(commandLine);
 		mainWindow.reset(new StandaloneWindow());
+		mainWindow->setVisible(true);
 	}
 
-	void ReaperWwiseTransferStandalone::shutdown()
+	void Standalone::shutdown()
 	{
 		mainWindow.reset();
 	}
 
-	START_JUCE_APPLICATION(ReaperWwiseTransferStandalone)
+	START_JUCE_APPLICATION(Standalone)
 } // namespace AK::WwiseTransfer

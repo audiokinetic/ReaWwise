@@ -13,6 +13,7 @@ namespace AK::WwiseTransfer
 		constexpr int editorBoxHeight = 26;
 		constexpr int labelWidth = 120;
 		constexpr int syncButtonWidth = 36;
+		constexpr int iconSize = 16;
 	} // namespace ImportDestinationComponentConstants
 
 	ImportDestinationComponent::ImportDestinationComponent(juce::ValueTree appState, WaapiClient& waapiClient)
@@ -45,6 +46,7 @@ namespace AK::WwiseTransfer
 		addAndMakeVisible(importDestinationLabel);
 		addAndMakeVisible(importDestinationEditor);
 		addAndMakeVisible(updateImportDestinationButton);
+		addAndMakeVisible(objectTypeIconComposite);
 
 		refreshComponent();
 	}
@@ -60,15 +62,19 @@ namespace AK::WwiseTransfer
 
 		auto area = getLocalBounds();
 
-		auto ImportDestinationSection = area.removeFromTop(editorBoxHeight);
+		auto importDestinationSection = area.removeFromTop(editorBoxHeight);
 		{
-			importDestinationLabel.setBounds(ImportDestinationSection.removeFromLeft(labelWidth));
-			ImportDestinationSection.removeFromLeft(margin);
+			importDestinationLabel.setBounds(importDestinationSection.removeFromLeft(labelWidth));
+			importDestinationSection.removeFromLeft(margin);
 
-			updateImportDestinationButton.setBounds(ImportDestinationSection.removeFromRight(syncButtonWidth));
-			ImportDestinationSection.removeFromRight(spacing);
+			updateImportDestinationButton.setBounds(importDestinationSection.removeFromRight(syncButtonWidth));
+			importDestinationSection.removeFromRight(spacing);
 
-			importDestinationEditor.setBounds(ImportDestinationSection);
+			objectTypeIconComposite.setBounds(importDestinationSection.removeFromRight(iconSize).withSizeKeepingCentre(iconSize, iconSize));
+
+			importDestinationSection.removeFromRight(spacing);
+
+			importDestinationEditor.setBounds(importDestinationSection);
 		}
 	}
 
@@ -77,6 +83,16 @@ namespace AK::WwiseTransfer
 		auto projectPathEmpty = projectPath.get().isEmpty();
 
 		updateImportDestinationButton.setEnabled(!projectPathEmpty);
+
+		auto* customLookAndFeel = dynamic_cast<CustomLookAndFeel*>(&getLookAndFeel());
+
+		if(customLookAndFeel)
+		{
+			// Reset the icon and add it as a child of the composite. The composite will refresh the icon automatically
+			objectTypeIconComposite.removeAllChildren();
+			objectTypeIcon = customLookAndFeel->getIconForObjectType(importDestinationType);
+			objectTypeIconComposite.addAndMakeVisible(objectTypeIcon.get());
+		}
 	}
 
 	void ImportDestinationComponent::updateImportDestination()
@@ -87,7 +103,6 @@ namespace AK::WwiseTransfer
 				return juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Import Destination", "No object is selected in Wwise. Please select one and try again.");
 
 			importDestination = response.result.path;
-			importDestinationType = response.result.type;
 		};
 
 		waapiClient.getSelectedObjectAsync(onGetSelectedObject);

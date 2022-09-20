@@ -32,6 +32,7 @@ namespace AK::WwiseTransfer
 		, containerNameExistsOption(applicationState, IDs::containerNameExists, nullptr)
 		, applyTemplateOption(applicationState, IDs::applyTemplate, nullptr)
 		, hierarchyMapping(applicationState.getChildWithName(IDs::hierarchyMapping))
+		, previewItems(applicationState.getChildWithName(IDs::previewItems))
 		, waapiClient(waapiClient)
 		, dawContext(dawContext)
 		, applicationProperties(applicationProperties)
@@ -49,7 +50,7 @@ namespace AK::WwiseTransfer
 
 		importButton.onClick = [this]
 		{
-			onImportButtonClick();
+			transferToWwise();
 		};
 
 		addAndMakeVisible(importButton);
@@ -90,8 +91,11 @@ namespace AK::WwiseTransfer
 		}
 	} // namespace
 
-	void ImportControlsComponent::onImportButtonClick()
+	void ImportControlsComponent::transferToWwise()
 	{
+		if(!importButton.isEnabled())
+			return;
+
 		using namespace ImportControlsComponentConstants;
 
 		// Disable the import button while rendering
@@ -115,7 +119,7 @@ namespace AK::WwiseTransfer
 		{
 			const juce::String message("One or more files failed to render.");
 			juce::Logger::writeToLog(message);
-			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Import Aborted", message);
+			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Transfer to Wwise Aborted", message);
 			importButton.setEnabled(true);
 			return;
 		}
@@ -134,7 +138,7 @@ namespace AK::WwiseTransfer
 					break;
 				}
 
-				if(importItem.audioFilePath != importItem.renderFilePath)
+				if(juce::File(importItem.audioFilePath) != juce::File(importItem.renderFilePath))
 				{
 					showRenameWarning = true;
 					break;
@@ -152,7 +156,7 @@ namespace AK::WwiseTransfer
 		{
 			const juce::String message("One or more files failed to render.");
 			juce::Logger::writeToLog(message);
-			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Import Aborted", message);
+			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Transfer to Wwise Aborted", message);
 			importButton.setEnabled(true);
 			return;
 		}
@@ -236,7 +240,7 @@ namespace AK::WwiseTransfer
 			message << juce::NewLine() << summary.errorMessage;
 
 		auto messageBoxOptions = juce::MessageBoxOptions()
-		                             .withTitle("Import Summary")
+		                             .withTitle("Wwise Import Summary")
 		                             .withMessage(message)
 		                             .withButton("View Details")
 		                             .withButton("Close");
@@ -257,7 +261,7 @@ namespace AK::WwiseTransfer
 		auto currentTime = juce::Time::getCurrentTime();
 
 		auto importSummaryFile = juce::File::getSpecialLocation(juce::File::tempDirectory)
-		                             .getChildFile(applicationName + "_ImportSummary_" + currentTime.formatted("%Y-%m-%d_%H-%M-%S"))
+		                             .getChildFile(applicationName + "_WwiseImportSummary_" + currentTime.formatted("%Y-%m-%d_%H-%M-%S"))
 		                             .withFileExtension(".html");
 
 		importSummaryFile.create();
@@ -265,7 +269,7 @@ namespace AK::WwiseTransfer
 		importSummaryFile.appendText("<style>table td, th { border:1px solid black; padding:10px; }");
 		importSummaryFile.appendText("table { border-collapse:collapse; }");
 		importSummaryFile.appendText("table th { text-align: left; }</style>");
-		importSummaryFile.appendText("<pre>" + applicationName + ": Import Summary " + currentTime.formatted("%Y-%m-%d %H:%M:%S") + "\n\n");
+		importSummaryFile.appendText("<pre>" + applicationName + ": Wwise Import Summary " + currentTime.formatted("%Y-%m-%d %H:%M:%S") + "\n\n");
 		importSummaryFile.appendText("Import Destination: " + importTaskOptions.importDestination + "\n");
 		importSummaryFile.appendText("Container Name Exists: " + ImportHelper::containerNameExistsOptionToReadableString(importTaskOptions.containerNameExistsOption) + "\n");
 		importSummaryFile.appendText("Apply Template: " + ImportHelper::applyTemplateOptionToReadableString(importTaskOptions.applyTemplateOption) + "\n\n");
@@ -291,7 +295,7 @@ namespace AK::WwiseTransfer
 
 	void ImportControlsComponent::refreshComponent()
 	{
-		auto importButtonEnabled = originalsSubfolderValid.get() && importDestinationValid.get() && projectPath.get().isNotEmpty();
+		auto importButtonEnabled = originalsSubfolderValid.get() && importDestinationValid.get() && projectPath.get().isNotEmpty() && previewItems.getNumChildren() > 0;
 
 		auto hieararchyMappingNodes = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
 
@@ -307,10 +311,12 @@ namespace AK::WwiseTransfer
 
 		importButton.setEnabled(importButtonEnabled);
 
-		juce::String tooltip = "";
+		juce::String tooltip;
 
 		if(projectPath.get().isEmpty())
 			tooltip = "Connect to Wwise to continue";
+		else if(previewItems.getNumChildren() == 0)
+			tooltip = "Nothing to transfer";
 		else if(!importButtonEnabled)
 			tooltip = "Fix pending errors to continue";
 
@@ -328,7 +334,7 @@ namespace AK::WwiseTransfer
 
 	void ImportControlsComponent::valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded)
 	{
-		if(parentTree.getType() == IDs::hierarchyMapping)
+		if(parentTree.getType() == IDs::hierarchyMapping || parentTree.getType() == IDs::previewItems)
 		{
 			triggerAsyncUpdate();
 		}
@@ -336,7 +342,7 @@ namespace AK::WwiseTransfer
 
 	void ImportControlsComponent::valueTreeChildRemoved(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved)
 	{
-		if(parentTree.getType() == IDs::hierarchyMapping)
+		if(parentTree.getType() == IDs::hierarchyMapping || parentTree.getType() == IDs::previewItems)
 		{
 			triggerAsyncUpdate();
 		}

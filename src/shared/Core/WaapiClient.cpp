@@ -28,6 +28,11 @@ namespace AK::WwiseTransfer
 		static constexpr const char* const commandsExecute = "ak.wwise.ui.commands.execute";
 	} // namespace WaapiCommands
 
+	namespace WaapiURIs
+	{
+		static constexpr const char* const unknownObject = "ak.wwise.query.unknown_object";
+	}
+
 	WaapiClientWatcher::WaapiClientWatcher(juce::ValueTree appState, WaapiClient& waapiClient, WaapiClientWatcherConfig waapiClientWatcherConfig)
 		: juce::Thread("WaapiService")
 		, applicationState(appState)
@@ -690,6 +695,68 @@ namespace AK::WwiseTransfer
 #endif
 
 			response.result = originalsFolder;
+		}
+
+		return response;
+	}
+
+	Waapi::Response<Waapi::ObjectResponse> WaapiClient::getObject(const juce::String& objectPath)
+	{
+		using namespace WwiseAuthoringAPI;
+
+		Waapi::Response<Waapi::ObjectResponse> response;
+
+		const auto args = AkJson::Map{
+			{
+				"from",
+				AkJson::Map{
+					{
+						"path",
+						AkJson::Array{
+							AkVariant{objectPath.toStdString()},
+						},
+					},
+				},
+			},
+		};
+
+		static const auto options = AkJson::Map{
+			{
+				"return",
+				AkJson::Array{
+					AkVariant{"id"},
+					AkVariant{"name"},
+					AkVariant{"type"},
+					AkVariant{"path"},
+					AkVariant{"sound:originalWavFilePath"},
+					AkVariant{"workunitType"},
+				},
+			},
+		};
+
+		AkJson result;
+		response.status = call(WaapiCommands::objectGet, args, options, result);
+
+		if(response.status)
+		{
+			if(result.HasKey("return"))
+			{
+				auto objects = result["return"].GetArray();
+
+				for(auto& object : objects)
+				{
+					response.result = object;
+				}
+			}
+		}
+		// Special Case: The call actually succeeds but does not find the object
+		else if(result.HasKey("uri") && result["uri"].GetVariant().GetString() == WaapiURIs::unknownObject)
+		{
+			response.status = true;
+		}
+		else
+		{
+			response.errorMessage << WaapiHelper::getErrorMessage(result);
 		}
 
 		return response;

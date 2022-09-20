@@ -23,7 +23,7 @@ namespace AK::WwiseTransfer
 
 	MainComponent::MainComponent(DawContext& dawContext, const juce::String& applicationName)
 		: applicationState(ApplicationState::create())
-		, validator(applicationState)
+		, validator(applicationState, waapiClient)
 		, applicationProperties(applicationName)
 		, waapiClientWatcher(applicationState, waapiClient, WaapiClientWatcherConfig{applicationProperties.getWaapiIp(), applicationProperties.getWaapiPort(), MainComponentConstants::connectionMonitorDelayDefault, MainComponentConstants::minConnectionRetryDelayDefault, MainComponentConstants::maxConnectionRetryDelayDefault})
 		, originalsSubfolderComponent(applicationState, applicationName)
@@ -142,5 +142,10 @@ namespace AK::WwiseTransfer
 	bool MainComponent::hasScaleFactorOverride()
 	{
 		return applicationProperties.getScaleFactorOverride() > 0.0;
+	}
+
+	void MainComponent::transferToWwise()
+	{
+		importControlsComponent.transferToWwise();
 	}
 } // namespace AK::WwiseTransfer

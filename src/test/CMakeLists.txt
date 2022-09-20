@@ -13,6 +13,8 @@ target_sources(${PROJECT_NAME} PRIVATE ${TEST_SOURCES})
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         WwiseTransfer_Shared
+        Reaper
+        ReaWwise_Static
     PUBLIC
         Catch2WithMain
         trompeloeil::trompeloeil

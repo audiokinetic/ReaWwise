@@ -31,5 +31,7 @@ namespace AK::WwiseTransfer
 		juce::TooltipWindow tooltipWindow;
 
 		std::unique_ptr<juce::Drawable> wwiseIcon;
+
+		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AboutComponent)
 	};
 } // namespace AK::WwiseTransfer

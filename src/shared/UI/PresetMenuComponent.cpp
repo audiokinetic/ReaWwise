@@ -9,9 +9,9 @@ namespace AK::WwiseTransfer
 	namespace PresetMenuComponentConstants
 	{
 		constexpr auto loadFlags = juce::FileBrowserComponent::openMode |
-			juce::FileBrowserComponent::canSelectFiles;
+		                           juce::FileBrowserComponent::canSelectFiles;
 		constexpr auto saveFlags = juce::FileBrowserComponent::saveMode |
-			juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::warnAboutOverwriting;
+		                           juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::warnAboutOverwriting;
 		constexpr auto fileFilter = "*.xml";
 	} // namespace PresetMenuComponentConstants
 
@@ -23,6 +23,8 @@ namespace AK::WwiseTransfer
 	{
 		if(!presetFolder.exists())
 			presetFolder.createDirectory();
+
+		setTooltip("Manage Presets");
 
 		onClick = [this]
 		{
@@ -44,11 +46,21 @@ namespace AK::WwiseTransfer
 			auto onFileChosen = [this](const juce::FileChooser& chooser)
 			{
 				auto file = chooser.getResult();
-				file.create();
 
-				const auto presetData = PersistanceHelper::hierarchyMappingToPresetData(hierarchyMapping);
-				file.replaceWithText(presetData);
-				applicationProperties.addRecentHierarchyMappingPreset(file.getFullPathName());
+				auto createResult = file.create();
+
+				if(createResult)
+				{
+					const auto presetData = PersistanceHelper::hierarchyMappingToPresetData(hierarchyMapping);
+					file.replaceWithText(presetData);
+					applicationProperties.addRecentHierarchyMappingPreset(file.getFullPathName());
+				}
+				// An empty path indicates that the file is invalid. This is the behavior for when the user clicks cancel in the file chooser
+				// https://docs.juce.com/master/classFile.html#a38506545c1402119b5fef7bcf6289fa9
+				else if(!file.getFullPathName().isEmpty())
+				{
+					juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Save Preset", createResult.getErrorMessage());
+				}
 			};
 
 			fileChooser->launchAsync(saveFlags, onFileChosen);
@@ -63,7 +75,7 @@ namespace AK::WwiseTransfer
 			auto onFileChosen = [this](const juce::FileChooser& chooser)
 			{
 				auto presetFile = chooser.getResult();
-				if (presetFile.exists())
+				if(presetFile.exists())
 					loadPreset(presetFile);
 			};
 

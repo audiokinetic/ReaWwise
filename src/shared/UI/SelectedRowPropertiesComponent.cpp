@@ -20,7 +20,7 @@ namespace AK::WwiseTransfer
 		constexpr int syncButtonWidth = 36;
 		constexpr int propertyTemplateToggleButtonWidth = 22;
 		constexpr int lineThickness = 2;
-		constexpr std::initializer_list<Wwise::ObjectType> objectTypes{Wwise::ObjectType::BlendContainer,
+		constexpr std::initializer_list<Wwise::ObjectType> objectTypes{Wwise::ObjectType::ActorMixer, Wwise::ObjectType::BlendContainer,
 			Wwise::ObjectType::PhysicalFolder, Wwise::ObjectType::RandomContainer, Wwise::ObjectType::SequenceContainer, Wwise::ObjectType::SoundSFX,
 			Wwise::ObjectType::SoundVoice, Wwise::ObjectType::SwitchContainer, Wwise::ObjectType::VirtualFolder, Wwise::ObjectType::WorkUnit};
 		const juce::String pastePropertiesToolTip = "Paste properties are only available when connected to Wwise 2022+";
@@ -158,7 +158,7 @@ namespace AK::WwiseTransfer
 		auto onGetSelectedObject = [this](const Waapi::Response<Waapi::ObjectResponse>& response)
 		{
 			if(response.result.path.isEmpty())
-				return juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Import Destination", "No object is selected in Wwise. Please select one and try again.");
+				return juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Property Template Path", "No object is selected in Wwise. Please select one and try again.");
 
 			propertyTemplatePath = response.result.path;
 			propertyTemplatePathType = response.result.type;
@@ -185,7 +185,7 @@ namespace AK::WwiseTransfer
 		propertyTemplatePathLabel.setEnabled(applyTemplateFeatureEnabled);
 
 		propertyTemplatePathEditor.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
-		propertyTemplatePathSyncButton.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
+		propertyTemplatePathSyncButton.setTooltip(applyTemplateFeatureEnabled ? "Sync with selected object in Wwise" : pastePropertiesToolTip);
 		propertyTemplateToggleButton.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
 		propertyTemplatePathLabel.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
 	}

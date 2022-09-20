@@ -6,8 +6,9 @@
 
 namespace AK::WwiseTransfer::ApplicationState
 {
-	Validator::Validator(juce::ValueTree appState)
+	Validator::Validator(juce::ValueTree appState, WaapiClient& waapiClient)
 		: applicationState(appState)
+		, waapiClient(waapiClient)
 	{
 		applicationState.addListener(this);
 	}
@@ -33,16 +34,33 @@ namespace AK::WwiseTransfer::ApplicationState
 				valueTree.setPropertyExcludingListener(this, IDs::originalsSubfolderValid, isValid, nullptr);
 				valueTree.setPropertyExcludingListener(this, IDs::originalsSubfolderErrorMessage, errorMessage, nullptr);
 			}
-			else if(property == IDs::importDestination || property == IDs::importDestinationType)
+			else if(property == IDs::importDestination)
 			{
 				const juce::String importDestination = valueTree[IDs::importDestination];
-				const auto importDestinationType = juce::VariantConverter<Wwise::ObjectType>::fromVar(valueTree[IDs::importDestinationType]);
 
-				auto isValid = validateImportDestination(importDestination, importDestinationType);
+				auto isValid = validateImportDestination(importDestination);
 				juce::String errorMessage = isValid ? "" : "Invalid import destination";
 
 				valueTree.setPropertyExcludingListener(this, IDs::importDestinationValid, isValid, nullptr);
 				valueTree.setPropertyExcludingListener(this, IDs::importDestinationErrorMessage, errorMessage, nullptr);
+
+				auto onGetObjectAsync = [this](const Waapi::Response<Waapi::ObjectResponse> response)
+				{
+					auto objectType = Wwise::ObjectType::VirtualFolder;
+
+					if(response.result.path.isNotEmpty())
+						objectType = response.result.type;
+
+					applicationState.setProperty(IDs::importDestinationType, juce::VariantConverter<Wwise::ObjectType>::toVar(objectType), nullptr);
+				};
+
+				waapiClient.getObjectAsync(importDestination, onGetObjectAsync);
+			}
+			else if(property == IDs::importDestinationType)
+			{
+				const auto importDestinationType = juce::VariantConverter<Wwise::ObjectType>::fromVar(valueTree[IDs::importDestinationType]);
+
+				validateHierarchyMapping(importDestinationType, applicationState.getChildWithName(IDs::hierarchyMapping));
 			}
 		}
 		else if(valueTree.getType() == IDs::hierarchyMappingNode)
@@ -50,7 +68,9 @@ namespace AK::WwiseTransfer::ApplicationState
 			if(property == IDs::objectType)
 			{
 				auto hierarchyMapping = valueTree.getParent();
-				validateHierarchyMapping(hierarchyMapping);
+
+				const auto importDestinationType = juce::VariantConverter<Wwise::ObjectType>::fromVar(applicationState[IDs::importDestinationType]);
+				validateHierarchyMapping(importDestinationType, hierarchyMapping);
 			}
 			else if(property == IDs::propertyTemplatePath || property == IDs::propertyTemplatePathType)
 			{
@@ -67,7 +87,9 @@ namespace AK::WwiseTransfer::ApplicationState
 	{
 		if(parent.getType() == IDs::hierarchyMapping)
 		{
-			validateHierarchyMapping(parent);
+			const auto importDestinationType = juce::VariantConverter<Wwise::ObjectType>::fromVar(applicationState[IDs::importDestinationType]);
+
+			validateHierarchyMapping(importDestinationType, parent);
 		}
 
 		if(child.getType() == IDs::hierarchyMappingNode)
@@ -81,7 +103,9 @@ namespace AK::WwiseTransfer::ApplicationState
 	{
 		if(parent.getType() == IDs::hierarchyMapping)
 		{
-			validateHierarchyMapping(parent);
+			const auto importDestinationType = juce::VariantConverter<Wwise::ObjectType>::fromVar(applicationState[IDs::importDestinationType]);
+
+			validateHierarchyMapping(importDestinationType, parent);
 		}
 	}
 
@@ -89,7 +113,9 @@ namespace AK::WwiseTransfer::ApplicationState
 	{
 		if(parent.getType() == IDs::hierarchyMapping)
 		{
-			validateHierarchyMapping(parent);
+			const auto importDestinationType = juce::VariantConverter<Wwise::ObjectType>::fromVar(applicationState[IDs::importDestinationType]);
+
+			validateHierarchyMapping(importDestinationType, parent);
 		}
 	}
 
@@ -105,21 +131,15 @@ namespace AK::WwiseTransfer::ApplicationState
 		return originalsSubfolderAbsolutePath.isAChildOf(originalsFolderWithLanguageSubfolder);
 	}
 
-	bool Validator::validateImportDestination(const juce::String& importDestination, Wwise::ObjectType objectType)
+	bool Validator::validateImportDestination(const juce::String& importDestination)
 	{
 		using namespace Wwise;
 
-		static const std::initializer_list<ObjectType> allowedObjectTypes = {ObjectType::VirtualFolder, ObjectType::WorkUnit,
-			ObjectType::RandomContainer, ObjectType::BlendContainer, ObjectType::ActorMixer, ObjectType::SwitchContainer};
-
 		static const juce::String pathPrefix = "\\Actor-Mixer Hierarchy";
-
-		auto allowedType = std::find(allowedObjectTypes.begin(), allowedObjectTypes.end(),
-							   objectType) != allowedObjectTypes.end();
 
 		auto allowedPathPrefix = importDestination.startsWith(pathPrefix);
 
-		return importDestination.isNotEmpty() && !importDestination.endsWith("\\") && allowedType && allowedPathPrefix;
+		return importDestination.isNotEmpty() && !importDestination.endsWith("\\") && allowedPathPrefix;
 	}
 
 	void Validator::validatePropertyTemplatePath(juce::ValueTree hierarchyMappingNode)
@@ -159,43 +179,39 @@ namespace AK::WwiseTransfer::ApplicationState
 		hierarchyMappingNode.setPropertyExcludingListener(this, IDs::objectNameErrorMessage, errorMessage, nullptr);
 	}
 
-	void Validator::validateHierarchyMapping(juce::ValueTree hierarchyMapping)
+	void Validator::validateHierarchyMapping(Wwise::ObjectType importDestinationType, juce::ValueTree hierarchyMapping)
 	{
-		// TODO: Should error be reported on parent or child?
-		auto hierarchyMappingNodeList = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
-
-		for(std::size_t i = 0; i < hierarchyMappingNodeList.size(); ++i)
+		// To properly validate the hierarchy mapping, we must include the import destination
+		std::vector<Wwise::ObjectType> hierarchyTypes{importDestinationType};
+		for(int i = 0; i < hierarchyMapping.getNumChildren(); ++i)
 		{
-			auto& child = hierarchyMappingNodeList.at(i);
+			const auto hierarchyMappingNode = hierarchyMapping.getChild(i);
+			hierarchyTypes.emplace_back(juce::VariantConverter<Wwise::ObjectType>::fromVar(hierarchyMappingNode[IDs::objectType]));
+		}
+
+		for(std::size_t i = 1; i < hierarchyTypes.size(); ++i)
+		{
+			const auto child = hierarchyTypes[i];
+			const auto parent = hierarchyTypes[i - 1];
 
 			bool isValid = true;
 			juce::String errorMessage;
 
 			// Last item must be SoundSFX, report this error above any others
-			if(i == hierarchyMappingNodeList.size() - 1)
+			if(i == hierarchyTypes.size() - 1 && child != Wwise::ObjectType::SoundSFX && child != Wwise::ObjectType::SoundVoice)
 			{
-				if(child.type != Wwise::ObjectType::SoundSFX && child.type != Wwise::ObjectType::SoundVoice)
-				{
-					isValid = false;
-					errorMessage << "Last item must be of type 'SoundSFX' or 'Sound Voice'";
-				}
+				isValid = false;
+				errorMessage << "Last item must be of type 'SoundSFX' or 'Sound Voice'";
+			}
+			else if(parent != Wwise::ObjectType::Unknown &&
+					child != Wwise::ObjectType::Unknown &&
+					!WwiseHelper::validateObjectTypeParentChildRelationShip(parent, child))
+			{
+				isValid = false;
+				errorMessage << "'" << WwiseHelper::objectTypeToReadableString(child) << "' cannot be a child of '" << WwiseHelper::objectTypeToReadableString(parent) << "'";
 			}
 
-			// Since we have limited space in the tooltip, do not do any other validation if an error was already detected
-			if(isValid && i != 0)
-			{
-				auto& parent = hierarchyMappingNodeList.at(i - 1);
-
-				if(parent.type != Wwise::ObjectType::Unknown &&
-					child.type != Wwise::ObjectType::Unknown &&
-					!WwiseHelper::validateObjectTypeParentChildRelationShip(parent.type, child.type))
-				{
-					isValid = false;
-					errorMessage << "'" << WwiseHelper::objectTypeToReadableString(child.type) << "' cannot be a child of '" << WwiseHelper::objectTypeToReadableString(parent.type) << "'";
-				}
-			}
-
-			auto hierarchyMappingNode = hierarchyMapping.getChild(i);
+			auto hierarchyMappingNode = hierarchyMapping.getChild(i - 1); // Index is off by 1 due to the importDestination
 			hierarchyMappingNode.setPropertyExcludingListener(this, IDs::objectTypeValid, isValid, nullptr);
 			hierarchyMappingNode.setPropertyExcludingListener(this, IDs::objectTypeErrorMessage, errorMessage, nullptr);
 		}

@@ -84,6 +84,7 @@ namespace AK::WwiseTransfer
 		Waapi::Response<Waapi::ObjectResponseSet> getObjectAncestorsAndDescendantsLegacy(const juce::String& objectPath);
 		Waapi::Response<std::vector<juce::String>> getProjectLanguages();
 		Waapi::Response<juce::String> getOriginalsFolder();
+		Waapi::Response<Waapi::ObjectResponse> getObject(const juce::String& objectPath);
 
 		bool selectObjects(const juce::String& selectObjectsCommand, const std::vector<juce::String>& objectPaths);
 
@@ -184,6 +185,17 @@ namespace AK::WwiseTransfer
 			auto onJobExecute = [objectPath, this]()
 			{
 				return getObjectAncestorsAndDescendantsLegacy(objectPath);
+			};
+
+			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);
+		}
+
+		template <typename Callback>
+		void getObjectAsync(const juce::String& objectPath, Callback& callback)
+		{
+			auto onJobExecute = [objectPath, this]()
+			{
+				return getObject(objectPath);
 			};
 
 			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);

@@ -35,12 +35,14 @@ namespace AK::WwiseTransfer
 		void resized() override;
 		bool hasScaleFactorOverride();
 
+		void transferToWwise();
+
 	private:
 		juce::ValueTree applicationState;
+		WaapiClient waapiClient;
 
 		ApplicationState::Validator validator;
 		ApplicationProperties applicationProperties;
-		WaapiClient waapiClient;
 		WaapiClientWatcher waapiClientWatcher;
 		Logger logger;
 		DawWatcher dawWatcher;

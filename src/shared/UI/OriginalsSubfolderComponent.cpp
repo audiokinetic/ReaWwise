@@ -47,12 +47,12 @@ namespace AK::WwiseTransfer
 		originalsSubfolderEditor.getValidationValue().referTo(applicationState.getPropertyAsValue(IDs::originalsSubfolderValid, nullptr));
 		originalsSubfolderEditor.getErrorMessageValue().referTo(applicationState.getPropertyAsValue(IDs::originalsSubfolderErrorMessage, nullptr));
 
+		aboutButton.setTooltip("About ReaWwise");
 		aboutButton.onClick = [this]
 		{
 			showAboutWindow();
 		};
 
-		fileBrowserButton.setButtonText("^");
 		fileBrowserButton.onClick = [this]
 		{
 			selectOriginalsSubfoler();
@@ -121,9 +121,10 @@ namespace AK::WwiseTransfer
 		auto originalsFolderEmpty = originalsFolder.get().isEmpty();
 
 		projectPathLabel.setEnabled(!projectPathEmpty);
+		projectPathEditor.setAlpha(!projectPathEmpty ? 1 : 0.5f);
 
 		fileBrowserButton.setEnabled(!projectPathEmpty && !originalsFolderEmpty);
-		fileBrowserButton.setTooltip(originalsFolderEmpty ? "File browser is only available when connected to Wwise 2022+" : "");
+		fileBrowserButton.setTooltip(originalsFolderEmpty ? "File browser is only available when connected to Wwise 2022+" : "Browse");
 	}
 
 	void OriginalsSubfolderComponent::selectOriginalsSubfoler()

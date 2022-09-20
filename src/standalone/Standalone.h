@@ -1,5 +1,7 @@
 #pragma once
 
+#include "StubContext.h"
+
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <memory>
 
@@ -7,7 +9,7 @@ namespace AK::WwiseTransfer
 {
 	class StandaloneWindow;
 
-	class ReaperWwiseTransferStandalone : public juce::JUCEApplication
+	class Standalone : public juce::JUCEApplication
 	{
 	public:
 		const juce::String getApplicationName() override;

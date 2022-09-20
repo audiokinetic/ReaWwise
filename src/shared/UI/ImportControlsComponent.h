@@ -20,6 +20,8 @@ namespace AK::WwiseTransfer
 
 		void resized() override;
 
+		void transferToWwise();
+
 	private:
 		juce::TextButton importButton;
 		juce::ValueTree applicationState;
@@ -33,6 +35,7 @@ namespace AK::WwiseTransfer
 		juce::CachedValue<Import::ContainerNameExistsOption> containerNameExistsOption;
 		juce::CachedValue<Import::ApplyTemplateOption> applyTemplateOption;
 		juce::ValueTree hierarchyMapping;
+		juce::ValueTree previewItems;
 
 		juce::CachedValue<juce::String> selectObjectsOnImportCommand;
 		juce::CachedValue<bool> applyTemplateFeatureEnabled;
@@ -49,7 +52,6 @@ namespace AK::WwiseTransfer
 
 		const juce::String applicationName;
 
-		void onImportButtonClick();
 		void showImportSummary(const Import::Summary& summary, const Import::Task::Options& importTaskOptions);
 		void viewImportSummaryDetails(const Import::Summary& summary, const Import::Task::Options& importTaskOptions);
 

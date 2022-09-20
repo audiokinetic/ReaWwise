@@ -1,22 +1,30 @@
 #include "ReaperContext.h"
 
+#include "Helpers/StringHelper.h"
 #include "Helpers/WwiseHelper.h"
 #include "Model/Wwise.h"
+
+#include <regex>
 
 namespace AK::ReaWwise
 {
 	namespace ReaperContextConstants
 	{
-		constexpr int defaultBufferSize = 4096;
+		constexpr int defaultBufferSize = 4 * 1024;
+		constexpr int largeBufferSize = 4 * 1024 * 1024;
 		const juce::String stateSizeKey = "stateSize";
 		const juce::String stateKey = "state";
 		const juce::String applicationKey = "ReaWwise";
 		const juce::String defaultRenderPattern = "untitled";
 	} // namespace ReaperContextConstants
 
-	ReaperContext::ReaperContext(ReaperPluginInterface& pluginInfo)
-		: reaperPluginInterface(pluginInfo)
-		, defaultRenderDirectory(juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("REAPER Media"))
+	enum ReaperCommands
+	{
+		Render = 42230
+	};
+
+	ReaperContext::ReaperContext(IReaperPlugin& reaperPlugin)
+		: reaperPlugin(reaperPlugin)
 	{
 	}
 
@@ -42,10 +50,10 @@ namespace AK::ReaWwise
 
 		const auto applicationStateString = applicationState.toXmlString();
 		const auto applicationStateStringSize = juce::String(applicationStateString.getNumBytesAsUTF8());
-		if(reaperPluginInterface.setProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateSizeKey.toUTF8(), applicationStateStringSize.toUTF8()) &&
-			reaperPluginInterface.setProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateKey.toUTF8(), applicationStateString.toUTF8()))
+		if(reaperPlugin.setProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateSizeKey.toUTF8(), applicationStateStringSize.toUTF8()) &&
+			reaperPlugin.setProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateKey.toUTF8(), applicationStateString.toUTF8()))
 		{
-			reaperPluginInterface.markProjectDirty(projectInfo.projectReference);
+			reaperPlugin.markProjectDirty(projectInfo.projectReference);
 			return true;
 		}
 
@@ -61,34 +69,92 @@ namespace AK::ReaWwise
 		auto projectInfo = getProjectInfo();
 
 		std::string buffer(defaultBufferSize, '\0');
-		reaperPluginInterface.getProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateSizeKey.toUTF8(), &buffer[0], buffer.size());
+		reaperPlugin.getProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateSizeKey.toUTF8(), &buffer[0], buffer.size());
 
 		const auto stateSize = std::strtoll(&buffer[0], nullptr, 10);
 		if(stateSize == 0)
 			return {};
 
 		buffer.resize(stateSize);
-		if(reaperPluginInterface.getProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateKey.toUTF8(), &buffer[0], buffer.size()))
+		if(reaperPlugin.getProjExtState(projectInfo.projectReference, applicationKey.toUTF8(), stateKey.toUTF8(), &buffer[0], buffer.size()))
 			return juce::ValueTree::fromXml(buffer);
 
 		return {};
 	}
 
-	std::vector<juce::String> ReaperContext::splitDoubleNullTerminatedString(const char* buffer)
+	void ReaperContext::renderItems()
 	{
-		std::vector<juce::String> result;
+		reaperPlugin.main_OnCommand(ReaperCommands::Render, 0);
+	}
 
-		for(const char* current = buffer; current && *current; current += result.back().length() + 1)
+	std::vector<juce::String> ReaperContext::getRenderTargets()
+	{
+		auto projectInfo = getProjectInfo();
+
+		std::vector<juce::String> renderTargets;
+
+		auto result = getProjectStringBuffer(projectInfo.projectReference, "RENDER_TARGETS_EX");
+
+		if(result.status)
+			renderTargets = WwiseTransfer::StringHelper::splitDoubleNullTerminatedString(result.buffer);
+		else
 		{
-			result.emplace_back(current);
+			// For REAPER < 6.69
+			auto renderTargetsString = getProjectString(projectInfo.projectReference, "RENDER_TARGETS");
+
+			juce::StringArray renderTargetsStringArray;
+			renderTargetsStringArray.addTokens(renderTargetsString, ";", "");
+			renderTargetsStringArray.removeEmptyStrings();
+
+			renderTargets = std::vector<juce::String>(renderTargetsStringArray.strings.begin(), renderTargetsStringArray.strings.end());
+		}
+
+		return renderTargets;
+	}
+
+	juce::String ReaperContext::getProjectString(ReaProject* proj, const char* key) const
+	{
+		auto result = getProjectStringBuffer(proj, key);
+
+		if(result.buffer.size() > 0)
+			return juce::String(&result.buffer[0], result.buffer.size());
+
+		return {};
+	}
+
+	ReaperContext::ProjectStringBufferResult ReaperContext::getProjectStringBuffer(ReaProject* proj, const char* key) const
+	{
+		ProjectStringBufferResult result;
+
+		if(reaperPlugin.supportsReallocCommands())
+		{
+			// For REAPER 6.68+
+			char buffer[ReaperContextConstants::defaultBufferSize];
+			char* bufferPtr = buffer;
+
+			int bufferSize = (int)sizeof(buffer);
+
+			int token = reaperPlugin.reallocCmdRegisterBuf(&bufferPtr, &bufferSize);
+
+			result.status = reaperPlugin.getSetProjectInfo_String(proj, key, bufferPtr, false);
+
+			if(result.status)
+				result.buffer.assign(bufferPtr, bufferPtr + bufferSize);
+
+			reaperPlugin.reallocCmdClear(token);
+		}
+		else
+		{
+			static std::vector<char> buffer(ReaperContextConstants::largeBufferSize);
+			std::fill(buffer.begin(), buffer.end(), '\0');
+
+			result.status = reaperPlugin.getSetProjectInfo_String(proj, key, &buffer[0], false);
+
+			if(result.status)
+				result.buffer = buffer;
 		}
 
 		return result;
-	}
-
-	void ReaperContext::renderItems()
-	{
-		reaperPluginInterface.main_OnCommand(42230, 0);
 	}
 
 	std::vector<WwiseTransfer::Import::Item> ReaperContext::getItemsForImport(const WwiseTransfer::Import::Options& options)
@@ -102,27 +168,90 @@ namespace AK::ReaWwise
 			return importItems;
 
 		auto projectInfo = getProjectInfo();
-		const auto renderDirectory = getRenderDirectory(projectInfo);
 
-		juce::StringArray temp;
-		juce::String renderStats = reaperPluginInterface.getProjectString(projectInfo.projectReference, "RENDER_STATS");
-		temp.addTokens(renderStats, ";", "");
+		juce::String renderStats = getProjectString(projectInfo.projectReference, "RENDER_STATS");
 
-		juce::StringArray finalRenderPaths;
+		static juce::String fileToken("FILE:");
+		static juce::String delimiter(';' + fileToken);
 
-		// Not all items in here are paths. Paths are prefixed with "FILE:"
-		for(auto item : temp)
+		if(renderStats.isNotEmpty())
 		{
-			if(item.startsWith("FILE:"))
-				finalRenderPaths.add(item.trimCharactersAtStart("FILE:"));
-		}
+			// To ease parsing, append ";FILE:" to the end of renderStats
+			if(renderStats.endsWithChar(';'))
+				renderStats << fileToken;
+			else
+				renderStats << delimiter;
 
-		for(int i = 0; i < importItemsForPreview.size(); ++i)
-		{
-			importItems.push_back({importItemsForPreview[i].path, importItemsForPreview[i].originalsSubFolder, importItemsForPreview[i].audioFilePath, finalRenderPaths[i]});
+			int endPosition, startPosition = renderStats.indexOf(fileToken) + fileToken.length();
+
+			if(startPosition != -1) // If we don't find the first "FILE:", exit since we are receiving something unexpected
+			{
+				static std::regex regex("(.+?);[A-Z]+");
+
+				while((endPosition = renderStats.indexOf(startPosition, delimiter)) != -1)
+				{
+					auto finalRenderPath = renderStats.substring(startPosition, endPosition).toStdString();
+
+					std::smatch results;
+					if(std::regex_search(finalRenderPath, results, regex))
+						finalRenderPath = results[1];
+
+					const auto& importItemForPreview = importItemsForPreview[importItems.size()];
+
+					importItems.push_back({
+						importItemForPreview.path,
+						importItemForPreview.originalsSubFolder,
+						importItemForPreview.audioFilePath,
+						finalRenderPath,
+					});
+
+					startPosition = endPosition + delimiter.length();
+				}
+			}
 		}
 
 		return importItems;
+	}
+
+	std::vector<juce::String> ReaperContext::getOriginalSubfolders(const ProjectInfo& projectInfo, const juce::String& originalsSubfolder)
+	{
+		// The originals subfolder is a combination of what the user inputs in the originals subfolder input field
+		// Combined with anything in the render file path after the render folder
+
+		// To get the resolved file paths relative to the render directory, we can simply subtract the parent paths in resolvedDummyRenderPattern from
+		// the file paths in resolvedRenderPattern. Other approaches require us to know the render directory which is difficult to figure out and
+		// requires alot of logic on our end.
+
+		const auto dummyRenderPattern = juce::File::getSeparatorString();
+		const auto resolvedDummyRenderPattern = getItemListFromRenderPattern(projectInfo.projectReference, dummyRenderPattern, true);
+
+		const auto renderPattern = getRenderPattern(projectInfo);
+		const auto resolvedRenderPattern = getItemListFromRenderPattern(projectInfo.projectReference, renderPattern, true);
+
+		const auto originalsSubfolderRenderPattern = originalsSubfolder + juce::File::getSeparatorString();
+		const auto resolvedOriginalsSubfolder = getItemListFromRenderPattern(projectInfo.projectReference, originalsSubfolderRenderPattern, true);
+
+		if(resolvedDummyRenderPattern.size() != resolvedRenderPattern.size() && resolvedDummyRenderPattern.size() != resolvedOriginalsSubfolder.size())
+		{
+			juce::Logger::writeToLog("Reaper: Mismatch between resolvedDummyRenderPattern, resolvedRenderPattern and resolvedOriginalsSubfolder");
+			return {};
+		}
+
+		std::vector<juce::String> finalOriginalsSubfolders;
+		for(int i = 0; i < resolvedDummyRenderPattern.size(); ++i)
+		{
+			auto renderDirectory = juce::File(resolvedDummyRenderPattern[i]).getParentDirectory();
+			auto relativeResolvedRenderPattern = juce::File(resolvedRenderPattern[i]).getRelativePathFrom(renderDirectory);
+			auto originalsSubfolderFile = juce::File(resolvedOriginalsSubfolder[i]).getParentDirectory().getChildFile(relativeResolvedRenderPattern);
+
+			juce::String originalsSubfolder = "";
+			if(originalsSubfolderFile.getParentDirectory() != renderDirectory)
+				originalsSubfolder = originalsSubfolderFile.getRelativePathFrom(renderDirectory).upToLastOccurrenceOf(juce::File::getSeparatorString(), false, true);
+
+			finalOriginalsSubfolders.push_back(originalsSubfolder);
+		}
+
+		return finalOriginalsSubfolders;
 	}
 
 	std::vector<WwiseTransfer::Import::PreviewItem> ReaperContext::getItemsForPreview(const WwiseTransfer::Import::Options& options)
@@ -131,28 +260,15 @@ namespace AK::ReaWwise
 
 		auto projectInfo = getProjectInfo();
 
-		const auto renderDirectory = getRenderDirectory(projectInfo);
-		const auto originalsSubfolderPathPart = options.originalsSubfolder + juce::File::getSeparatorString();
-
-		const auto resolvedOriginalsSubfolder = getItemListFromRenderPattern(projectInfo.projectReference, originalsSubfolderPathPart, false);
-
-		juce::StringArray renderTargets;
-		juce::String renderTargetsString = reaperPluginInterface.getProjectString(projectInfo.projectReference, "RENDER_TARGETS");
-		renderTargets.addTokens(renderTargetsString, ";", "");
-		renderTargets.removeEmptyStrings();
-
-		if(renderTargets.size() != resolvedOriginalsSubfolder.size())
-		{
-			juce::Logger::writeToLog("Reaper: Mismatch between renderTargets and resolvedOriginalsSubfolder");
-			return {};
-		}
+		auto renderTargets = getRenderTargets();
+		auto resolvedOriginalsSubfolder = getOriginalSubfolders(projectInfo, options.originalsSubfolder);
 
 		const auto objectPathsPattern = options.importDestination + options.hierarchyMappingPath;
 		std::vector<juce::String> resolvedObjectPaths = getItemListFromRenderPattern(projectInfo.projectReference, objectPathsPattern, false);
 
-		if(resolvedObjectPaths.size() != renderTargets.size() || resolvedObjectPaths.size() != resolvedOriginalsSubfolder.size())
+		if(renderTargets.size() != resolvedOriginalsSubfolder.size() || renderTargets.size() != resolvedObjectPaths.size())
 		{
-			juce::Logger::writeToLog("Reaper: Mismatch between resolvedObjectPaths, renderTargets and resolvedOriginalsSubfolder");
+			juce::Logger::writeToLog("Reaper: Mismatch between renderTargets, resolvedObjectPaths and resolvedOriginalsSubfolder");
 			return {};
 		}
 
@@ -160,27 +276,8 @@ namespace AK::ReaWwise
 		for(int i = 0; i < resolvedObjectPaths.size(); ++i)
 		{
 			const auto& objectPath = resolvedObjectPaths[i].upToLastOccurrenceOf(".", false, false);
-			const auto& renderTarget = renderTargets[i];
 
-			// Get the parent of the render target, as a relative path against the render directory
-			// We want to preserve this hierarchy in the wwise originals folder
-			juce::String relativeParentDir;
-			if(juce::File(renderTarget).getParentDirectory() != renderDirectory)
-				relativeParentDir = juce::File(renderTarget).getRelativePathFrom(renderDirectory).upToLastOccurrenceOf(juce::File::getSeparatorString(), false, true);
-
-			// Reaper may append a differentiator at the end of a path during pattern resolving. We don't care about it.
-			auto originalsSubfolder = resolvedOriginalsSubfolder[i].upToLastOccurrenceOf(juce::File::getSeparatorString(), false, true);
-
-			// The originalsSubfolder is a combination of what the user inputs in the gui (resolvedOriginalsSubfolder) and the directory structure under the render directory.
-			if(relativeParentDir.isNotEmpty())
-			{
-				if(originalsSubfolder.isNotEmpty())
-					originalsSubfolder << juce::File::getSeparatorString();
-
-				originalsSubfolder << relativeParentDir;
-			}
-
-			importItems.push_back({objectPath, originalsSubfolder, renderTarget});
+			importItems.push_back({objectPath, resolvedOriginalsSubfolder[i], renderTargets[i]});
 		}
 
 		return importItems;
@@ -191,7 +288,7 @@ namespace AK::ReaWwise
 		std::string buffer(ReaperContextConstants::defaultBufferSize, '\0');
 
 		// The buffer sent to enumProjects will contain the project path.
-		auto projectReference = reaperPluginInterface.enumProjects(-1, &buffer[0], buffer.size());
+		auto projectReference = reaperPlugin.enumProjects(-1, &buffer[0], buffer.size());
 		if(!projectReference || buffer.empty())
 			return {};
 
@@ -212,7 +309,7 @@ namespace AK::ReaWwise
 		// There are several scenarios where the render pattern could be empty
 		// 1. When the project hasn't been saved (reaper uses "untitled")
 		// 2. When the project has been saved (reaper uses the project name)
-		auto renderPattern = reaperPluginInterface.getProjectString(projectInfo.projectReference, "RENDER_PATTERN");
+		auto renderPattern = getProjectString(projectInfo.projectReference, "RENDER_PATTERN");
 		if(renderPattern.isNotEmpty())
 			return renderPattern;
 
@@ -222,30 +319,17 @@ namespace AK::ReaWwise
 		return projectInfo.projectName;
 	}
 
-	juce::File ReaperContext::getRenderDirectory(const ReaperContext::ProjectInfo& projectInfo) const
-	{
-		auto renderDirectoryPath = reaperPluginInterface.getProjectString(projectInfo.projectReference, "RENDER_FILE");
-		if(juce::File::isAbsolutePath(renderDirectoryPath))
-			return juce::File(renderDirectoryPath);
-
-		if(projectInfo.projectPath.isNotEmpty())
-			return juce::File(projectInfo.projectPath).getParentDirectory().getChildFile(renderDirectoryPath);
-
-		// If the project wasnt saved, reaper uses a general render directory
-		return defaultRenderDirectory.getChildFile(renderDirectoryPath);
-	}
-
 	bool ReaperContext::sessionChanged()
 	{
 		auto sessionChanged = false;
 
 		auto projectInfo = getProjectInfo();
 
-		auto projectStateCount = reaperPluginInterface.getProjectStateChangeCount(projectInfo.projectReference);
-		auto renderSource = reaperPluginInterface.getSetProjectInfo(projectInfo.projectReference, "RENDER_SETTINGS", 0, false);
-		auto renderBounds = reaperPluginInterface.getSetProjectInfo(projectInfo.projectReference, "RENDER_BOUNDSFLAG", 0, false);
-		auto renderFile = reaperPluginInterface.getProjectString(projectInfo.projectReference, "RENDER_FILE");
-		auto renderPattern = reaperPluginInterface.getProjectString(projectInfo.projectReference, "RENDER_PATTERN");
+		auto projectStateCount = reaperPlugin.getProjectStateChangeCount(projectInfo.projectReference);
+		auto renderSource = reaperPlugin.getSetProjectInfo(projectInfo.projectReference, "RENDER_SETTINGS", 0, false);
+		auto renderBounds = reaperPlugin.getSetProjectInfo(projectInfo.projectReference, "RENDER_BOUNDSFLAG", 0, false);
+		auto renderFile = getProjectString(projectInfo.projectReference, "RENDER_FILE");
+		auto renderPattern = getProjectString(projectInfo.projectReference, "RENDER_PATTERN");
 
 		if(projectStateCount != stateInfo.projectStateCount ||
 			renderSource != stateInfo.renderSource ||
@@ -268,10 +352,13 @@ namespace AK::ReaWwise
 
 	std::vector<juce::String> ReaperContext::getItemListFromRenderPattern(ReaProject* project, const juce::String& pattern, bool suppressIllegalPaths)
 	{
-		const int bufferLength = reaperPluginInterface.resolveRenderPattern(project, suppressIllegalPaths ? "" : nullptr, pattern.toUTF8(), nullptr, 0);
-		std::string buffer(bufferLength, '\0');
+		const int bufferLength = reaperPlugin.resolveRenderPattern(project, suppressIllegalPaths ? "" : nullptr, pattern.toUTF8(), nullptr, 0);
 
-		const int newBufferLength = reaperPluginInterface.resolveRenderPattern(project, suppressIllegalPaths ? "" : nullptr, pattern.toUTF8(), &buffer[0], bufferLength);
+		if(bufferLength == 0)
+			return {};
+
+		std::vector<char> buffer(bufferLength, '\0');
+		const int newBufferLength = reaperPlugin.resolveRenderPattern(project, suppressIllegalPaths ? "" : nullptr, pattern.toUTF8(), &buffer[0], bufferLength);
 		if(newBufferLength > bufferLength)
 		{
 			// It is possible the resolved render pattern changes between the two calls to resolveRenderPattern.
@@ -281,6 +368,6 @@ namespace AK::ReaWwise
 			return {};
 		}
 
-		return splitDoubleNullTerminatedString(&buffer[0]);
+		return WwiseTransfer::StringHelper::splitDoubleNullTerminatedString(buffer);
 	}
 } // namespace AK::ReaWwise
