@@ -139,6 +139,7 @@ namespace AK::ReaWwise
 		juce::StringArray renderTargets;
 		juce::String renderTargetsString = reaperPluginInterface.getProjectString(projectInfo.projectReference, "RENDER_TARGETS");
 		renderTargets.addTokens(renderTargetsString, ";", "");
+		renderTargets.removeEmptyStrings();
 
 		if(renderTargets.size() != resolvedOriginalsSubfolder.size())
 		{
