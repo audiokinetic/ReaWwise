@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "Helpers/WaapiHelper.h"
 #include "Helpers/WwiseHelper.h"
 
@@ -65,61 +80,6 @@ namespace AK::WwiseTransfer
 		REQUIRE(counter == 2);
 	}
 #pragma endregion WaapiHelperTests
-
-#pragma region WwiseHelperTests
-	TEST_CASE_METHOD(WwiseHelperTests, "WwiseHelper::pathToPathParts")
-	{
-		std::vector<juce::String> paths{
-			"\\Actor-Mixer Hierarchy\\Default Work Unit\\object",
-			"Actor-Mixer Hierarchy\\Default Work Unit\\object\\"};
-
-		for(auto& path : paths)
-		{
-			auto parts = WwiseHelper::pathToPathParts(path);
-
-			REQUIRE(parts.size() == (size_t)3);
-			REQUIRE(parts[0] == juce::String("Actor-Mixer Hierarchy"));
-			REQUIRE(parts[1] == juce::String("Default Work Unit"));
-			REQUIRE(parts[2] == juce::String("object"));
-		}
-	}
-
-	TEST_CASE_METHOD(WwiseHelperTests, "WwiseHelper::pathToObjectName")
-	{
-		std::vector<std::pair<juce::String, juce::String>> getObjectNameTestCases{
-			{"\\Actor-Mixer Hierarchy\\Default Work Unit\\object", "object"},
-			{"\\Actor-Mixer Hierarchy\\Default Work Unit\\<SoundSFX>object", "object"},
-		};
-
-		for(auto& testCase : getObjectNameTestCases)
-		{
-			REQUIRE(WwiseHelper::pathToObjectName(testCase.first) == testCase.second);
-		}
-	}
-
-	TEST_CASE_METHOD(WwiseHelperTests, "WwiseHelper::pathToAncestorPaths")
-	{
-		juce::String path = "\\Actor-Mixer Hierarchy\\Default Work Unit\\object";
-
-		auto ancestors = WwiseHelper::pathToAncestorPaths(path);
-
-		REQUIRE(ancestors.size() == (size_t)2);
-		REQUIRE(ancestors[0] == juce::String("\\Actor-Mixer Hierarchy"));
-		REQUIRE(ancestors[1] == juce::String("\\Actor-Mixer Hierarchy\\Default Work Unit"));
-	}
-
-	TEST_CASE_METHOD(WwiseHelperTests, "WwiseHelper::getCommonAncestor")
-	{
-		juce::String path1 = "\\Actor-Mixer Hierarchy\\Default Work Unit\\Container";
-		juce::String path2 = "\\Actor-Mixer Hierarchy\\Default Work Unit\\Container\\Object";
-		juce::String path3 = "\\Actor-Mixer Hierarchy\\Default Work Unit\\Container2\\Object2";
-		juce::String path4 = "\\Default Work Unit";
-
-		REQUIRE(WwiseHelper::getCommonAncestor(path1, path2) == juce::String("\\Actor-Mixer Hierarchy\\Default Work Unit\\Container"));
-		REQUIRE(WwiseHelper::getCommonAncestor(path2, path3) == juce::String("\\Actor-Mixer Hierarchy\\Default Work Unit"));
-		REQUIRE(WwiseHelper::getCommonAncestor(path3, path4) == juce::String(""));
-	}
-#pragma endregion WwiseHelperTests
 
 #pragma region WwiseModelTests
 	TEST_CASE_METHOD(WwiseModelTests, "Wwise::Version")

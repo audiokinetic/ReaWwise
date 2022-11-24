@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "Helpers/WwiseHelper.h"
 #include "Model/Import.h"
 
@@ -21,7 +36,8 @@ namespace AK::WwiseTransfer::Test
 		{Wwise::ObjectType::VirtualFolder, "Virtual Folder"},
 		{Wwise::ObjectType::WorkUnit, "Work Unit"},
 		{Wwise::ObjectType::Sound, "Sound"},
-		{Wwise::ObjectType::Unknown, "Unknown"}};
+		{Wwise::ObjectType::Unknown, "Unknown"},
+	};
 
 	std::vector<Wwise::ObjectType> objectTypes{
 		Wwise::ObjectType::ActorMixer,
@@ -36,5 +52,6 @@ namespace AK::WwiseTransfer::Test
 		Wwise::ObjectType::VirtualFolder,
 		Wwise::ObjectType::WorkUnit,
 		Wwise::ObjectType::Sound,
-		Wwise::ObjectType::Unknown};
+		Wwise::ObjectType::Unknown,
+	};
 } // namespace AK::WwiseTransfer::Test

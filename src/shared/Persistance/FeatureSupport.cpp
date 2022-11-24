@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "FeatureSupport.h"
 
 #include "Helpers/WwiseHelper.h"
@@ -15,7 +30,7 @@ namespace AK::WwiseTransfer
 		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
 		undoGroupFeatureEnabled.referTo(featureSupport, IDs::undoGroupFeatureEnabled, nullptr);
 		waqlEnabled.referTo(featureSupport, IDs::waqlEnabled, nullptr);
-		originalsFolderLookupEnabled.referTo(featureSupport, IDs::originalsFolderLookupEnabled, nullptr);
+		additionalProjectInfoLookupEnabled.referTo(featureSupport, IDs::additionalProjectInfoLookupEnabled, nullptr);
 
 		applicationState.addListener(this);
 	}
@@ -42,7 +57,7 @@ namespace AK::WwiseTransfer
 				applyTemplateFeatureEnabled = response.result >= v2022_1_0_0;
 				undoGroupFeatureEnabled = response.result >= v2021_1_10_0;
 				waqlEnabled = response.result >= v2021_1_0_0;
-				originalsFolderLookupEnabled = response.result >= v2022_1_0_0;
+				additionalProjectInfoLookupEnabled = response.result >= v2022_1_0_0;
 			};
 
 			waapiClient.getVersionAsync(onGetVersionAsync);

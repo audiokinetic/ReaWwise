@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "ImportPreviewComponent.h"
 
 #include "Helpers/ImportHelper.h"
@@ -43,6 +58,9 @@ namespace AK::WwiseTransfer
 		treeView.setDefaultOpenness(true);
 		treeView.setRootItem(&rootItem);
 		treeView.setRootItemVisible(false);
+		treeView.setMultiSelectEnabled(true);
+		treeView.setWantsKeyboardFocus(true);
+		treeView.addKeyListener(this);
 
 		for(const auto& tableHeader : tableHeaders)
 		{
@@ -69,6 +87,7 @@ namespace AK::WwiseTransfer
 	ImportPreviewComponent::~ImportPreviewComponent()
 	{
 		applicationState.removeListener(this);
+		treeView.removeKeyListener(this);
 	}
 
 	void ImportPreviewComponent::resized()
@@ -140,10 +159,47 @@ namespace AK::WwiseTransfer
 		header.setStretchToFitActive(true);
 	}
 
+	void ImportPreviewComponent::copySelectedItemsToClipBoard()
+	{
+		juce::String header("Name\tObject Status\tOriginals Wav\tWav Status\r\n");
+
+		juce::String body;
+		for(int i = 0; i < treeView.getNumSelectedItems(); ++i)
+		{
+			auto selectedItem = dynamic_cast<ValueTreeItem*>(treeView.getSelectedItem(i));
+
+			if(selectedItem)
+			{
+				auto valueTree = selectedItem->getValueTree();
+
+				auto previewItem = ImportHelper::valueTreeToPreviewItemNode(valueTree);
+
+				body << valueTree.getType() << "\t" << ImportHelper::objectStatusToReadableString(previewItem.objectStatus) << "\t"
+					 << previewItem.audioFilePath << "\t" << ImportHelper::wavStatusToReadableString(previewItem.wavStatus) << "\r\n";
+			}
+		}
+
+		if(body.isNotEmpty())
+			juce::SystemClipboard::copyTextToClipboard(header << body);
+	}
+
+	bool ImportPreviewComponent::keyPressed(const juce::KeyPress& key, juce::Component* originatingComponent)
+	{
+		if(key == juce::KeyPress('c', juce::ModifierKeys::ctrlModifier, 0))
+		{
+			copySelectedItemsToClipBoard();
+			return true;
+		}
+
+		return false;
+	}
+
 	ValueTreeItem::ValueTreeItem(juce::TableHeaderComponent& header, juce::ValueTree t)
 		: header(header)
 		, tree(t)
 	{
+		setDrawsInLeftMargin(true);
+
 		tree.addListener(this);
 		header.addListener(this);
 	}
@@ -232,6 +288,9 @@ namespace AK::WwiseTransfer
 
 	void ValueTreeItem::paintItem(juce::Graphics& g, int width, int height)
 	{
+		if(isSelected())
+			g.fillAll(juce::LookAndFeel::getDefaultLookAndFeel().findColour(juce::TextEditor::highlightColourId));
+
 		using namespace ImportPreviewComponentConstants;
 
 		auto previewItem = ImportHelper::valueTreeToPreviewItemNode(tree);
@@ -246,7 +305,7 @@ namespace AK::WwiseTransfer
 		jassert(cellText.size() == header.getNumColumns(true));
 
 		auto* customLookAndFeel = dynamic_cast<CustomLookAndFeel*>(&getOwnerView()->getLookAndFeel());
-		g.setColour(customLookAndFeel->getTextColourForObjectStatus(previewItem.objectStatus));
+		auto textColor = customLookAndFeel->getTextColourForObjectStatus(previewItem.objectStatus);
 
 		// First column is special since it has indentation + icon
 		auto indent = getItemPosition(true).getX();
@@ -264,24 +323,33 @@ namespace AK::WwiseTransfer
 
 			if(textWidth > 0)
 			{
-				g.drawText(cellText[0],
+				auto objectNameColor = previewItem.unresolvedWildcard ? getOwnerView()->getLookAndFeel().findColour(ValueTreeItem::errorOutlineColor) : textColor;
+				auto objectName = previewItem.unresolvedWildcard ? "<unresolved_wildcard>" : cellText[0];
+
+				g.setColour(objectNameColor);
+				g.drawText(objectName,
 					iconSize, 0, textWidth, height,
 					juce::Justification::centredLeft, true);
 			}
 		}
 
-		auto xPosition = trueColumnWidth;
-
-		// The rest of the cells are just text, so no special text coordinates to calculate
-		for(int i = 1; i < cellText.size(); ++i)
+		if(!previewItem.unresolvedWildcard)
 		{
-			auto columnWidth = header.getColumnWidth(i + 1);
+			auto xPosition = trueColumnWidth;
 
-			g.drawText(cellText[i],
-				xPosition, 0, columnWidth, height,
-				juce::Justification::centredLeft, true);
+			g.setColour(textColor);
 
-			xPosition += columnWidth;
+			// The rest of the cells are just text, so no special text coordinates to calculate
+			for(int i = 1; i < cellText.size(); ++i)
+			{
+				auto columnWidth = header.getColumnWidth(i + 1);
+
+				g.drawText(cellText[i],
+					xPosition, 0, columnWidth, height,
+					juce::Justification::centredLeft, true);
+
+				xPosition += columnWidth;
+			}
 		}
 	}
 
@@ -323,11 +391,52 @@ namespace AK::WwiseTransfer
 		case TreeValueItemColumn::OriginalsWav:
 			return previewItem.audioFilePath;
 		case TreeValueItemColumn::WavStatus:
-			// TODO: Return the wav status as string eventually
-			return juce::String();
+			return ImportHelper::wavStatusToReadableString(previewItem.wavStatus);
 		default:
 			return juce::String();
 		}
+	}
+
+	void ValueTreeItem::itemClicked(const juce::MouseEvent& event)
+	{
+		if(event.mods == juce::ModifierKeys::rightButtonModifier)
+		{
+			auto onCopy = [this]
+			{
+				auto treeView = getOwnerView();
+
+				if(treeView)
+				{
+					auto parent = treeView->getParentComponent();
+
+					if(parent)
+					{
+						auto importPreviewComponent = dynamic_cast<ImportPreviewComponent*>(parent);
+
+						if(importPreviewComponent)
+						{
+							importPreviewComponent->copySelectedItemsToClipBoard();
+							return;
+						}
+					}
+				}
+
+				juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Copy Error", "Unable to add selected items to clipboard");
+			};
+
+			juce::PopupMenu contextMenu;
+			contextMenu.addItem("Copy to Clipboard", onCopy);
+
+			auto treeView = getOwnerView();
+
+			if(treeView)
+				contextMenu.showMenuAsync(juce::PopupMenu::Options().withParentComponent(treeView));
+		}
+	}
+
+	juce::ValueTree ValueTreeItem::getValueTree()
+	{
+		return tree;
 	}
 
 	ValueTreeItem::Comparator::Comparator(const juce::TableHeaderComponent& header)

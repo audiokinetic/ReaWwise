@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
 
 #include "Model/Import.h"
@@ -10,6 +25,7 @@ namespace AK::WwiseTransfer
 {
 	namespace CustomLookAndFeelConstants
 	{
+		constexpr float extraSmallFontSize = 15.0f;
 		constexpr float smallFontSize = 16.0f;
 		constexpr float regularFontSize = 18.0f;
 		constexpr float largeFontSize = 20.0f;
@@ -48,11 +64,11 @@ namespace AK::WwiseTransfer
 		juce::Font getAlertWindowMessageFont() override;
 		juce::Font getAlertWindowFont() override;
 		juce::Font getAlertWindowTitleFont() override;
+		juce::Font getComboBoxFont(juce::ComboBox&) override;
 		juce::Font getTableHeaderFont();
 
 	private:
 		juce::Typeface::Ptr regularTypeFace;
-		juce::Typeface::Ptr boldTypeFace;
 
 		juce::Colour windowBackgroundColor;
 		juce::Colour widgetBackgroundColor;
@@ -68,5 +84,6 @@ namespace AK::WwiseTransfer
 		juce::Colour previewItemNoChangeColor;
 		juce::Colour previewItemNewColor;
 		juce::Colour previewItemReplacedColor;
+		juce::Colour errorColor;
 	};
 } // namespace AK::WwiseTransfer

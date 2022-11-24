@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "Helpers/PersistanceHelper.h"
 #include "Model/Import.h"
 #include "Model/IDs.h"
@@ -74,8 +89,6 @@ namespace AK::WwiseTransfer::Test
 	{
 		REQUIRE(presetData.getTagName() == values.identifier.toString());
 		REQUIRE(presetData.getStringAttribute(IDs::objectName.toString()) == values.objectName);
-		REQUIRE(presetData.getStringAttribute(IDs::objectNameValid.toString()) == juce::String(static_cast<int>(values.objectNameValid)));
-		REQUIRE(presetData.getStringAttribute(IDs::objectNameErrorMessage.toString()) == values.objectNameErrorMsg);
 		REQUIRE(presetData.getStringAttribute(IDs::objectType.toString()) == juce::String(static_cast<int>(values.objectType)));
 		REQUIRE(presetData.getStringAttribute(IDs::propertyTemplatePath.toString()) == values.propertyTemplatePath);
 		REQUIRE(presetData.getStringAttribute(IDs::propertyTemplatePathEnabled.toString()) == juce::String(static_cast<int>(values.propertyTemplatePathEnabled)));
@@ -84,6 +97,8 @@ namespace AK::WwiseTransfer::Test
 
 	inline void testHierarchyMappingPresetRemovedProperties(const juce::XmlElement& presetData)
 	{
+		REQUIRE(presetData.getStringAttribute(IDs::objectNameValid.toString()).isEmpty());
+		REQUIRE(presetData.getStringAttribute(IDs::objectNameErrorMessage.toString()).isEmpty());
 		REQUIRE(presetData.getStringAttribute(IDs::objectTypeValid.toString()).isEmpty());
 		REQUIRE(presetData.getStringAttribute(IDs::objectTypeErrorMessage.toString()).isEmpty());
 		REQUIRE(presetData.getStringAttribute(IDs::propertyTemplatePathValid.toString()).isEmpty());

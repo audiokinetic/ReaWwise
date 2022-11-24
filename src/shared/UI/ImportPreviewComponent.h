@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
 
 #include "BinaryData.h"
@@ -34,6 +49,13 @@ namespace AK::WwiseTransfer
 		void itemOpennessChanged(bool isNowOpen) override;
 		juce::String getUniqueName() const override;
 		juce::String getComparisonTextForColumn(int column);
+		void itemClicked(const juce::MouseEvent&) override;
+		juce::ValueTree getValueTree();
+
+		enum ColourIds
+		{
+			errorOutlineColor = 0x00000002,
+		};
 
 	private:
 		juce::TableHeaderComponent& header;
@@ -58,12 +80,16 @@ namespace AK::WwiseTransfer
 		: public juce::Component
 		, public juce::ValueTree::Listener
 		, public juce::AsyncUpdater
+		, public juce::KeyListener
 	{
 	public:
 		ImportPreviewComponent(juce::ValueTree appState);
 		~ImportPreviewComponent();
 
 		void resized() override;
+
+		void copySelectedItemsToClipBoard();
+		bool keyPressed(const juce::KeyPress& key, juce::Component* originatingComponent) override;
 
 	private:
 		juce::ValueTree applicationState;

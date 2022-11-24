@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
 
 #include "Core/DawContext.h"
@@ -34,6 +49,7 @@ namespace AK::WwiseTransfer
 		juce::CachedValue<juce::String> languageSubfolder;
 		juce::CachedValue<Import::ContainerNameExistsOption> containerNameExistsOption;
 		juce::CachedValue<Import::ApplyTemplateOption> applyTemplateOption;
+		juce::CachedValue<bool> transferInProgress;
 		juce::ValueTree hierarchyMapping;
 		juce::ValueTree previewItems;
 
@@ -50,10 +66,12 @@ namespace AK::WwiseTransfer
 
 		juce::ToggleButton showSilentIncrementWarningToggle;
 
+		juce::TextEditor errorMessageContainer;
+
 		const juce::String applicationName;
 
-		void showImportSummary(const Import::Summary& summary, const Import::Task::Options& importTaskOptions);
-		void viewImportSummaryDetails(const Import::Summary& summary, const Import::Task::Options& importTaskOptions);
+		void showImportSummaryModal(const Import::Summary& summary, const Import::Task::Options& importTaskOptions);
+		juce::URL createImportSummaryFile(const Import::Summary& summary, const Import::Task::Options& importTaskOptions);
 
 		void refreshComponent();
 
@@ -63,6 +81,12 @@ namespace AK::WwiseTransfer
 		void valueTreeChildOrderChanged(juce::ValueTree& parentTreeWhoseChildrenHaveMoved, int oldIndex, int newIndex);
 
 		void handleAsyncUpdate() override;
+
+		void onRenderFailedDetected();
+		void onImportCancelled();
+		void onFileRenamedDetected(bool isPathIncomplete, const std::vector<Import::Item>& importItems);
+		void onPathIncompleteDetected(const std::vector<Import::Item>& importItems);
+		void onImport(const std::vector<Import::Item>& importItems);
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImportControlsComponent)
 	};

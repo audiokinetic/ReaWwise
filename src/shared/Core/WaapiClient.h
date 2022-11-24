@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
 
 #include "AK/WwiseAuthoringAPI/AkAutobahn/AkJson.h"
@@ -77,13 +92,13 @@ namespace AK::WwiseTransfer
 
 		Waapi::Response<Wwise::Version> getVersion();
 		Waapi::Response<Waapi::ProjectInfo> getProjectInfo();
+		Waapi::Response<Waapi::AdditionalProjectInfo> getAdditionalProjectInfo();
 		Waapi::Response<Waapi::ObjectResponse> getSelectedObject();
 		Waapi::Response<Waapi::ObjectResponseSet> pasteProperties(const Waapi::PastePropertiesRequest& pastePropertiesRequest);
 		Waapi::Response<Waapi::ObjectResponseSet> import(const std::vector<Waapi::ImportItemRequest>& importItemsRequest, Import::ContainerNameExistsOption containerNameExistsOption, const juce::String& objectLanguage);
 		Waapi::Response<Waapi::ObjectResponseSet> getObjectAncestorsAndDescendants(const juce::String& objectPath);
 		Waapi::Response<Waapi::ObjectResponseSet> getObjectAncestorsAndDescendantsLegacy(const juce::String& objectPath);
 		Waapi::Response<std::vector<juce::String>> getProjectLanguages();
-		Waapi::Response<juce::String> getOriginalsFolder();
 		Waapi::Response<Waapi::ObjectResponse> getObject(const juce::String& objectPath);
 
 		bool selectObjects(const juce::String& selectObjectsCommand, const std::vector<juce::String>& objectPaths);
@@ -109,6 +124,17 @@ namespace AK::WwiseTransfer
 			auto onJobExecute = [this]()
 			{
 				return getProjectInfo();
+			};
+
+			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);
+		}
+
+		template <typename Callback>
+		void getAdditionalProjectInfoAsync(const Callback& callback)
+		{
+			auto onJobExecute = [this]()
+			{
+				return getAdditionalProjectInfo();
 			};
 
 			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);
@@ -158,17 +184,6 @@ namespace AK::WwiseTransfer
 		}
 
 		template <typename Callback>
-		void getOriginalsFolderAsync(Callback& callback)
-		{
-			auto onJobExecute = [this]()
-			{
-				return getOriginalsFolder();
-			};
-
-			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);
-		}
-
-		template <typename Callback>
 		void getObjectAncestorsAndDescendantsAsync(const juce::String& objectPath, Callback& callback)
 		{
 			auto onJobExecute = [objectPath, this]()
@@ -209,7 +224,7 @@ namespace AK::WwiseTransfer
 		: private juce::Thread
 	{
 	public:
-		WaapiClientWatcher(juce::ValueTree applicationState, WaapiClient& waapiClient, WaapiClientWatcherConfig waapiClientWatcherConfig);
+		WaapiClientWatcher(juce::ValueTree applicationState, WaapiClient& waapiClient, WaapiClientWatcherConfig&& waapiClientWatcherConfig);
 
 		void start();
 		void stop();

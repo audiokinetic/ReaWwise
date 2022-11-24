@@ -1,7 +1,24 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "ImportControlsComponent.h"
 
+#include "Helpers/FileHelper.h"
 #include "Helpers/ImportHelper.h"
 #include "Model/IDs.h"
+#include "Theme/CustomLookAndFeel.h"
 
 #include <set>
 
@@ -18,6 +35,10 @@ namespace AK::WwiseTransfer
 		constexpr int showSilentIncrementWarningToggleWidth = 300;
 		constexpr int showSilentIncrementWarningToggleHeight = 60;
 		constexpr int showSilentIncrementWarningToggleMarginLeft = 78;
+
+		constexpr int errorMessageWidth = 260;
+		constexpr int errorMessageHeight = 200;
+		constexpr int errorMessageMarginLeft = 75;
 	}; // namespace ImportControlsComponentConstants
 
 	ImportControlsComponent::ImportControlsComponent(juce::ValueTree appState, WaapiClient& waapiClient, DawContext& dawContext, ApplicationProperties& applicationProperties, const juce::String& applicationName)
@@ -31,6 +52,7 @@ namespace AK::WwiseTransfer
 		, projectPath(applicationState, IDs::projectPath, nullptr)
 		, containerNameExistsOption(applicationState, IDs::containerNameExists, nullptr)
 		, applyTemplateOption(applicationState, IDs::applyTemplate, nullptr)
+		, transferInProgress(applicationState, IDs::transferInProgress, nullptr)
 		, hierarchyMapping(applicationState.getChildWithName(IDs::hierarchyMapping))
 		, previewItems(applicationState.getChildWithName(IDs::previewItems))
 		, waapiClient(waapiClient)
@@ -61,6 +83,10 @@ namespace AK::WwiseTransfer
 
 		showSilentIncrementWarningToggle.setButtonText("Don't show message again");
 		showSilentIncrementWarningToggle.setSize(showSilentIncrementWarningToggleWidth, showSilentIncrementWarningToggleHeight);
+
+		errorMessageContainer.setMultiLine(true);
+		errorMessageContainer.setReadOnly(true);
+		errorMessageContainer.setSize(errorMessageWidth, errorMessageHeight);
 	}
 
 	ImportControlsComponent::~ImportControlsComponent()
@@ -73,174 +99,89 @@ namespace AK::WwiseTransfer
 		importButton.setBounds(getLocalBounds());
 	}
 
-	namespace
-	{
-		bool RenderDirContentModified(const std::set<juce::File>& directorySet, const juce::Time& lastWriteTime)
-		{
-			for(const auto& directory : directorySet)
-			{
-				for(const auto& file : directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false))
-				{
-					if(file.getLastModificationTime() > lastWriteTime)
-					{
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-	} // namespace
-
 	void ImportControlsComponent::transferToWwise()
 	{
-		if(!importButton.isEnabled())
-			return;
-
 		using namespace ImportControlsComponentConstants;
 
-		// Disable the import button while rendering
-		importButton.setEnabled(false);
+		if(transferInProgress.get())
+			return;
+
+		transferInProgress = true;
 
 		const auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)));
 		const Import::Options opts(importDestination, originalsSubFolder, hierarchyMappingPath);
 
 		const auto previewItems = dawContext.getItemsForPreview(opts);
+
+		// Confirm that files where rendered
 		std::set<juce::File> directorySet;
 		for(const auto item : previewItems)
 		{
 			directorySet.insert(juce::File(item.audioFilePath).getParentDirectory());
 		}
+
 		auto lastModificationTime = juce::Time::getCurrentTime();
 
 		juce::Logger::writeToLog("Sending render request to DAW");
+
 		dawContext.renderItems();
 
-		if(!RenderDirContentModified(directorySet, lastModificationTime))
+		if(FileHelper::countModifiedFilesInDirectoriesSince(directorySet, lastModificationTime) != previewItems.size())
 		{
-			const juce::String message("One or more files failed to render.");
-			juce::Logger::writeToLog(message);
-			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Transfer to Wwise Aborted", message);
-			importButton.setEnabled(true);
+			onRenderFailedDetected();
 			return;
 		}
 
 		const auto importItems = dawContext.getItemsForImport(opts);
 
+		bool showIncompletePathWarning = false;
 		bool showRenameWarning = false;
-		bool showRenderFailed = false;
+
 		if(importItems.size() > 0)
 		{
 			for(const auto& importItem : importItems)
 			{
 				if(importItem.renderFilePath.isEmpty())
 				{
-					showRenderFailed = true;
-					break;
+					onRenderFailedDetected();
+					return;
 				}
 
 				if(juce::File(importItem.audioFilePath) != juce::File(importItem.renderFilePath))
-				{
 					showRenameWarning = true;
-					break;
-				}
+
+				if(!WwiseHelper::isPathComplete(importItem.path))
+					showIncompletePathWarning = true;
 			}
 		}
 		else
 		{
-			juce::Logger::writeToLog("No items to import.");
-			importButton.setEnabled(true);
+			juce::Logger::writeToLog("No items to import...");
+			transferInProgress = false;
 			return;
 		}
 
-		if(showRenderFailed)
-		{
-			const juce::String message("One or more files failed to render.");
-			juce::Logger::writeToLog(message);
-			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Transfer to Wwise Aborted", message);
-			importButton.setEnabled(true);
-			return;
-		}
-
-		const auto hierarchyMappingNodeList = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
-		const Import::Task::Options importTaskOptions{
-			importItems,
-			containerNameExistsOption,
-			applyTemplateOption,
-			importDestination,
-			hierarchyMappingNodeList,
-			originalsFolder,
-			languageSubfolder,
-			selectObjectsOnImportCommand,
-			applyTemplateFeatureEnabled,
-			undoGroupFeatureEnabled,
-			waqlEnabled};
-
-		auto onImportComplete = [this, importTaskOptions = importTaskOptions](const Import::Summary& importSummary)
-		{
-			showImportSummary(importSummary, importTaskOptions);
-			importButton.setEnabled(true);
-		};
-
-		importTask.reset(new ImportTask(waapiClient, importTaskOptions, onImportComplete));
-
-		if(!showRenameWarning || !applicationProperties.getShowSilentIncrementWarning())
-		{
-			juce::Logger::writeToLog("Importing files...");
-			importTask->launchThread();
-			return;
-		}
-
-		const juce::String message("Several file names where silently incremented to avoid overwriting during the render process.");
-		juce::Logger::writeToLog(message);
-
-		auto onDialogBtnClicked = [this, importItems = importItems](int result)
-		{
-			applicationProperties.setShowSilentIncrementWarning(!showSilentIncrementWarningToggle.getToggleState());
-
-			if(result == MessageBoxOption::Continue)
-			{
-				juce::Logger::writeToLog("Importing files...");
-				importTask->launchThread();
-				return;
-			}
-
-			juce::Logger::writeToLog("Import aborted.");
-			importTask.reset();
-			importButton.setEnabled(true);
-		};
-
-		auto messageBoxOptions = juce::MessageBoxOptions()
-		                             .withTitle("Action Required")
-		                             .withMessage(message)
-		                             .withButton("Continue")
-		                             .withButton("Cancel");
-
-		juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
-
-		auto modalManager = juce::ModalComponentManager::getInstance();
-		auto alertWindow = dynamic_cast<juce::AlertWindow*>(modalManager->getModalComponent(0));
-		alertWindow->addCustomComponent(&showSilentIncrementWarningToggle);
-
-		// Reset and reposition the toggle button
-		showSilentIncrementWarningToggle.setToggleState(false, true);
-		auto bounds = showSilentIncrementWarningToggle.getBounds();
-		bounds.setX(showSilentIncrementWarningToggleMarginLeft);
-		showSilentIncrementWarningToggle.setBounds(bounds);
+		if(showRenameWarning && applicationProperties.getShowSilentIncrementWarning())
+			onFileRenamedDetected(showIncompletePathWarning, importItems);
+		else if(showIncompletePathWarning)
+			onPathIncompleteDetected(importItems);
+		else
+			onImport(importItems);
 	}
 
-	void ImportControlsComponent::showImportSummary(const Import::Summary& summary, const Import::Task::Options& importTaskOptions)
+	void ImportControlsComponent::showImportSummaryModal(const Import::Summary& summary, const Import::Task::Options& importTaskOptions)
 	{
-		juce::String message;
+		auto hasErrors = !summary.errors.empty();
 
+		juce::String title(!hasErrors ? "Wwise Import Successful" : "Wwise Imported with Errors");
+
+		juce::String message;
 		message << summary.getNumObjectsCreated() << " object(s) created.";
 		message << juce::NewLine() << summary.getNumObjectTemplatesApplied() << " object template(s) applied.";
-		message << juce::NewLine() << importTaskOptions.importItems.size() << " audio files(s) imported.";
-
-		if(summary.errorMessage.isNotEmpty())
-			message << juce::NewLine() << summary.errorMessage;
+		message << juce::NewLine() << summary.getNumAudiofilesTransfered() << " audio files(s) imported.";
 
 		auto messageBoxOptions = juce::MessageBoxOptions()
-		                             .withTitle("Wwise Import Summary")
+		                             .withTitle(title)
 		                             .withMessage(message)
 		                             .withButton("View Details")
 		                             .withButton("Close");
@@ -249,53 +190,62 @@ namespace AK::WwiseTransfer
 		{
 			if(result == MessageBoxOption::Continue)
 			{
-				viewImportSummaryDetails(summary, importTaskOptions);
+				auto importSummaryFile = createImportSummaryFile(summary, importTaskOptions);
+				importSummaryFile.launchInDefaultBrowser();
 			}
 		};
 
 		juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
+
+		auto modalManager = juce::ModalComponentManager::getInstance();
+		auto alertWindow = dynamic_cast<juce::AlertWindow*>(modalManager->getModalComponent(0));
+
+		if(hasErrors)
+		{
+			juce::String errorMessage;
+
+			for(const auto& error : summary.errors)
+			{
+				errorMessage << "Error: `" + error.uri + "` for procedure `" + error.procedureUri + "`" << juce::NewLine() << juce::NewLine();
+				errorMessage << "Message: " + error.message << juce::NewLine() << juce::NewLine();
+			}
+
+			alertWindow->addCustomComponent(&errorMessageContainer);
+			auto currentBounds = errorMessageContainer.getBounds();
+			errorMessageContainer.setBounds(currentBounds.withX(ImportControlsComponentConstants::errorMessageMarginLeft));
+			errorMessageContainer.setText(errorMessage);
+			errorMessageContainer.setColour(juce::TextEditor::backgroundColourId, findColour(juce::AlertWindow::backgroundColourId));
+			errorMessageContainer.setFont(CustomLookAndFeelConstants::smallFontSize);
+		}
+		else
+		{
+			for(int i = 0; i < alertWindow->getNumChildComponents(); ++i)
+			{
+				auto* component = alertWindow->getChildComponent(i);
+				if(component->getName() == "Error Details")
+					component->setEnabled(false);
+			}
+		}
 	}
 
-	void ImportControlsComponent::viewImportSummaryDetails(const Import::Summary& summary, const Import::Task::Options& importTaskOptions)
+	juce::URL ImportControlsComponent::createImportSummaryFile(const Import::Summary& summary, const Import::Task::Options& importTaskOptions)
 	{
 		auto currentTime = juce::Time::getCurrentTime();
+		auto hasErrors = !summary.errors.empty();
 
 		auto importSummaryFile = juce::File::getSpecialLocation(juce::File::tempDirectory)
 		                             .getChildFile(applicationName + "_WwiseImportSummary_" + currentTime.formatted("%Y-%m-%d_%H-%M-%S"))
 		                             .withFileExtension(".html");
 
-		importSummaryFile.create();
+		importSummaryFile.appendText(ImportHelper::createImportSummary(applicationName, currentTime, summary, importTaskOptions));
 
-		importSummaryFile.appendText("<style>table td, th { border:1px solid black; padding:10px; }");
-		importSummaryFile.appendText("table { border-collapse:collapse; }");
-		importSummaryFile.appendText("table th { text-align: left; }</style>");
-		importSummaryFile.appendText("<pre>" + applicationName + ": Wwise Import Summary " + currentTime.formatted("%Y-%m-%d %H:%M:%S") + "\n\n");
-		importSummaryFile.appendText("Import Destination: " + importTaskOptions.importDestination + "\n");
-		importSummaryFile.appendText("Container Name Exists: " + ImportHelper::containerNameExistsOptionToReadableString(importTaskOptions.containerNameExistsOption) + "\n");
-		importSummaryFile.appendText("Apply Template: " + ImportHelper::applyTemplateOptionToReadableString(importTaskOptions.applyTemplateOption) + "\n\n");
-
-		importSummaryFile.appendText("Objects created: " + juce::String(summary.getNumObjectsCreated()) + "\n");
-		importSummaryFile.appendText("Object Templates Applied: " + juce::String(summary.getNumObjectTemplatesApplied()) + "\n");
-		importSummaryFile.appendText("Audio Files Imported: " + juce::String(importTaskOptions.importItems.size()) + "\n\n");
-
-		importSummaryFile.appendText("<table><tr><th>Object Path</th><th>Type</th><th>Object Status</th><th>Originals Wav</th><th>Wav Status</th><th>Property Template Applied</th></tr>");
-
-		for(const auto& [objectPath, object] : summary.objects)
-		{
-			importSummaryFile.appendText("<tr><td>" + objectPath + "</td><td>" + WwiseHelper::objectTypeToReadableString(object.type) + "</td>" +
-										 "<td>" + ImportHelper::objectStatusToReadableString(object.objectStatus) + "</td><td>" + object.originalWavFilePath + "</td>" +
-										 "<td>" + ImportHelper::wavStatusToReadableString(object.wavStatus) + "</td><td>" + object.propertyTemplatePath + "</td></tr>");
-		}
-
-		importSummaryFile.appendText("</table></pre>");
-
-		juce::URL importSummaryFileUrl(importSummaryFile.getFullPathName());
-		importSummaryFileUrl.launchInDefaultBrowser();
+		return juce::URL(importSummaryFile.getFullPathName());
 	}
 
 	void ImportControlsComponent::refreshComponent()
 	{
-		auto importButtonEnabled = originalsSubfolderValid.get() && importDestinationValid.get() && projectPath.get().isNotEmpty() && previewItems.getNumChildren() > 0;
+		auto importButtonEnabled = !transferInProgress.get() && originalsSubfolderValid.get() && importDestinationValid.get() &&
+		                           projectPath.get().isNotEmpty() && previewItems.getNumChildren() > 0;
 
 		auto hieararchyMappingNodes = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
 
@@ -325,7 +275,7 @@ namespace AK::WwiseTransfer
 
 	void ImportControlsComponent::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 	{
-		if(treeWhosePropertyHasChanged == applicationState && (property == IDs::originalsSubfolderValid || property == IDs::importDestinationValid || property == IDs::projectPath) ||
+		if(treeWhosePropertyHasChanged == applicationState && (property == IDs::originalsSubfolderValid || property == IDs::importDestinationValid || property == IDs::projectPath || property == IDs::transferInProgress) ||
 			treeWhosePropertyHasChanged.getType() == IDs::hierarchyMappingNode)
 		{
 			triggerAsyncUpdate();
@@ -360,4 +310,116 @@ namespace AK::WwiseTransfer
 	{
 		refreshComponent();
 	}
+
+	void ImportControlsComponent::onRenderFailedDetected()
+	{
+		const juce::String message("One or more files failed to render.");
+		juce::Logger::writeToLog(message);
+
+		juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Transfer to Wwise Aborted", message);
+
+		transferInProgress = false;
+		importTask.reset();
+	}
+
+	void ImportControlsComponent::onImportCancelled()
+	{
+		juce::Logger::writeToLog("Import was cancelled by user...");
+
+		transferInProgress = false;
+		importTask.reset();
+	}
+
+	void ImportControlsComponent::onFileRenamedDetected(bool isPathIncomplete, const std::vector<Import::Item>& importItems)
+	{
+		auto onDialogBtnClicked = [this, isPathIncomplete, importItems](int result)
+		{
+			applicationProperties.setShowSilentIncrementWarning(!showSilentIncrementWarningToggle.getToggleState());
+
+			if(result == MessageBoxOption::Continue)
+			{
+				if(isPathIncomplete)
+					onPathIncompleteDetected(importItems);
+				else
+					onImport(importItems);
+			}
+			else
+				onImportCancelled();
+		};
+
+		const juce::String message("One or more file names where silently incremented to avoid overwriting during the render process.");
+		juce::Logger::writeToLog(message);
+
+		auto messageBoxOptions = juce::MessageBoxOptions()
+		                             .withTitle("Action Required")
+		                             .withMessage(message)
+		                             .withButton("Continue")
+		                             .withButton("Cancel");
+
+		juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
+
+		auto modalManager = juce::ModalComponentManager::getInstance();
+		auto alertWindow = dynamic_cast<juce::AlertWindow*>(modalManager->getModalComponent(0));
+		alertWindow->addCustomComponent(&showSilentIncrementWarningToggle);
+
+		// Reset and reposition the toggle button
+		showSilentIncrementWarningToggle.setToggleState(false, true);
+		auto bounds = showSilentIncrementWarningToggle.getBounds();
+		bounds.setX(ImportControlsComponentConstants::showSilentIncrementWarningToggleMarginLeft);
+		showSilentIncrementWarningToggle.setBounds(bounds);
+	}
+
+	void ImportControlsComponent::onPathIncompleteDetected(const std::vector<Import::Item>& importItems)
+	{
+		auto onDialogBtnClicked = [this, importItems](int result)
+		{
+			if(result == MessageBoxOption::Continue)
+				onImport(importItems);
+			else
+				onImportCancelled();
+		};
+
+		const juce::String message("One or more object paths are incomplete and will not be transfered.");
+		juce::Logger::writeToLog(message);
+
+		auto messageBoxOptions = juce::MessageBoxOptions()
+		                             .withTitle("Action Required")
+		                             .withMessage(message)
+		                             .withButton("Continue")
+		                             .withButton("Cancel");
+
+		juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
+	}
+
+	void ImportControlsComponent::onImport(const std::vector<Import::Item>& importItems)
+	{
+		const auto hierarchyMappingNodeList = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
+
+		const Import::Task::Options importTaskOptions{
+			importItems,
+			containerNameExistsOption,
+			applyTemplateOption,
+			importDestination,
+			hierarchyMappingNodeList,
+			originalsFolder,
+			languageSubfolder,
+			selectObjectsOnImportCommand,
+			applyTemplateFeatureEnabled,
+			undoGroupFeatureEnabled,
+			waqlEnabled};
+
+		auto onImportComplete = [this, importTaskOptions = importTaskOptions](const Import::Summary& importSummary)
+		{
+			showImportSummaryModal(importSummary, importTaskOptions);
+
+			transferInProgress = false;
+			importTask.reset(); // Needs to be called last since this lambda gets called inside of importTask
+		};
+
+		juce::Logger::writeToLog("Importing files...");
+
+		importTask.reset(new ImportTask(waapiClient, importTaskOptions, onImportComplete));
+		importTask->launchThread();
+	}
+
 } // namespace AK::WwiseTransfer

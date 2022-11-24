@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
@@ -14,6 +29,7 @@ namespace AK::WwiseTransfer::IDs
 	inline const juce::Identifier originalsSubfolderValid = "originalsSubfolderValid";
 	inline const juce::Identifier originalsSubfolderErrorMessage = "originalsSubfolderErrorMessage";
 	inline const juce::Identifier languageSubfolder = "languageSubfolder";
+	inline const juce::Identifier referenceLanguage = "referenceLanguage";
 
 	inline const juce::Identifier importDestination = "importDestination";
 	inline const juce::Identifier importDestinationType = "importDestinationType";
@@ -40,6 +56,7 @@ namespace AK::WwiseTransfer::IDs
 	inline const juce::Identifier audioFilePath = "audioFilePath";
 	inline const juce::Identifier renderFilePath = "renderFilePath";
 	inline const juce::Identifier wavStatus = "wavStatus";
+	inline const juce::Identifier unresolvedWildcard = "unresolvedWildcard";
 
 	inline const juce::Identifier propertyTemplatePath = "propertyTemplatePath";
 	inline const juce::Identifier propertyTemplatePathType = "propertyTemplatePathType";
@@ -62,11 +79,12 @@ namespace AK::WwiseTransfer::IDs
 	inline const juce::Identifier applyTemplateFeatureEnabled = "applyTemplateFeatureEnabled";
 	inline const juce::Identifier undoGroupFeatureEnabled = "undoGroupFeatureEnabled";
 	inline const juce::Identifier waqlEnabled = "waqlEnabled";
-	inline const juce::Identifier originalsFolderLookupEnabled = "originalsFolderLookupEnabled";
+	inline const juce::Identifier additionalProjectInfoLookupEnabled = "additionalProjectInfoLookupEnabled";
 
 	inline const juce::Identifier wwiseObjectsChanged = "wwiseObjectsChanged";
 
 	inline const juce::Identifier previewLoading = "previewLoading";
+	inline const juce::Identifier transferInProgress = "transferInProgress";
 
 	inline const juce::Identifier sessionName = "sessionName";
 

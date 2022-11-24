@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
 
 #include "Helpers/WwiseHelper.h"
@@ -61,6 +76,7 @@ namespace AK::WwiseTransfer::ImportHelper
 			juce::VariantConverter<Import::ObjectStatus>::fromVar(valueTree[IDs::objectStatus]),
 			valueTree[IDs::audioFilePath],
 			juce::VariantConverter<Import::WavStatus>::fromVar(valueTree[IDs::wavStatus]),
+			valueTree[IDs::unresolvedWildcard],
 		};
 	}
 
@@ -72,6 +88,8 @@ namespace AK::WwiseTransfer::ImportHelper
 		valueTree.setProperty(IDs::objectStatus, juce::VariantConverter<Import::ObjectStatus>::toVar(previewItem.objectStatus), nullptr);
 		valueTree.setProperty(IDs::audioFilePath, previewItem.audioFilePath, nullptr);
 		valueTree.setProperty(IDs::wavStatus, juce::VariantConverter<Import::WavStatus>::toVar(previewItem.wavStatus), nullptr);
+
+		valueTree.setProperty(IDs::unresolvedWildcard, previewItem.unresolvedWildcard, nullptr);
 
 		return valueTree;
 	}
@@ -217,5 +235,54 @@ namespace AK::WwiseTransfer::ImportHelper
 		}
 
 		return hash.Get();
+	}
+
+	inline juce::String createImportSummary(const juce::String& applicationName, juce::Time currentTime, const Import::Summary& summary, const Import::Task::Options& importTaskOptions)
+	{
+		juce::String report;
+
+		auto hasErrors = !summary.errors.empty();
+
+		report << "<style>table td, th { border:1px solid black; padding:10px; }";
+		report << "table { border-collapse:collapse; }";
+		report << "table th { text-align: left; }</style>";
+		report << applicationName + ": Wwise Import Summary " + currentTime.formatted("%Y-%m-%d %H:%M:%S") + "<br><br>";
+		report << "Import Destination: " + importTaskOptions.importDestination + "<br>";
+		report << "Container Name Exists: " + ImportHelper::containerNameExistsOptionToReadableString(importTaskOptions.containerNameExistsOption) + "<br>";
+		report << "Apply Template: " + ImportHelper::applyTemplateOptionToReadableString(importTaskOptions.applyTemplateOption) + "<br><br>";
+
+		report << "Objects created: " + juce::String(summary.getNumObjectsCreated()) + "<br>";
+		report << "Object Templates Applied: " + juce::String(summary.getNumObjectTemplatesApplied()) + "<br>";
+		report << "Audio Files Imported: " + juce::String(summary.getNumAudiofilesTransfered()) + "<br>";
+
+		if(hasErrors)
+			report << "<br>Wwise Imported with <a href='#waapi-errors'>Errors!</a><br>";
+
+		report << "<h3>Wwise Objects</h3>";
+		report << "<pre><table><tr><th>Object Path</th><th>Type</th><th>Object Status</th><th>Originals Wav</th><th>Wav Status</th><th>Property Template Applied</th></tr>";
+
+		for(const auto& [objectPath, object] : summary.objects)
+		{
+			report << "<tr><td>" + objectPath + "</td><td>" + WwiseHelper::objectTypeToReadableString(object.type) + "</td>";
+			report << "<td>" + ImportHelper::objectStatusToReadableString(object.objectStatus) + "</td><td>" + object.originalWavFilePath + "</td>";
+			report << "<td>" + ImportHelper::wavStatusToReadableString(object.wavStatus) + "</td><td>" + object.propertyTemplatePath + "</td></tr>";
+		}
+
+		report << "</table></pre>";
+
+		if(hasErrors)
+		{
+			report << "<h3 id='waapi-errors'>Waapi Errors</h3>";
+
+			for(const auto& error : summary.errors)
+			{
+				report << "<h4>" + error.procedureUri + "</h4>";
+
+				// Using juce::JSON for pretty printing
+				report << "<pre>" + juce::JSON::toString(juce::JSON::fromString(error.raw)) + "</pre>";
+			}
+		}
+
+		return report;
 	}
 } // namespace AK::WwiseTransfer::ImportHelper

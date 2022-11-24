@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "SelectedRowPropertiesComponent.h"
 
 #include "BinaryData.h"
@@ -121,6 +136,7 @@ namespace AK::WwiseTransfer
 		objectType.referTo(hierarchyMappingNode, IDs::objectType, nullptr);
 
 		objectLanguage.referTo(hierarchyMappingNode, IDs::objectLanguage, nullptr);
+
 		propertyTemplatePath.referTo(hierarchyMappingNode, IDs::propertyTemplatePath, nullptr);
 		propertyTemplatePathEnabled.referTo(hierarchyMappingNode, IDs::propertyTemplatePathEnabled, nullptr);
 		propertyTemplatePathValid.referTo(hierarchyMappingNode, IDs::propertyTemplatePathValid, nullptr);
@@ -137,6 +153,7 @@ namespace AK::WwiseTransfer
 		propertyTemplateToggleButton.getToggleStateValue().referTo(propertyTemplatePathEnabled.getPropertyAsValue());
 
 		updatePropertyTemplateSection();
+
 		objectLanguageComboBox.setVisible(objectType == Wwise::ObjectType::SoundVoice);
 		objectLanguageComboBox.clear();
 
@@ -147,9 +164,6 @@ namespace AK::WwiseTransfer
 			if(languageList[i] == objectLanguage)
 				objectLanguageComboBox.setSelectedId(i + 1);
 		}
-
-		if(objectLanguage.get().isNotEmpty() && objectLanguageComboBox.getSelectedId() == 0)
-			objectLanguageComboBox.setText(objectLanguage.get());
 	}
 
 	void SelectedRowPropertiesComponent::updatePropertyTemplatePath()

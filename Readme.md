@@ -79,10 +79,10 @@ For general questions about usage, refer to Audiokinetic's [Community Q&A](https
 ## Contributing
 The repository is not open to pull request but in the case of a bug report, bugfix or a suggestions, please feel free to [open an issue](https://github.com/audiokinetic/ReaWwise/issues).
 
-Feature requests can also be submitted to the [feature request section](https://www.audiokinetic.com/qa/feature-requests/) of Audiokinetic's Community Q&A. Use ReaWwise as the Category when submitting a question.
+Feature requests can also be submitted to the [feature request section](https://www.audiokinetic.com/qa/questions/reawwise) of Audiokinetic's Community Q&A. Use ReaWwise as the Category when submitting a question.
 
 ## Legal
-Copyright © 2022 [Audiokinetic Inc.](https://audiokinetic.com) All rights reserved.
+Copyright © 2023 [Audiokinetic Inc.](https://audiokinetic.com) All rights reserved.
 
 ## Acknowledgements
 Inspired by the work of [Karl Davis](https://github.com/karltechno)

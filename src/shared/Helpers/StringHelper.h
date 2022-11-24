@@ -1,4 +1,21 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
+
+#include <juce_gui_basics/juce_gui_basics.h>
 
 #include <algorithm>
 #include <iostream>
@@ -8,6 +25,12 @@
 
 namespace AK::WwiseTransfer::StringHelper
 {
+	template <typename CharArray>
+	juce::String utf8EncodedCharArrayToString(const CharArray& charArray)
+	{
+		return {juce::CharPointer_UTF8(&charArray[0]), std::size(charArray)};
+	}
+
 	inline std::vector<juce::String> splitDoubleNullTerminatedString(const std::vector<char>& buffer)
 	{
 		std::vector<juce::String> stringArray;
@@ -19,7 +42,7 @@ namespace AK::WwiseTransfer::StringHelper
 				tempBuffer.push_back(character);
 			else if(!tempBuffer.empty())
 			{
-				stringArray.push_back(juce::String(&tempBuffer[0], tempBuffer.size()));
+				stringArray.push_back(utf8EncodedCharArrayToString(tempBuffer));
 				tempBuffer.clear();
 			}
 			else

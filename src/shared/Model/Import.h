@@ -1,6 +1,22 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
 
 #include "Model/IDs.h"
+#include "Model/Waapi.h"
 #include "Model/Wwise.h"
 
 #include <algorithm>
@@ -61,6 +77,7 @@ namespace AK::WwiseTransfer::Import
 		ObjectStatus objectStatus{};
 		juce::String audioFilePath;
 		WavStatus wavStatus{};
+		bool unresolvedWildcard{false};
 	};
 
 	struct HierarchyMappingNode
@@ -131,9 +148,18 @@ namespace AK::WwiseTransfer::Import
 		};
 
 		std::map<juce::String, Object> objects;
-		juce::String errorMessage;
+		std::vector<AK::WwiseTransfer::Waapi::Error> errors;
 
 		using PathObjectPair = std::pair<juce::String, Object>;
+
+		int getNumAudiofilesTransfered() const
+		{
+			auto predicate = [](const PathObjectPair& pathObjectPair)
+			{
+				return pathObjectPair.second.type == Wwise::ObjectType::AudioFileSource;
+			};
+			return std::count_if(objects.begin(), objects.end(), predicate);
+		}
 
 		int getNumObjectsCreated() const
 		{

@@ -1,6 +1,24 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+The script in this file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "CustomLookAndFeel.h"
 
 #include "BinaryData.h"
+#include "UI/HierarchyMappingTable.h"
+#include "UI/ImportPreviewComponent.h"
+#include "UI/ValidatableTextEditor.h"
 
 namespace AK::WwiseTransfer
 {
@@ -19,8 +37,8 @@ namespace AK::WwiseTransfer
 		, previewItemNoChangeColor{0xff7d7d7d}
 		, previewItemNewColor{0xff29afff}
 		, previewItemReplacedColor{0xffda8e40}
-		, regularTypeFace{juce::Typeface::createSystemTypefaceFor(BinaryData::open_sans_ttf, BinaryData::open_sans_ttfSize)}
-		, boldTypeFace{juce::Typeface::createSystemTypefaceFor(BinaryData::open_sans_bold_ttf, BinaryData::open_sans_bold_ttfSize)}
+		, errorColor(0xffff3333)
+		, regularTypeFace{juce::Typeface::createSystemTypefaceFor(BinaryData::noto_universal_ttf, BinaryData::noto_universal_ttfSize)}
 	{
 		setColourScheme({
 			windowBackgroundColor,
@@ -46,6 +64,10 @@ namespace AK::WwiseTransfer
 		setColour(juce::TableHeaderComponent::outlineColourId, thickOutlineColor);
 		setColour(juce::HyperlinkButton::textColourId, textColor);
 		setColour(juce::TooltipWindow::backgroundColourId, widgetBackgroundColor);
+
+		setColour(ValidatableTextEditor::errorOutlineColor, errorColor);
+		setColour(HierarchyMappingTable::errorOutlineColor, errorColor);
+		setColour(ValueTreeItem::errorOutlineColor, errorColor);
 	}
 
 	std::unique_ptr<juce::Drawable> CustomLookAndFeel::getIconForObjectType(Wwise::ObjectType objectType)
@@ -56,7 +78,7 @@ namespace AK::WwiseTransfer
 		{
 		case ObjectType::ActorMixer:
 		{
-			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_PhysicalFolder_nor_svg, BinaryData::ObjectIcons_PhysicalFolder_nor_svgSize);
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_ActorMixer_nor_svg, BinaryData::ObjectIcons_ActorMixer_nor_svgSize);
 		}
 		case ObjectType::AudioFileSource:
 		{
@@ -147,7 +169,7 @@ namespace AK::WwiseTransfer
 		auto textColour = header.findColour(juce::TableHeaderComponent::textColourId)
 		                      .withAlpha(columnDisabled ? 0.5f : 1.0f);
 		g.setColour(textColour);
-		g.setFont(getTableHeaderFont().withHeight((float)height * 0.6f));
+		g.setFont(getTableHeaderFont());
 		g.drawFittedText(columnName, area, juce::Justification::centredLeft, 1);
 	}
 
@@ -225,9 +247,16 @@ namespace AK::WwiseTransfer
 
 	void CustomLookAndFeel::fillTextEditorBackground(juce::Graphics& g, int width, int height, juce::TextEditor& textEditor)
 	{
-		auto backgroundColor = textEditor.isReadOnly() ? windowBackgroundColor : textEditor.findColour(juce::TextEditor::backgroundColourId);
+		if(dynamic_cast<juce::AlertWindow*>(textEditor.getParentComponent()) == nullptr)
+		{
+			auto backgroundColor = textEditor.isReadOnly() ? windowBackgroundColor : textEditor.findColour(juce::TextEditor::backgroundColourId);
 
-		g.fillAll(backgroundColor);
+			g.fillAll(backgroundColor);
+		}
+		else
+		{
+			LookAndFeel_V2::fillTextEditorBackground(g, width, height, textEditor);
+		}
 	}
 
 	void CustomLookAndFeel::drawTooltip(juce::Graphics& g, const juce::String& text, int width, int height)
@@ -245,7 +274,7 @@ namespace AK::WwiseTransfer
 
 		juce::AttributedString s;
 		s.setJustification(juce::Justification::centred);
-		s.append(text, juce::Font(tooltipFontSize, juce::Font::bold), findColour(juce::TooltipWindow::textColourId));
+		s.append(text, juce::Font(tooltipFontSize), findColour(juce::TooltipWindow::textColourId));
 
 		juce::TextLayout tl;
 		tl.createLayoutWithBalancedLineLengths(s, (float)maxToolTipWidth);
@@ -283,9 +312,6 @@ namespace AK::WwiseTransfer
 
 	juce::Typeface::Ptr CustomLookAndFeel::getTypefaceForFont(const juce::Font& font)
 	{
-		if(font.isBold())
-			return boldTypeFace;
-
 		return regularTypeFace;
 	}
 
@@ -311,7 +337,7 @@ namespace AK::WwiseTransfer
 
 	juce::Font CustomLookAndFeel::getTableHeaderFont()
 	{
-		return juce::Font(CustomLookAndFeelConstants::smallFontSize, juce::Font::bold);
+		return juce::Font(CustomLookAndFeelConstants::extraSmallFontSize);
 	}
 
 	juce::Font CustomLookAndFeel::getAlertWindowFont()
@@ -326,6 +352,11 @@ namespace AK::WwiseTransfer
 
 	juce::Font CustomLookAndFeel::getAlertWindowTitleFont()
 	{
-		return juce::Font(CustomLookAndFeelConstants::largeFontSize, juce::Font::bold);
+		return juce::Font(CustomLookAndFeelConstants::largeFontSize);
+	}
+
+	juce::Font CustomLookAndFeel::getComboBoxFont(juce::ComboBox&)
+	{
+		return juce::Font(CustomLookAndFeelConstants::smallFontSize);
 	}
 } // namespace AK::WwiseTransfer

@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "DawWatcher.h"
 
 #include "Helpers/ImportHelper.h"
@@ -79,6 +94,9 @@ namespace AK::WwiseTransfer
 
 		if(importItemsHash != lastImportItemsHash || previewOptionsChanged)
 		{
+			auto pathParts = WwiseHelper::pathToPathParts(WwiseHelper::pathToPathWithoutObjectTypes(importDestination) +
+														  WwiseHelper::pathToPathWithoutObjectTypes(hierarchyMappingPath));
+
 			previewOptionsChanged = false;
 
 			std::set<juce::String> objectPaths;
@@ -90,6 +108,7 @@ namespace AK::WwiseTransfer
 			for(const auto& importItem : importItems)
 			{
 				auto currentNode = rootNode;
+				int depth = 0;
 
 				for(const auto& ancestorPath : WwiseHelper::pathToAncestorPaths(importItem.path))
 				{
@@ -103,13 +122,17 @@ namespace AK::WwiseTransfer
 						auto name = WwiseHelper::pathToObjectName(pathWithoutType);
 						auto type = WwiseHelper::pathToObjectType(ancestorPath);
 
-						child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, "", Import::WavStatus::Unknown});
+						auto unresolvedWildcard = name.isEmpty() && pathParts[depth].isNotEmpty();
+
+						Import::PreviewItemNode previewItemNode{name, type, Import::ObjectStatus::New, "", Import::WavStatus::Unknown, unresolvedWildcard};
+						child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, previewItemNode);
 
 						currentNode.appendChild(child, nullptr);
 						pathToValueTreeMapping[pathWithoutType] = child;
 					}
 
 					currentNode = child;
+					depth++;
 				}
 
 				auto pathWithoutType = WwiseHelper::pathToPathWithoutObjectTypes(importItem.path);
@@ -134,7 +157,10 @@ namespace AK::WwiseTransfer
 						wavStatus = Import::WavStatus::New;
 				}
 
-				auto child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, {name, type, Import::ObjectStatus::New, originalsWav, wavStatus});
+				auto unresolvedWildcard = name.isEmpty() && pathParts[depth].isNotEmpty();
+
+				Import::PreviewItemNode previewItemNode{name, type, Import::ObjectStatus::New, originalsWav, wavStatus, unresolvedWildcard};
+				auto child = ImportHelper::previewItemNodeToValueTree(pathWithoutType, previewItemNode);
 
 				currentNode.appendChild(child, nullptr);
 				pathToValueTreeMapping[pathWithoutType] = child;

@@ -16,23 +16,23 @@ specific language governing permissions and limitations under the License.
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <set>
 
-namespace AK::WwiseTransfer
+namespace AK::WwiseTransfer::FileHelper
 {
-	class LoadingComponent : public juce::Component
+	inline int countModifiedFilesInDirectoriesSince(const std::set<juce::File>& directorySet, const juce::Time& lastWriteTime)
 	{
-	public:
-		LoadingComponent();
+		int modifiedFiles = 0;
 
-		void resized() override;
-		void paint(juce::Graphics& g) override;
+		for(const auto& directory : directorySet)
+		{
+			for(const auto& file : directory.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false))
+			{
+				if(file.getLastModificationTime() > lastWriteTime)
+					++modifiedFiles;
+			}
+		}
 
-	private:
-		juce::ProgressBar progressBar;
-		juce::Label text;
-
-		double progress = -1;
-
-		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LoadingComponent)
-	};
-} // namespace AK::WwiseTransfer
+		return modifiedFiles;
+	}
+} // namespace AK::WwiseTransfer::FileHelper

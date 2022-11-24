@@ -1,10 +1,25 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "WwiseHelperTests.h"
 
 namespace AK::WwiseTransfer::Test
 {
 	TEST_CASE("objectTypeToReadableString")
 	{
-		for (const auto& typeStringPair : objectTypeStringMap)
+		for(const auto& typeStringPair : objectTypeStringMap)
 		{
 			REQUIRE(WwiseHelper::objectTypeToReadableString(typeStringPair.first) == typeStringPair.second);
 		}
@@ -12,7 +27,7 @@ namespace AK::WwiseTransfer::Test
 
 	TEST_CASE("stringToObjectType")
 	{
-		for (const auto& typeStringPair : objectTypeStringMap)
+		for(const auto& typeStringPair : objectTypeStringMap)
 		{
 			REQUIRE(WwiseHelper::stringToObjectType(typeStringPair.second) == typeStringPair.first);
 		}
@@ -22,7 +37,7 @@ namespace AK::WwiseTransfer::Test
 	{
 		const auto testName = "testObject";
 
-		for (const auto& objectType : objectTypes)
+		for(const auto& objectType : objectTypes)
 		{
 			auto expectedResult = "\\<" + WwiseHelper::objectTypeToReadableString(objectType) + ">" + testName;
 			REQUIRE(WwiseHelper::buildObjectPathNode(objectType, testName) == expectedResult);
@@ -34,7 +49,7 @@ namespace AK::WwiseTransfer::Test
 		const auto testName = "testObject";
 		const auto expectedResult = "\\testObject";
 
-		for (const auto& objectType : objectTypes)
+		for(const auto& objectType : objectTypes)
 		{
 			auto buildObjectPath = WwiseHelper::buildObjectPathNode(objectType, testName);
 			REQUIRE(WwiseHelper::pathToPathWithoutObjectTypes(buildObjectPath) == expectedResult);
@@ -47,15 +62,14 @@ namespace AK::WwiseTransfer::Test
 		{
 			auto testPath = "\\test\\path\\directory\\multiple";
 
-			REQUIRE(WwiseHelper::pathToPathParts(testPath) == std::vector<juce::String> { "test", "path", "directory", "multiple" });
+			REQUIRE(WwiseHelper::pathToPathParts(testPath) == std::vector<juce::String>{"test", "path", "directory", "multiple"});
 		}
 		SECTION("Wwise Object Type Directory")
 		{
 			auto testPath = "\\<testObject>testName\\path\\directory\\multiple";
 
-			REQUIRE(WwiseHelper::pathToPathParts(testPath) == std::vector<juce::String> { "<testObject>testName", "path", "directory", "multiple" });
+			REQUIRE(WwiseHelper::pathToPathParts(testPath) == std::vector<juce::String>{"<testObject>testName", "path", "directory", "multiple"});
 		}
-
 	}
 
 	TEST_CASE("pathToAncestorPaths")
@@ -64,14 +78,14 @@ namespace AK::WwiseTransfer::Test
 		{
 			auto testPath = "\\test\\path\\directory\\multiple";
 
-			REQUIRE(WwiseHelper::pathToAncestorPaths(testPath) == std::vector<juce::String> { "\\test", "\\test\\path", "\\test\\path\\directory" });
+			REQUIRE(WwiseHelper::pathToAncestorPaths(testPath) == std::vector<juce::String>{"\\test", "\\test\\path", "\\test\\path\\directory"});
 		}
 
 		SECTION("Wwise Object Type Directory")
 		{
 			auto testPath = "\\<testObject>testName\\path\\directory\\multiple";
 
-			REQUIRE(WwiseHelper::pathToAncestorPaths(testPath) == std::vector<juce::String> { "\\<testObject>testName", "\\<testObject>testName\\path", "\\<testObject>testName\\path\\directory" });
+			REQUIRE(WwiseHelper::pathToAncestorPaths(testPath) == std::vector<juce::String>{"\\<testObject>testName", "\\<testObject>testName\\path", "\\<testObject>testName\\path\\directory"});
 		}
 	}
 
@@ -98,7 +112,7 @@ namespace AK::WwiseTransfer::Test
 
 		SECTION("Wwise::ObjectType")
 		{
-			for (const auto& objectType : objectTypes)
+			for(const auto& objectType : objectTypes)
 			{
 				auto buildObjectPath = WwiseHelper::buildObjectPathNode(objectType, testName);
 
@@ -123,13 +137,11 @@ namespace AK::WwiseTransfer::Test
 			auto minor = 10;
 			auto build = 123456;
 
-			auto version = Wwise::Version
-			{
+			auto version = Wwise::Version{
 				year,
 				major,
 				minor,
-				build
-			};
+				build};
 
 			auto versionTree = WwiseHelper::versionToValueTree(version);
 
@@ -204,14 +216,14 @@ namespace AK::WwiseTransfer::Test
 
 		SECTION("Non-Empty")
 		{
-			languages = { "English", "French", "Ukranian" };
+			languages = {"English", "French", "Ukranian"};
 
 			auto languageTreeRoot = WwiseHelper::languagesToValueTree(languages);
 
 			REQUIRE(languageTreeRoot.getNumChildren() == languages.size());
 			REQUIRE(languageTreeRoot.getType() == IDs::languages);
 
-			for (int index = 0; index < languages.size(); index++)
+			for(int index = 0; index < languages.size(); index++)
 			{
 				REQUIRE(languageTreeRoot.getChild(index).getProperty(IDs::languageName) == languages[index]);
 				REQUIRE(languageTreeRoot.getChild(index).getType() == IDs::language);
@@ -232,9 +244,9 @@ namespace AK::WwiseTransfer::Test
 
 		SECTION("Non-Empty")
 		{
-			auto languages = std::vector<juce::String>{ "English", "French", "Ukranian" };
+			auto languages = std::vector<juce::String>{"English", "French", "Ukranian"};
 
-			for (const auto& language : languages)
+			for(const auto& language : languages)
 			{
 				auto childValueTree = juce::ValueTree(IDs::language);
 				childValueTree.setProperty(IDs::languageName, language, nullptr);
@@ -271,4 +283,31 @@ namespace AK::WwiseTransfer::Test
 			REQUIRE(WwiseHelper::getCommonAncestor(testPath1, testPath2) == "");
 		}
 	}
-} // namespace AK::WwiseTransfer:Test
+
+	TEST_CASE("isPathComplete")
+	{
+		SECTION("Complete paths")
+		{
+			std::vector<juce::String> completePaths = {
+				"\\test\\complete\\path",
+				"\\test\\<Object Type>complete\\<Object Type>path",
+			};
+
+			for(const auto& path : completePaths)
+				REQUIRE(WwiseHelper::isPathComplete(path));
+		}
+
+		SECTION("Incomplete paths")
+		{
+			std::vector<juce::String> incompletePaths = {
+				"\\test\\\\path",
+				"\\test\\<Object Type>\\<Object Type>path",
+				"\\test\\<Object Type>incomplete\\<Object Type>",
+				"\\test\\<Object Type>incomplete\\",
+			};
+
+			for(const auto& path : incompletePaths)
+				REQUIRE(!WwiseHelper::isPathComplete(path));
+		}
+	}
+} // namespace AK::WwiseTransfer::Test

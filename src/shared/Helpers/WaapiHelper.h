@@ -1,7 +1,23 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #pragma once
 
-#include "AK/WwiseAuthoringAPI/AkAutobahn/AkJson.h"
+#include "Model/Waapi.h"
 
+#include <JSONHelpers.h>
 #include <juce_core/juce_core.h>
 
 namespace AK::WwiseTransfer::WaapiHelper
@@ -13,26 +29,18 @@ namespace AK::WwiseTransfer::WaapiHelper
 			juce::Time::waitForMillisecondCounter(juce::Time::getMillisecondCounter() + retryDelayMs);
 	}
 
-	inline juce::String getErrorMessage(AK::WwiseAuthoringAPI::AkJson result)
+	inline Waapi::Error parseError(const juce::String& procedureUri, AK::WwiseAuthoringAPI::AkJson result)
 	{
-		juce::String message;
+		Waapi::Error error;
+		error.procedureUri = procedureUri;
+		error.raw = WwiseAuthoringAPI::JSONHelpers::GetAkJsonString(result);
 
 		if(result.HasKey("message"))
-		{
-			message << "Error: ";
-			message << result["message"].GetVariant().GetString().c_str();
+			error.message = result["message"].GetVariant().GetString().c_str();
 
-			if(result.HasKey("details") && result["details"].HasKey("log"))
-			{
-				message << juce::NewLine() << "Details:" << juce::NewLine() << juce::NewLine();
-				for(auto& item : result["details"]["log"].GetArray())
-				{
-					if(item.HasKey("message"))
-						message << juce::NewLine() << item["message"].GetVariant().GetString();
-				}
-			}
-		}
+		if(result.HasKey("uri"))
+			error.uri = result["uri"].GetVariant().GetString().c_str();
 
-		return message;
+		return error;
 	}
 } // namespace AK::WwiseTransfer::WaapiHelper

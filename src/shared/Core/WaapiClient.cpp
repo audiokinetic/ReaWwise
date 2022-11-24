@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------------------
+
+Copyright (c) 2023 AUDIOKINETIC Inc.
+
+This file is licensed to use under the license available at:
+https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
+You may not use this file except in compliance with the License.
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations under the License.
+
+----------------------------------------------------------------------------------------*/
+
 #include "WaapiClient.h"
 
 #include "Helpers/ImportHelper.h"
@@ -33,14 +48,19 @@ namespace AK::WwiseTransfer
 		static constexpr const char* const unknownObject = "ak.wwise.query.unknown_object";
 	}
 
-	WaapiClientWatcher::WaapiClientWatcher(juce::ValueTree appState, WaapiClient& waapiClient, WaapiClientWatcherConfig waapiClientWatcherConfig)
+	namespace WaapiMessages
+	{
+		static constexpr const char* const objectNotFound = "Object not found";
+	}
+
+	WaapiClientWatcher::WaapiClientWatcher(juce::ValueTree appState, WaapiClient& waapiClient, WaapiClientWatcherConfig&& waapiClientWatcherConfig)
 		: juce::Thread("WaapiService")
 		, applicationState(appState)
 		, projectId(applicationState, IDs::projectId, nullptr)
 		, waapiConnected(applicationState, IDs::waapiConnected, nullptr)
 		, wwiseObjectsChanged(applicationState, IDs::wwiseObjectsChanged, nullptr)
 		, waapiClient(waapiClient)
-		, waapiClientWatcherConfig(std::move(waapiClientWatcherConfig))
+		, waapiClientWatcherConfig(waapiClientWatcherConfig)
 		, connectionRetryDelay(waapiClientWatcherConfig.MinConnectionRetryDelay)
 		, languages(applicationState.getChildWithName(IDs::languages))
 	{
@@ -385,7 +405,7 @@ namespace AK::WwiseTransfer
 		}
 		else
 		{
-			response.errorMessage << WaapiHelper::getErrorMessage(result);
+			response.error = WaapiHelper::parseError(WaapiCommands::audioImport, result);
 		}
 
 		return response;
@@ -471,6 +491,7 @@ namespace AK::WwiseTransfer
 					break;
 			}
 		}
+
 		if(response.status)
 		{
 			if(result.HasKey("return"))
@@ -485,7 +506,14 @@ namespace AK::WwiseTransfer
 		}
 		else
 		{
-			response.errorMessage << WaapiHelper::getErrorMessage(result);
+			if(result.HasKey("message"))
+			{
+				juce::String message(result["message"].GetVariant().GetString());
+				if(message.contains(WaapiMessages::objectNotFound))
+					response.status = true;
+			}
+
+			response.error = WaapiHelper::parseError(WaapiCommands::objectGet, result);
 		}
 
 		return response;
@@ -547,7 +575,7 @@ namespace AK::WwiseTransfer
 		}
 		else
 		{
-			response.errorMessage << WaapiHelper::getErrorMessage(result);
+			response.error = WaapiHelper::parseError(WaapiCommands::objectGet, result);
 		}
 
 		return response;
@@ -671,31 +699,7 @@ namespace AK::WwiseTransfer
 		}
 
 		if(!response.status)
-			response.errorMessage << WaapiHelper::getErrorMessage(result);
-
-		return response;
-	}
-
-	Waapi::Response<juce::String> WaapiClient::getOriginalsFolder()
-	{
-		using namespace WwiseAuthoringAPI;
-
-		Waapi::Response<juce::String> response;
-
-		AkJson result;
-		response.status = call(WaapiCommands::getProjectInfo, AkJson::Map{}, AkJson::Map{}, result);
-
-		if(result.HasKey("directories") && result["directories"].HasKey("originals"))
-		{
-			auto originalsFolder = juce::String(result["directories"]["originals"].GetVariant().GetString());
-
-#ifndef WIN32
-			// Waapi returns the path as a windows path
-			originalsFolder = originalsFolder.replace("\\", juce::File::getSeparatorString()).replace("Y:", "~").replace("Z:", "/");
-#endif
-
-			response.result = originalsFolder;
-		}
+			response.error = WaapiHelper::parseError(WaapiCommands::objectGet, result);
 
 		return response;
 	}
@@ -756,7 +760,7 @@ namespace AK::WwiseTransfer
 		}
 		else
 		{
-			response.errorMessage << WaapiHelper::getErrorMessage(result);
+			response.error = WaapiHelper::parseError(WaapiCommands::objectGet, result);
 		}
 
 		return response;
@@ -821,7 +825,7 @@ namespace AK::WwiseTransfer
 
 		if(!response.status)
 		{
-			response.errorMessage << juce::NewLine() << WaapiHelper::getErrorMessage(result);
+			response.error = WaapiHelper::parseError(WaapiCommands::objectPasteProperties, result);
 		}
 
 		return response;
@@ -850,7 +854,7 @@ namespace AK::WwiseTransfer
 		}
 		else
 		{
-			response.errorMessage = WaapiHelper::getErrorMessage(result);
+			response.error = WaapiHelper::parseError(WaapiCommands::getInfo, result);
 		}
 
 		return response;
@@ -912,7 +916,52 @@ namespace AK::WwiseTransfer
 		}
 		else
 		{
-			response.errorMessage = WaapiHelper::getErrorMessage(result);
+			response.error = WaapiHelper::parseError(WaapiCommands::objectGet, result);
+		}
+
+		return response;
+	}
+	Waapi::Response<Waapi::AdditionalProjectInfo> WaapiClient::getAdditionalProjectInfo()
+	{
+		using namespace WwiseAuthoringAPI;
+
+		Waapi::Response<Waapi::AdditionalProjectInfo> response;
+
+		AkJson result;
+		response.status = call(WaapiCommands::getProjectInfo, AkJson::Map{}, AkJson::Map{}, result);
+
+		if(result.HasKey("directories") && result["directories"].HasKey("originals"))
+		{
+			auto originalsFolder = juce::String(result["directories"]["originals"].GetVariant().GetString());
+
+#ifndef WIN32
+			// Waapi returns the path as a windows path
+			originalsFolder = originalsFolder.replace("\\", juce::File::getSeparatorString()).replace("Y:", "~").replace("Z:", "/");
+#endif
+
+			response.result.originalsFolder = originalsFolder;
+		}
+
+		if(result.HasKey("referenceLanguageId") && result.HasKey("languages"))
+		{
+			const auto& referenceLanguageId = result["referenceLanguageId"].GetVariant().GetString();
+			const auto& languages = result["languages"].GetArray();
+
+			for(const auto& languageAsAkJson : languages)
+			{
+				const auto& language = languageAsAkJson.GetMap();
+				const auto& langIdIt = language.find("id");
+				const auto& langNameIt = language.find("name");
+
+				if(langIdIt != language.cend() && langNameIt != language.cend())
+				{
+					if(langIdIt->second.GetVariant().GetString() == referenceLanguageId)
+					{
+						response.result.referenceLanguage = langNameIt->second.GetVariant().GetString();
+						break;
+					}
+				}
+			}
 		}
 
 		return response;
@@ -950,7 +999,7 @@ namespace AK::WwiseTransfer
 		}
 		else
 		{
-			response.errorMessage = WaapiHelper::getErrorMessage(result);
+			response.error = WaapiHelper::parseError(WaapiCommands::getSelectedObjects, result);
 		}
 
 		return response;
