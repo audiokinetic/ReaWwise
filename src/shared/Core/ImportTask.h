@@ -62,7 +62,7 @@ namespace AK::WwiseTransfer
 			{
 				if(WwiseHelper::isPathComplete(importItem.path))
 				{
-					importItemRequests.emplace_back(Waapi::ImportItemRequest{importItem.path, importItem.originalsSubFolder, importItem.renderFilePath});
+					importItemRequests.emplace_back(Waapi::ImportItemRequest{importItem.path, importItem.originalsSubFolder, importItem.renderFilePath, importItem.renderFileWavBase64, importItem.renderFileName});
 
 					auto pathWithoutObjectTypes = WwiseHelper::pathToPathWithoutObjectTypes(importItem.path);
 					objectsInExtension.insert(pathWithoutObjectTypes);

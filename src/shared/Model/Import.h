@@ -68,6 +68,8 @@ namespace AK::WwiseTransfer::Import
 	struct Item : public PreviewItem
 	{
 		juce::String renderFilePath;
+		juce::String renderFileWavBase64;
+		juce::String renderFileName;
 	};
 
 	struct PreviewItemNode

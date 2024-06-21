@@ -29,8 +29,8 @@ namespace AK::WwiseTransfer
 {
 	struct WaapiClientWatcherConfig
 	{
-		const juce::String Ip;
-		const int Port;
+		juce::String Ip;
+		int Port;
 		const int ConnectionMonitorDelay;
 		const int MinConnectionRetryDelay;
 		const int MaxConnectionRetryDelay;
@@ -228,6 +228,7 @@ namespace AK::WwiseTransfer
 
 		void start();
 		void stop();
+		void changeParameters(const juce::String& ip, int port);
 
 	private:
 		juce::ValueTree applicationState;
@@ -248,10 +249,18 @@ namespace AK::WwiseTransfer
 		uint64_t objectPostDeletedEventSubscriptionId{0};
 		uint64_t objectNameChangedEventSubscriptionId{0};
 
+		// protected by guiMutex except for on construction
+		std::mutex guiMutex;
+		bool shouldReconnect = false;
+		juce::String ip;
+		int port;
+		//
+
 		void run() override;
 
 		void setProjectId(const juce::String& projectId);
 		void setWaapiConnected(bool connected);
 		void setWwiseObjectsChanged(bool changed);
+		void disconnectFromWaapi();
 	};
 } // namespace AK::WwiseTransfer

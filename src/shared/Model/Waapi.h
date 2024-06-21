@@ -29,6 +29,8 @@ namespace AK::WwiseTransfer::Waapi
 		juce::String path;
 		juce::String originalsSubFolder;
 		juce::String renderFilePath;
+		juce::String renderFileWavBase64;
+		juce::String renderFileName;
 	};
 
 	struct ProjectInfo

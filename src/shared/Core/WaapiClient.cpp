@@ -63,6 +63,8 @@ namespace AK::WwiseTransfer
 		, waapiClientWatcherConfig(waapiClientWatcherConfig)
 		, connectionRetryDelay(waapiClientWatcherConfig.MinConnectionRetryDelay)
 		, languages(applicationState.getChildWithName(IDs::languages))
+		, ip(waapiClientWatcherConfig.Ip)
+		, port(waapiClientWatcherConfig.Port)
 	{
 	}
 
@@ -76,10 +78,20 @@ namespace AK::WwiseTransfer
 		stopThread(-1);
 	}
 
+	void WaapiClientWatcher::changeParameters(const juce::String& ip, int port)
+	{
+		{
+			std::lock_guard lock(guiMutex);
+			this->ip = ip;
+			this->port = port;
+			shouldReconnect = true;
+		}
+		notify();
+	}
+
 	void WaapiClientWatcher::run()
 	{
 		using namespace WwiseAuthoringAPI;
-
 		auto onDisconnect = [this]
 		{
 			juce::Logger::writeToLog("Disconnected from waapi");
@@ -108,6 +120,18 @@ namespace AK::WwiseTransfer
 
 		while(!threadShouldExit())
 		{
+			{
+				std::unique_lock lock(guiMutex);
+				if(shouldReconnect)
+				{
+					waapiClientWatcherConfig.Ip = ip;
+					waapiClientWatcherConfig.Port = port;
+					shouldReconnect = false;
+					lock.unlock();
+					disconnectFromWaapi();
+				}
+			}
+
 			int waitTime = waapiClientWatcherConfig.ConnectionMonitorDelay;
 
 			if(!waapiClient.isConnected())
@@ -183,55 +207,7 @@ namespace AK::WwiseTransfer
 		}
 		if(waapiClient.isConnected())
 		{
-			AkJson result;
-			if(waapiClient.unsubscribe(projectLoadedSubscriptionId, result))
-			{
-				juce::Logger::writeToLog("Unsubscribed from project loaded");
-			}
-			else
-			{
-				juce::Logger::writeToLog("Failed to unsubscribed from project unloaded");
-			}
-
-			if(waapiClient.unsubscribe(projectPostClosedSubscriptionId, result))
-			{
-				juce::Logger::writeToLog("Unsubscribed from project post closed");
-			}
-			else
-			{
-				juce::Logger::writeToLog("Failed to unsubscribed from project post closed");
-			}
-
-			if(waapiClient.unsubscribe(objectCreatedEventSubscriptionId, result))
-			{
-				juce::Logger::writeToLog("Unsubscribed from object created");
-			}
-			else
-			{
-				juce::Logger::writeToLog("Failed to unsubscribed from object created");
-			}
-
-			if(waapiClient.unsubscribe(objectPostDeletedEventSubscriptionId, result))
-			{
-				juce::Logger::writeToLog("Unsubscribed from object postDeleted");
-			}
-			else
-			{
-				juce::Logger::writeToLog("Failed to unsubscribed from object postDeleted");
-			}
-
-			if(waapiClient.unsubscribe(objectNameChangedEventSubscriptionId, result))
-			{
-				juce::Logger::writeToLog("Unsubscribed from object postDeleted");
-			}
-			else
-			{
-				juce::Logger::writeToLog("Failed to unsubscribed from object postDeleted");
-			}
-
-			setWaapiConnected(false);
-
-			waapiClient.disconnect();
+			disconnectFromWaapi();
 		}
 	}
 	void WaapiClientWatcher::setProjectId(const juce::String& id)
@@ -260,6 +236,61 @@ namespace AK::WwiseTransfer
 		};
 
 		juce::MessageManager::callAsync(onCallAsync);
+	}
+
+	void WaapiClientWatcher::disconnectFromWaapi()
+	{
+		using namespace WwiseAuthoringAPI;
+		AkJson result;
+		if(waapiClient.unsubscribe(projectLoadedSubscriptionId, result))
+		{
+			juce::Logger::writeToLog("Unsubscribed from project loaded");
+		}
+		else
+		{
+			juce::Logger::writeToLog("Failed to unsubscribed from project unloaded");
+		}
+
+		if(waapiClient.unsubscribe(projectPostClosedSubscriptionId, result))
+		{
+			juce::Logger::writeToLog("Unsubscribed from project post closed");
+		}
+		else
+		{
+			juce::Logger::writeToLog("Failed to unsubscribed from project post closed");
+		}
+
+		if(waapiClient.unsubscribe(objectCreatedEventSubscriptionId, result))
+		{
+			juce::Logger::writeToLog("Unsubscribed from object created");
+		}
+		else
+		{
+			juce::Logger::writeToLog("Failed to unsubscribed from object created");
+		}
+
+		if(waapiClient.unsubscribe(objectPostDeletedEventSubscriptionId, result))
+		{
+			juce::Logger::writeToLog("Unsubscribed from object postDeleted");
+		}
+		else
+		{
+			juce::Logger::writeToLog("Failed to unsubscribed from object postDeleted");
+		}
+
+		if(waapiClient.unsubscribe(objectNameChangedEventSubscriptionId, result))
+		{
+			juce::Logger::writeToLog("Unsubscribed from object postDeleted");
+		}
+		else
+		{
+			juce::Logger::writeToLog("Failed to unsubscribed from object postDeleted");
+		}
+
+		waapiClient.disconnect();
+
+		setWaapiConnected(false);
+		setProjectId("");
 	}
 
 	void WaapiClientWatcher::setWaapiConnected(bool connected)
@@ -338,11 +369,22 @@ namespace AK::WwiseTransfer
 		AkJson::Array importItemsAsJson;
 		for(const auto& importItemRequest : importItemsRequest)
 		{
+			std::string key;
+			std::string value;
+			if(importItemRequest.renderFileWavBase64.isEmpty())
+			{
+				key = "audioFile";
+				value = importItemRequest.renderFilePath.toStdString();
+			}
+			else
+			{
+				key = "audioFileBase64";
+				value = importItemRequest.renderFileName.toStdString() + "|" + importItemRequest.renderFileWavBase64.toStdString();
+			}
+			using namespace juce;
 			auto importItemAsJson = AkJson(AkJson::Map{
-				{
-					"audioFile",
-					AkVariant(importItemRequest.renderFilePath.toStdString()),
-				},
+				{key,
+					AkVariant(value)},
 				{
 					"objectPath",
 					AkVariant(importItemRequest.path.toStdString()),

@@ -25,7 +25,9 @@ namespace AK::WwiseTransfer
 		explicit ApplicationProperties(const juce::String& applicationName);
 
 		juce::String getWaapiIp();
+		void setWaapiIp(const juce::String& ip);
 		int getWaapiPort();
+		void setWaapiPort(int port);
 		int getPreviewRefreshInterval();
 		juce::StringArray getRecentHierarchyMappingPresets();
 		void addRecentHierarchyMappingPreset(const juce::String& path);
@@ -34,6 +36,8 @@ namespace AK::WwiseTransfer
 		double getScaleFactorOverride();
 		bool getShowSilentIncrementWarning();
 		void setShowSilentIncrementWarning(bool value);
+		bool getIsCrossMachineTransferEnabled();
+		void setIsCrossMachineTransferEnabled(bool value);
 
 	private:
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ApplicationProperties)

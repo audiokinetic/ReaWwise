@@ -38,8 +38,7 @@ specific language governing permissions and limitations under the License.
 
 namespace AK::WwiseTransfer
 {
-	class MainComponent
-		: public juce::Component
+	class MainComponent : public juce::Component
 		, juce::ValueTree::Listener
 		, juce::AsyncUpdater
 	{

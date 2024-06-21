@@ -15,11 +15,10 @@ specific language governing permissions and limitations under the License.
 
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <juce_gui_basics/juce_gui_basics.h>
 #include <string>
 #include <vector>
 

@@ -14,7 +14,6 @@ specific language governing permissions and limitations under the License.
 ----------------------------------------------------------------------------------------*/
 
 #include <AK/Tools/Common/AkAssert.h>
-
 #include <cassert>
 #include <stdio.h>
 

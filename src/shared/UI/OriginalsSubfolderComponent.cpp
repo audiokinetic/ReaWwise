@@ -30,15 +30,17 @@ namespace AK::WwiseTransfer
 		constexpr int smallButtonWidth = 26;
 	} // namespace WwiseOriginalsComponentConstants
 
-	OriginalsSubfolderComponent::OriginalsSubfolderComponent(juce::ValueTree appState, const juce::String& applicationName)
+	OriginalsSubfolderComponent::OriginalsSubfolderComponent(juce::ValueTree appState, const juce::String& applicationName, ApplicationProperties& applicationProperties, WaapiClientWatcher& waapiCW)
 		: applicationState(appState)
 		, projectPath(applicationState, IDs::projectPath, nullptr)
 		, originalsSubfolder(applicationState, IDs::originalsSubfolder, nullptr)
 		, fileBrowserButton("FileBrowserButton", juce::Drawable::createFromImageData(BinaryData::General_FolderWithTriangle_Normal_svg, BinaryData::General_FolderWithTriangle_Normal_svgSize))
 		, aboutButton("AboutButton", juce::Drawable::createFromImageData(BinaryData::Dialog_Help_Active_png, BinaryData::Dialog_Help_Active_pngSize))
+		, crossMachineTransferSettingsButton("crossMachineTransferSettingsButton", juce::Drawable::createFromImageData(BinaryData::Dialog_Settings_Active_png, BinaryData::Dialog_Settings_Active_pngSize))
 		, originalsFolder(applicationState, IDs::originalsFolder, nullptr)
 		, languageSubfolder(applicationState, IDs::languageSubfolder, nullptr)
 		, aboutComponent(applicationName)
+		, crossMachineTransferSettingsComponent(applicationName, applicationProperties, waapiCW)
 	{
 		projectPathLabel.setText("Project Path", juce::dontSendNotification);
 		projectPathLabel.setBorderSize(juce::BorderSize(0));
@@ -68,6 +70,12 @@ namespace AK::WwiseTransfer
 			showAboutWindow();
 		};
 
+		crossMachineTransferSettingsButton.setTooltip("Cross Machine Transfer Settings");
+		crossMachineTransferSettingsButton.onClick = [this]
+		{
+			showCrossMachineTransferSettingsWindow();
+		};
+
 		fileBrowserButton.onClick = [this]
 		{
 			selectOriginalsSubfoler();
@@ -85,6 +93,7 @@ namespace AK::WwiseTransfer
 		addAndMakeVisible(fileBrowserButton);
 		addAndMakeVisible(wildcardSelector);
 		addAndMakeVisible(aboutButton);
+		addAndMakeVisible(crossMachineTransferSettingsButton);
 
 		refreshComponent();
 
@@ -108,6 +117,9 @@ namespace AK::WwiseTransfer
 			projectPathSection.removeFromLeft(margin);
 
 			aboutButton.setBounds(projectPathSection.removeFromRight(smallButtonWidth));
+			projectPathSection.removeFromRight(spacing);
+
+			crossMachineTransferSettingsButton.setBounds(projectPathSection.removeFromRight(smallButtonWidth));
 			projectPathSection.removeFromRight(spacing);
 
 			projectPathEditor.setBounds(projectPathSection);
@@ -183,6 +195,17 @@ namespace AK::WwiseTransfer
 		options.resizable = false;
 		options.componentToCentreAround = this->getParentComponent()->getParentComponent();
 		options.content = juce::OptionalScopedPointer<juce::Component>(&aboutComponent, false);
+
+		options.launchAsync();
+	}
+	void OriginalsSubfolderComponent::showCrossMachineTransferSettingsWindow()
+	{
+		juce::DialogWindow::LaunchOptions options;
+		options.dialogTitle = "Waapi Network Transfer Settings";
+		options.useNativeTitleBar = true;
+		options.resizable = false;
+		options.componentToCentreAround = this->getParentComponent()->getParentComponent();
+		options.content = juce::OptionalScopedPointer<juce::Component>(&crossMachineTransferSettingsComponent, false);
 
 		options.launchAsync();
 	}

@@ -1,0 +1,14 @@
+{
+    "description": "Wwise Reaper extension",
+    "id": "audiokinetic.reawwise.${year}_${major}_${minor}",
+    "name": "ReaWwise",
+    "tag": "reawwise",
+    "type": "reawwise",
+    "vendor": "Audiokinetic",
+    "version": {
+        "build": ${build},
+        "major": ${major},
+        "minor": ${minor},
+        "year": ${year}
+    }
+}

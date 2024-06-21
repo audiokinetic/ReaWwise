@@ -41,7 +41,11 @@ namespace AK::WwiseTransfer
 		constexpr int errorMessageMarginLeft = 75;
 	}; // namespace ImportControlsComponentConstants
 
-	ImportControlsComponent::ImportControlsComponent(juce::ValueTree appState, WaapiClient& waapiClient, DawContext& dawContext, ApplicationProperties& applicationProperties, const juce::String& applicationName)
+	ImportControlsComponent::ImportControlsComponent(juce::ValueTree appState,
+		WaapiClient& waapiClient,
+		DawContext& dawContext,
+		ApplicationProperties& applicationProperties,
+		const juce::String& applicationName)
 		: applicationState(appState)
 		, originalsSubfolderValid(applicationState, IDs::originalsSubfolderValid, nullptr)
 		, importDestinationValid(applicationState, IDs::importDestinationValid, nullptr)
@@ -108,7 +112,8 @@ namespace AK::WwiseTransfer
 
 		transferInProgress = true;
 
-		const auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)));
+		const auto hierarchyMappingPath =
+			ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)));
 		const Import::Options opts(importDestination, originalsSubFolder, hierarchyMappingPath);
 
 		const auto previewItems = dawContext.getItemsForPreview(opts);
@@ -132,14 +137,15 @@ namespace AK::WwiseTransfer
 			return;
 		}
 
-		const auto importItems = dawContext.getItemsForImport(opts);
+		auto importItems = dawContext.getItemsForImport(opts);
 
 		bool showIncompletePathWarning = false;
 		bool showRenameWarning = false;
+		bool isCrossMachineTransferEnabled = applicationProperties.getIsCrossMachineTransferEnabled();
 
 		if(importItems.size() > 0)
 		{
-			for(const auto& importItem : importItems)
+			for(auto& importItem : importItems)
 			{
 				if(importItem.renderFilePath.isEmpty())
 				{
@@ -152,6 +158,20 @@ namespace AK::WwiseTransfer
 
 				if(!WwiseHelper::isPathComplete(importItem.path))
 					showIncompletePathWarning = true;
+
+				using namespace juce;
+				const File rendPath(importItem.renderFilePath);
+				importItem.renderFileName = rendPath.getFileName();
+
+				if(isCrossMachineTransferEnabled)
+				{
+					MemoryBlock mb;
+					std::unique_ptr<FileInputStream> inputStream = rendPath.createInputStream();
+					inputStream->readIntoMemoryBlock(mb);
+					importItem.renderFileWavBase64 = Base64::toBase64(mb.getData(), mb.getSize());
+					// add base64 padding
+					importItem.renderFileWavBase64 += String(std::string(importItem.renderFileWavBase64.length() % 4, '='));
+				}
 			}
 		}
 		else
@@ -180,11 +200,7 @@ namespace AK::WwiseTransfer
 		message << juce::NewLine() << summary.getNumObjectTemplatesApplied() << " object template(s) applied.";
 		message << juce::NewLine() << summary.getNumAudiofilesTransfered() << " audio files(s) imported.";
 
-		auto messageBoxOptions = juce::MessageBoxOptions()
-		                             .withTitle(title)
-		                             .withMessage(message)
-		                             .withButton("View Details")
-		                             .withButton("Close");
+		auto messageBoxOptions = juce::MessageBoxOptions().withTitle(title).withMessage(message).withButton("View Details").withButton("Close");
 
 		auto onDialogBtnClicked = [this, summary = summary, importTaskOptions = importTaskOptions](int result)
 		{
@@ -244,16 +260,15 @@ namespace AK::WwiseTransfer
 
 	void ImportControlsComponent::refreshComponent()
 	{
-		auto importButtonEnabled = !transferInProgress.get() && originalsSubfolderValid.get() && importDestinationValid.get() &&
-		                           projectPath.get().isNotEmpty() && previewItems.getNumChildren() > 0;
+		auto importButtonEnabled = !transferInProgress.get() && originalsSubfolderValid.get() && importDestinationValid.get() && projectPath.get().isNotEmpty() &&
+		                           previewItems.getNumChildren() > 0;
 
 		auto hieararchyMappingNodes = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
 
 		auto hierarchyMappingValid = true;
 		for(const auto& hierarchyMappingNode : hieararchyMappingNodes)
 		{
-			hierarchyMappingValid &= hierarchyMappingNode.typeValid &&
-			                         hierarchyMappingNode.nameValid &&
+			hierarchyMappingValid &= hierarchyMappingNode.typeValid && hierarchyMappingNode.nameValid &&
 			                         (!hierarchyMappingNode.propertyTemplatePathEnabled || hierarchyMappingNode.propertyTemplatePathValid);
 		}
 
@@ -275,7 +290,8 @@ namespace AK::WwiseTransfer
 
 	void ImportControlsComponent::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 	{
-		if(treeWhosePropertyHasChanged == applicationState && (property == IDs::originalsSubfolderValid || property == IDs::importDestinationValid || property == IDs::projectPath || property == IDs::transferInProgress) ||
+		if(treeWhosePropertyHasChanged == applicationState && (property == IDs::originalsSubfolderValid || property == IDs::importDestinationValid ||
+																  property == IDs::projectPath || property == IDs::transferInProgress) ||
 			treeWhosePropertyHasChanged.getType() == IDs::hierarchyMappingNode)
 		{
 			triggerAsyncUpdate();
@@ -350,11 +366,7 @@ namespace AK::WwiseTransfer
 		const juce::String message("One or more file names where silently incremented to avoid overwriting during the render process.");
 		juce::Logger::writeToLog(message);
 
-		auto messageBoxOptions = juce::MessageBoxOptions()
-		                             .withTitle("Action Required")
-		                             .withMessage(message)
-		                             .withButton("Continue")
-		                             .withButton("Cancel");
+		auto messageBoxOptions = juce::MessageBoxOptions().withTitle("Action Required").withMessage(message).withButton("Continue").withButton("Cancel");
 
 		juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
 
@@ -382,11 +394,7 @@ namespace AK::WwiseTransfer
 		const juce::String message("One or more object paths are incomplete and will not be transfered.");
 		juce::Logger::writeToLog(message);
 
-		auto messageBoxOptions = juce::MessageBoxOptions()
-		                             .withTitle("Action Required")
-		                             .withMessage(message)
-		                             .withButton("Continue")
-		                             .withButton("Cancel");
+		auto messageBoxOptions = juce::MessageBoxOptions().withTitle("Action Required").withMessage(message).withButton("Continue").withButton("Cancel");
 
 		juce::AlertWindow::showAsync(messageBoxOptions, onDialogBtnClicked);
 	}
@@ -396,16 +404,8 @@ namespace AK::WwiseTransfer
 		const auto hierarchyMappingNodeList = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
 
 		const Import::Task::Options importTaskOptions{
-			importItems,
-			containerNameExistsOption,
-			applyTemplateOption,
-			importDestination,
-			hierarchyMappingNodeList,
-			originalsFolder,
-			languageSubfolder,
-			selectObjectsOnImportCommand,
-			applyTemplateFeatureEnabled,
-			undoGroupFeatureEnabled,
+			importItems, containerNameExistsOption, applyTemplateOption, importDestination, hierarchyMappingNodeList,
+			originalsFolder, languageSubfolder, selectObjectsOnImportCommand, applyTemplateFeatureEnabled, undoGroupFeatureEnabled,
 			waqlEnabled};
 
 		auto onImportComplete = [this, importTaskOptions = importTaskOptions](const Import::Summary& importSummary)

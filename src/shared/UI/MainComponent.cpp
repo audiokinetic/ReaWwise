@@ -40,8 +40,12 @@ namespace AK::WwiseTransfer
 		: applicationState(ApplicationState::create())
 		, validator(applicationState, waapiClient)
 		, applicationProperties(applicationName)
-		, waapiClientWatcher(applicationState, waapiClient, WaapiClientWatcherConfig{applicationProperties.getWaapiIp(), applicationProperties.getWaapiPort(), MainComponentConstants::connectionMonitorDelayDefault, MainComponentConstants::minConnectionRetryDelayDefault, MainComponentConstants::maxConnectionRetryDelayDefault})
-		, originalsSubfolderComponent(applicationState, applicationName)
+		, waapiClientWatcher(applicationState,
+			  waapiClient,
+			  WaapiClientWatcherConfig{applicationProperties.getWaapiIp(), applicationProperties.getWaapiPort(),
+				  MainComponentConstants::connectionMonitorDelayDefault, MainComponentConstants::minConnectionRetryDelayDefault,
+				  MainComponentConstants::maxConnectionRetryDelayDefault})
+		, originalsSubfolderComponent(applicationState, applicationName, applicationProperties, waapiClientWatcher)
 		, importDestinationComponent(applicationState, waapiClient)
 		, importComponent(applicationState, waapiClient, applicationProperties, applicationName)
 		, importPreviewComponent(applicationState)

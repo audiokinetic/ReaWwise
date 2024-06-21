@@ -19,6 +19,7 @@ specific language governing permissions and limitations under the License.
 #include "CustomDrawableButton.h"
 #include "TruncatableTextEditor.h"
 #include "ValidatableTextEditor.h"
+#include "WaapiNetworkTransferSettingsComponent.h"
 #include "WildcardSelector.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
@@ -32,7 +33,7 @@ namespace AK::WwiseTransfer
 		, private juce::AsyncUpdater
 	{
 	public:
-		OriginalsSubfolderComponent(juce::ValueTree applicationState, const juce::String& applicationName);
+		OriginalsSubfolderComponent(juce::ValueTree applicationState, const juce::String& applicationName, ApplicationProperties& applicationProperties, WaapiClientWatcher& waapiCW);
 		~OriginalsSubfolderComponent();
 
 	private:
@@ -54,6 +55,9 @@ namespace AK::WwiseTransfer
 		CustomDrawableButton aboutButton;
 		AboutComponent aboutComponent;
 
+		CustomDrawableButton crossMachineTransferSettingsButton;
+		WaapiNetworkTransferSettingsComponent crossMachineTransferSettingsComponent;
+
 		void resized() override;
 		void refreshComponent();
 		void selectOriginalsSubfoler();
@@ -62,6 +66,7 @@ namespace AK::WwiseTransfer
 		void handleAsyncUpdate() override;
 
 		void showAboutWindow();
+		void showCrossMachineTransferSettingsWindow();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OriginalsSubfolderComponent)
 	};

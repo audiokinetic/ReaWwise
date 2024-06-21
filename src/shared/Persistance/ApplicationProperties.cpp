@@ -37,6 +37,9 @@ namespace AK::WwiseTransfer
 
 		const juce::String showSilentIncrementWarningName = "showSilentIncrementWarning";
 		constexpr bool showSilentIncrementWarningValue = true;
+
+		const juce::String enableCrossMachineTransferName = "enableCrossMachineTransfer";
+		constexpr bool enableCrossMachineTransferValue = false;
 	} // namespace ApplicationPropertyConstants
 
 	ApplicationProperties::ApplicationProperties(const juce::String& applicationName)
@@ -63,13 +66,35 @@ namespace AK::WwiseTransfer
 	juce::String ApplicationProperties::getWaapiIp()
 	{
 		using namespace ApplicationPropertyConstants;
-		return getUserSettings()->getValue(waapiIpPropertyName, waapiIpDefaultPropertyValue);
+		juce::String val = getUserSettings()->getValue(waapiIpPropertyName, waapiIpDefaultPropertyValue);
+		if(val.isEmpty() || !getIsCrossMachineTransferEnabled())
+			return waapiIpDefaultPropertyValue;
+		return val;
+	}
+
+	void ApplicationProperties::setWaapiIp(const juce::String& ip)
+	{
+		using namespace ApplicationPropertyConstants;
+		if(ip.isEmpty())
+			return;
+		getUserSettings()->setValue(waapiIpPropertyName, ip);
 	}
 
 	int ApplicationProperties::getWaapiPort()
 	{
 		using namespace ApplicationPropertyConstants;
-		return getUserSettings()->getIntValue(waapiPortPropertyName, waapiPortDefaultPropertyValue);
+		int val = getUserSettings()->getIntValue(waapiPortPropertyName, waapiPortDefaultPropertyValue);
+		if(val <= 0)
+			return waapiPortDefaultPropertyValue;
+		return val;
+	}
+
+	void ApplicationProperties::setWaapiPort(int port)
+	{
+		using namespace ApplicationPropertyConstants;
+		if(port <= 0)
+			return;
+		getUserSettings()->setValue(waapiPortPropertyName, port);
 	}
 
 	int ApplicationProperties::getPreviewRefreshInterval()
@@ -81,7 +106,8 @@ namespace AK::WwiseTransfer
 	juce::StringArray ApplicationProperties::getRecentHierarchyMappingPresets()
 	{
 		using namespace ApplicationPropertyConstants;
-		auto recentHierarchyMappingPresetsAsString = getUserSettings()->getValue(recentHierarchyMappingPresetsPropertyName, recentHierarchyMappingPresetsPropertyValue);
+		auto recentHierarchyMappingPresetsAsString =
+			getUserSettings()->getValue(recentHierarchyMappingPresetsPropertyName, recentHierarchyMappingPresetsPropertyValue);
 
 		juce::StringArray recentHierarchyMappingPresets;
 		recentHierarchyMappingPresets.addTokens(recentHierarchyMappingPresetsAsString, ";", "");
@@ -108,7 +134,7 @@ namespace AK::WwiseTransfer
 		using namespace ApplicationPropertyConstants;
 
 		auto recentHierarchyMappingPresets = getRecentHierarchyMappingPresets();
-		if (recentHierarchyMappingPresets.contains(path))
+		if(recentHierarchyMappingPresets.contains(path))
 			recentHierarchyMappingPresets.removeString(path);
 
 		const auto recentHierarchyMappingPresetsAsString = recentHierarchyMappingPresets.joinIntoString(";", 0, 10);
@@ -137,5 +163,15 @@ namespace AK::WwiseTransfer
 	{
 		using namespace ApplicationPropertyConstants;
 		getUserSettings()->setValue(showSilentIncrementWarningName, value);
+	}
+	bool ApplicationProperties::getIsCrossMachineTransferEnabled()
+	{
+		using namespace ApplicationPropertyConstants;
+		return getUserSettings()->getBoolValue(enableCrossMachineTransferName, enableCrossMachineTransferValue);
+	}
+	void ApplicationProperties::setIsCrossMachineTransferEnabled(bool value)
+	{
+		using namespace ApplicationPropertyConstants;
+		getUserSettings()->setValue(enableCrossMachineTransferName, value);
 	}
 } // namespace AK::WwiseTransfer

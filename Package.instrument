@@ -101,4 +101,30 @@
 			/>
 	</target>
 
+	<target name="generate-bundle-json">
+		<fail message="Requires the 'BUILD_NUMBER' property to be set." if="${BUILD_NUMBER == None}" />
+		<fail message="Requires the 'WWISE_VERSION' property to be set." if="${WWISE_VERSION is None}" />
+		<fail message="Requires the 'WWISE_BUILD_NUMBER' property to be set." if="${WWISE_BUILD_NUMBER is None}" />
+		<fail message="Requires the 'VERSION' property to be set." if="${VERSION is None}" />
+		<fail message="Requires the 'VERSION_MAJOR' property to be set." if="${VERSION_MAJOR is None}" />
+		<fail message="Requires the 'VERSION_MINOR' property to be set." if="${VERSION_MINOR is None}" />
+		<fail message="Requires the 'VERSION_SUBMINOR' property to be set." if="${VERSION_SUBMINOR is None}" />
+
+		<property name="PKG_PATH" value="${BUILDS_LOCATION}\ReaperWwiseTransfer\${VERSION}\${WWISE_VERSION}.${WWISE_BUILD_NUMBER}.${BUILD_NUMBER}\Bundles" />
+		
+		<!-- Generate a bundle.json file in the release folder with version info. -->
+		<ak:generatebundlejson
+			wwise-branch=""
+			wwise-build="${BUILD_NUMBER}"
+			wwise-major="${VERSION_MAJOR}"
+			wwise-minor="${VERSION_MINOR}"
+			wwise-nickname=""
+			wwise-subminor="${VERSION_SUBMINOR}"
+			template-path="ReaperWwiseTransfer\bundle_template.json"
+			release-path="${PKG_PATH}"
+			product-dependent-data=""
+			/>
+		
+	</target>
+
 </instrument>

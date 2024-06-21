@@ -51,7 +51,7 @@ namespace AK::WwiseTransfer
 
 	void TruncatableTextEditor::resetText()
 	{
-		juce::String text{ "..." };
+		juce::String text{"..."};
 		const auto indent = getLeftIndent() * 4;
 		const auto ellipsisWidth = getFont().getStringWidth(text);
 		const auto width = getWidth();
