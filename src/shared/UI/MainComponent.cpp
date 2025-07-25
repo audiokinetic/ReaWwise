@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -137,9 +137,32 @@ namespace AK::WwiseTransfer
 
 	void MainComponent::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 	{
-		if(treeWhosePropertyHasChanged.getType() == IDs::application && property == IDs::collapsedUI)
+		if (treeWhosePropertyHasChanged.getType() == IDs::application)
 		{
-			triggerAsyncUpdate();
+			if (property == IDs::collapsedUI)
+			{
+				triggerAsyncUpdate();
+			}
+			else if ((property == IDs::waapiConnected && applicationState.getPropertyAsValue(IDs::waapiConnected, nullptr) == true) || property == IDs::projectPath)
+			{
+				if (applicationState.getProperty(IDs::importDestination) == "")
+				{
+					auto projectInfo = waapiClient.getAdditionalProjectInfo();
+					if (projectInfo.status)
+					{
+						if (!projectInfo.result.defaultImportWorkUnitPath.isEmpty())
+						{
+							applicationState.setProperty(IDs::importDestination, projectInfo.result.defaultImportWorkUnitPath, nullptr);
+							applicationState.setProperty(IDs::importDestinationValid, true, nullptr);
+						}
+						else
+						{
+							applicationState.setProperty(IDs::importDestination, "\\Actor-Mixer Hierarchy\\Default Work Unit", nullptr);
+							applicationState.setProperty(IDs::importDestinationValid, true, nullptr);
+						}
+					}
+				}
+			}
 		}
 	}
 

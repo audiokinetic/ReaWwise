@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -146,15 +146,9 @@ namespace AK::WwiseTransfer::ApplicationState
 		return originalsSubfolderAbsolutePath.isAChildOf(originalsFolderWithLanguageSubfolder);
 	}
 
-	bool Validator::validateImportDestination(const juce::String& importDestination)
+	bool Validator::validateImportDestination(const juce::String& importDestination) const
 	{
-		using namespace Wwise;
-
-		static const juce::String pathPrefix = "\\Actor-Mixer Hierarchy";
-
-		auto allowedPathPrefix = importDestination.startsWith(pathPrefix);
-
-		return importDestination.isNotEmpty() && !importDestination.endsWith("\\") && allowedPathPrefix;
+		return importDestination.isNotEmpty() && !importDestination.endsWith("\\") && pathStartsWithAllowedPrefix(importDestination);
 	}
 
 	void Validator::validatePropertyTemplatePath(juce::ValueTree hierarchyMappingNode)
@@ -168,15 +162,11 @@ namespace AK::WwiseTransfer::ApplicationState
 			ObjectType::RandomContainer, ObjectType::BlendContainer, ObjectType::ActorMixer, ObjectType::SwitchContainer,
 			ObjectType::Sound};
 
-		static const juce::String pathPrefix = "\\Actor-Mixer Hierarchy";
-
 		auto allowedType = std::find(allowedObjectTypes.begin(), allowedObjectTypes.end(),
 							   propertyTemplatePathType) != allowedObjectTypes.end() ||
 		                   propertyTemplatePathType == ObjectType::Unknown;
 
-		auto allowedPathPrefix = propertyTemplatePath.startsWith(pathPrefix);
-
-		bool isValid = propertyTemplatePath.isEmpty() || allowedType && allowedPathPrefix;
+		bool isValid = propertyTemplatePath.isEmpty() || allowedType && pathStartsWithAllowedPrefix(propertyTemplatePath);
 		juce::String errorMessage = isValid ? "" : "Invalid property template path";
 
 		hierarchyMappingNode.setPropertyExcludingListener(this, IDs::propertyTemplatePathValid, isValid, nullptr);
@@ -230,5 +220,16 @@ namespace AK::WwiseTransfer::ApplicationState
 			hierarchyMappingNode.setPropertyExcludingListener(this, IDs::objectTypeValid, isValid, nullptr);
 			hierarchyMappingNode.setPropertyExcludingListener(this, IDs::objectTypeErrorMessage, errorMessage, nullptr);
 		}
+	}
+
+	bool Validator::pathStartsWithAllowedPrefix(const juce::String& path) const
+	{
+		static const juce::String pathPrefixLegacy = "\\Actor-Mixer Hierarchy";
+		static const juce::String pathPrefix = "\\Containers";
+
+		auto featureSupport = applicationState.getChildWithName(IDs::featureSupport);
+		bool useNewObjectNames = featureSupport.getProperty(IDs::newObjectNamesEnabled);
+
+		return useNewObjectNames ? path.startsWith(pathPrefix) : path.startsWith(pathPrefixLegacy);
 	}
 } // namespace AK::WwiseTransfer::ApplicationState

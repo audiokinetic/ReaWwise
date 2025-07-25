@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -43,6 +43,11 @@ namespace AK::WwiseTransfer
 		juce::CachedValue<juce::String> originalsFolder;
 		juce::CachedValue<juce::String> languageSubfolder;
 		juce::Label projectPathLabel;
+
+		juce::Image connectedStatusImage;
+		juce::Image disconnectedStatusImage;
+		juce::ImageComponent connectionStatusIcon;
+
 		juce::Label originalsSubfolderLabel;
 		TruncatableTextEditor projectPathEditor;
 		ValidatableTextEditor originalsSubfolderEditor;

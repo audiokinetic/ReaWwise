@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -43,6 +43,7 @@ namespace AK::WwiseTransfer::Waapi
 	{
 		juce::String originalsFolder;
 		juce::String referenceLanguage;
+		juce::String defaultImportWorkUnitPath;
 	};
 
 	struct ObjectResponse
@@ -58,7 +59,7 @@ namespace AK::WwiseTransfer::Waapi
 			{
 				auto workUnitType = json["workunitType"].GetVariant().GetString();
 
-				if(path == "\\Actor-Mixer Hierarchy")
+				if(path == "\\Actor-Mixer Hierarchy" || path == "\\Containers")
 					type = Wwise::ObjectType::ActorMixer;
 				else if(workUnitType == "folder")
 					type = Wwise::ObjectType::PhysicalFolder;

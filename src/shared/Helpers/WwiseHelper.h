@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -77,14 +77,14 @@ namespace AK::WwiseTransfer::WwiseHelper
 		}
 	};
 
-	inline juce::String objectTypeToReadableString(Wwise::ObjectType objectType)
+	inline juce::String objectTypeToReadableString(Wwise::ObjectType objectType, bool forDisplayPurpose = false)
 	{
 		using namespace Wwise;
 
 		switch(objectType)
 		{
 		case ObjectType::ActorMixer:
-			return "Actor-Mixer";
+			return !forDisplayPurpose ? "Actor-Mixer" : "Actor-Mixer / Property Container";
 		case ObjectType::AudioFileSource:
 			return "Audio File Source";
 		case ObjectType::BlendContainer:
@@ -118,7 +118,7 @@ namespace AK::WwiseTransfer::WwiseHelper
 
 		if(objectTypeAsString == "AudioFileSource" || objectTypeAsString == "Audio File Source")
 			return ObjectType::AudioFileSource;
-		else if(objectTypeAsString == "ActorMixer" || objectTypeAsString == "Actor Mixer" || objectTypeAsString == "Actor-Mixer")
+		else if(objectTypeAsString == "ActorMixer" || objectTypeAsString == "Actor Mixer" || objectTypeAsString == "Actor-Mixer" || objectTypeAsString == "Property Container" || objectTypeAsString == "Actor-Mixer / Property Container")
 			return ObjectType::ActorMixer;
 		else if(objectTypeAsString == "BlendContainer" || objectTypeAsString == "Blend Container")
 			return ObjectType::BlendContainer;
@@ -201,7 +201,7 @@ namespace AK::WwiseTransfer::WwiseHelper
 
 	inline Wwise::ObjectType pathToObjectType(const juce::String& objectPath)
 	{
-		if(objectPath == "\\Actor-Mixer Hierarchy")
+		if(objectPath == "\\Actor-Mixer Hierarchy" || objectPath == "\\Containers")
 			return Wwise::ObjectType::ActorMixer;
 
 		auto lastIndexLessThan = objectPath.lastIndexOf("<");

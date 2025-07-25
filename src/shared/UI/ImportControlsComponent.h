@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -87,6 +87,8 @@ namespace AK::WwiseTransfer
 		void onFileRenamedDetected(bool isPathIncomplete, const std::vector<Import::Item>& importItems);
 		void onPathIncompleteDetected(const std::vector<Import::Item>& importItems);
 		void onImport(const std::vector<Import::Item>& importItems);
+
+		bool validateFullImportPathBeforeTransfer() const;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImportControlsComponent)
 	};

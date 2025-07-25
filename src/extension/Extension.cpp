@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -260,7 +260,7 @@ namespace AK::ReaWwise
 
 		static std::set<std::shared_ptr<AkJsonRef>> objects;
 
-		///////// Waapi /////////
+		///////// WAAPI /////////
 
 		static bool Waapi_Connect(const char* ipAddress, intptr_t port)
 		{
@@ -758,9 +758,9 @@ namespace AK::ReaWwise
 	}
 
 		static auto apiFunctionDefinitions = {
-			AK_RWT_GENERATE_API_FUNC_DEF(Waapi_Connect, "bool", "const char*,int", "ipAddress,port", "Ak: Connect to waapi (Returns connection status as bool)"),
-			AK_RWT_GENERATE_API_FUNC_DEF(Waapi_Disconnect, "void", "", "", "Ak: Disconnect from waapi"),
-			AK_RWT_GENERATE_API_FUNC_DEF(Waapi_Call, "*", "const char*,*,*", "uri,*,*", "Ak: Make a call to Waapi"),
+			AK_RWT_GENERATE_API_FUNC_DEF(Waapi_Connect, "bool", "const char*,int", "ipAddress,port", "Ak: Connect to WAAPI (Returns connection status as bool)"),
+			AK_RWT_GENERATE_API_FUNC_DEF(Waapi_Disconnect, "void", "", "", "Ak: Disconnect from WAAPI"),
+			AK_RWT_GENERATE_API_FUNC_DEF(Waapi_Call, "*", "const char*,*,*", "uri,*,*", "Ak: Make a call to WAAPI"),
 
 			AK_RWT_GENERATE_API_FUNC_DEF(AkJson_Map, "*", "", "", "Ak: Create a map object"),
 			AK_RWT_GENERATE_API_FUNC_DEF(AkJson_Map_Get, "*", "*,const char*", "*,key", "Ak: Get a map object"),
@@ -771,7 +771,7 @@ namespace AK::ReaWwise
 			AK_RWT_GENERATE_API_FUNC_DEF(AkJson_Array_Get, "*", "*,int", "*,index", "Ak: Get element at index of array object"),
 			AK_RWT_GENERATE_API_FUNC_DEF(AkJson_Array_Size, "int", "*", "*", "Ak: Get count of elements in array object"),
 
-			AK_RWT_GENERATE_API_FUNC_DEF(AkJson_GetStatus, "bool", "*", "*", "Ak: Get the status of a result from a call to waapi"),
+			AK_RWT_GENERATE_API_FUNC_DEF(AkJson_GetStatus, "bool", "*", "*", "Ak: Get the status of a result from a call to WAAPI"),
 
 			AK_RWT_GENERATE_API_FUNC_DEF(AkJson_Clear, "bool", "*", "*", "Ak: Clear object referenced by pointer"),
 			AK_RWT_GENERATE_API_FUNC_DEF(AkJson_ClearAll, "bool", "", "", "Ak: Clear all objects rederenced by pointers"),

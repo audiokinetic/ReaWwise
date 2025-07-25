@@ -45,7 +45,7 @@ namespace AK::WwiseTransfer
 		setSize(width, height);
 		setLookAndFeel(&lookAndFeel);
 
-		ipAddressLabel.setText("Waapi IP Address", juce::dontSendNotification);
+		ipAddressLabel.setText("WAAPI IP Address", juce::dontSendNotification);
 		ipAddressLabel.setBorderSize(juce::BorderSize(0));
 		ipAddressLabel.setMinimumHorizontalScale(1.0f);
 		ipAddressLabel.setJustificationType(juce::Justification::left);
@@ -61,7 +61,7 @@ namespace AK::WwiseTransfer
 		addAndMakeVisible(ipAddressLabel);
 		addAndMakeVisible(ipAddressTextEditor);
 
-		portLabel.setText("Waapi Port", juce::dontSendNotification);
+		portLabel.setText("WAAPI Port", juce::dontSendNotification);
 		portLabel.setBorderSize(juce::BorderSize(0));
 		portLabel.setMinimumHorizontalScale(1.0f);
 		portLabel.setJustificationType(juce::Justification::left);

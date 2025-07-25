@@ -40,6 +40,8 @@ unset(WWISESDK CACHE)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+include_directories(3rd)
+
 add_subdirectory(3rd/JUCE)
 add_subdirectory(3rd/Catch2)
 add_subdirectory(3rd/trompeloeil)

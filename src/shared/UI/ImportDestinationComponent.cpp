@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -98,6 +98,8 @@ namespace AK::WwiseTransfer
 		auto projectPathEmpty = projectPath.get().isEmpty();
 
 		updateImportDestinationButton.setEnabled(!projectPathEmpty);
+
+		importDestinationEditor.repaint();
 
 		auto* customLookAndFeel = dynamic_cast<CustomLookAndFeel*>(&getLookAndFeel());
 

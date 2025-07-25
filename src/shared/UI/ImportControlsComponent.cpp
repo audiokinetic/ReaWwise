@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -110,6 +110,16 @@ namespace AK::WwiseTransfer
 		if(transferInProgress.get())
 			return;
 
+		if (!validateFullImportPathBeforeTransfer())
+		{
+			const juce::String message("The import destination or Wwise node hierarchy must contain at least one work unit.");
+			juce::Logger::writeToLog(message);
+
+			juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon, "Transfer to Wwise Aborted", message);
+
+			return;
+		}
+
 		transferInProgress = true;
 
 		const auto hierarchyMappingPath =
@@ -170,7 +180,7 @@ namespace AK::WwiseTransfer
 					inputStream->readIntoMemoryBlock(mb);
 					importItem.renderFileWavBase64 = Base64::toBase64(mb.getData(), mb.getSize());
 					// add base64 padding
-					importItem.renderFileWavBase64 += String(std::string(importItem.renderFileWavBase64.length() % 4, '='));
+					importItem.renderFileWavBase64 += String(std::string(4 - (importItem.renderFileWavBase64.length() % 4), '='));
 				}
 			}
 		}
@@ -420,6 +430,37 @@ namespace AK::WwiseTransfer
 
 		importTask.reset(new ImportTask(waapiClient, importTaskOptions, onImportComplete));
 		importTask->launchThread();
+	}
+
+	bool ImportControlsComponent::validateFullImportPathBeforeTransfer() const
+	{
+		juce::String importDestination = applicationState.getProperty(IDs::importDestination);
+		std::vector<juce::String> pathParts = WwiseHelper::pathToPathParts(importDestination);
+
+		juce::String partialPath = "";
+		for (const auto& part : pathParts)
+		{
+			partialPath += "\\" + part;
+
+			auto response = waapiClient.getObject(partialPath);
+			if(response.result.path.isNotEmpty() && response.result.type == Wwise::ObjectType::WorkUnit)
+			{
+				return true; // Base import destination contains a work unit.
+			}
+		}
+
+		bool hierarchyContainsWorkUnit = false;
+		auto hierarchyMapping = applicationState.getChildWithName(IDs::hierarchyMapping);
+		for(int i = 0; i < hierarchyMapping.getNumChildren(); ++i)
+		{
+			const auto hierarchyMappingNode = hierarchyMapping.getChild(i);
+			if (juce::VariantConverter<Wwise::ObjectType>::fromVar(hierarchyMappingNode[IDs::objectType]) == Wwise::ObjectType::WorkUnit)
+			{
+				return true; // One of the node that will be created at import is a work unit.
+			}
+		}
+
+		return false;
 	}
 
 } // namespace AK::WwiseTransfer

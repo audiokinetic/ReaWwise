@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -80,6 +80,7 @@ namespace AK::WwiseTransfer::IDs
 	inline const juce::Identifier undoGroupFeatureEnabled = "undoGroupFeatureEnabled";
 	inline const juce::Identifier waqlEnabled = "waqlEnabled";
 	inline const juce::Identifier additionalProjectInfoLookupEnabled = "additionalProjectInfoLookupEnabled";
+	inline const juce::Identifier newObjectNamesEnabled = "newObjectNamesEnabled";
 
 	inline const juce::Identifier wwiseObjectsChanged = "wwiseObjectsChanged";
 

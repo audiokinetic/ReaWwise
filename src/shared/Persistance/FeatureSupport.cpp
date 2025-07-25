@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -31,6 +31,7 @@ namespace AK::WwiseTransfer
 		undoGroupFeatureEnabled.referTo(featureSupport, IDs::undoGroupFeatureEnabled, nullptr);
 		waqlEnabled.referTo(featureSupport, IDs::waqlEnabled, nullptr);
 		additionalProjectInfoLookupEnabled.referTo(featureSupport, IDs::additionalProjectInfoLookupEnabled, nullptr);
+		newObjectNamesEnabled.referTo(featureSupport, IDs::newObjectNamesEnabled, nullptr);
 
 		applicationState.addListener(this);
 	}
@@ -58,9 +59,17 @@ namespace AK::WwiseTransfer
 				undoGroupFeatureEnabled = response.result >= v2021_1_10_0;
 				waqlEnabled = response.result >= v2021_1_0_0;
 				additionalProjectInfoLookupEnabled = response.result >= v2022_1_0_0;
+				newObjectNamesEnabled = response.result >= v2025_1_0_0;
+
+				triggerListenerOnVersionSensitiveProperties();
 			};
 
 			waapiClient.getVersionAsync(onGetVersionAsync);
 		}
+	}
+
+	void FeatureSupport::triggerListenerOnVersionSensitiveProperties()
+	{
+		applicationState.sendPropertyChangeMessage(IDs::importDestination);
 	}
 } // namespace AK::WwiseTransfer

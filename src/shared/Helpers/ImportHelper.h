@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -272,7 +272,7 @@ namespace AK::WwiseTransfer::ImportHelper
 
 		if(hasErrors)
 		{
-			report << "<h3 id='waapi-errors'>Waapi Errors</h3>";
+			report << "<h3 id='waapi-errors'>WAAPI Errors</h3>";
 
 			for(const auto& error : summary.errors)
 			{

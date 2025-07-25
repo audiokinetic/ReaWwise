@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -21,6 +21,20 @@ specific language governing permissions and limitations under the License.
 #include <JSONHelpers.h>
 #include <juce_events/juce_events.h>
 #include <set>
+
+namespace
+{
+	juce::String normalizePath(const juce::String& path)
+	{
+		juce::String normalizedPath(path);
+#ifndef WIN32
+		// Waapi returns the path as a windows path
+		normalizedPath.replace("\\", juce::File::getSeparatorString()).replace("Y:", "~").replace("Z:", "/");
+#endif
+
+		return normalizedPath;
+	}
+}
 
 namespace AK::WwiseTransfer
 {
@@ -109,6 +123,8 @@ namespace AK::WwiseTransfer
 		auto onProjectPostClosed = [this](auto, auto)
 		{
 			juce::Logger::writeToLog("Received project post close event");
+
+			applicationState.setProperty(IDs::projectPath, "", nullptr);
 		};
 
 		auto onObjectEvent = [this](auto, auto)
@@ -341,7 +357,7 @@ namespace AK::WwiseTransfer
 		auto status = Call(in_uri, in_args, in_options, out_result, in_timeoutMs);
 
 		juce::Logger::writeToLog(juce::String(in_uri) +
-								 juce::NewLine() + juce::String("args: ") + JSONHelpers::GetAkJsonString(in_args) +
+								 juce::NewLine() + juce::String("args: ") + JSONHelpers::GetAkJsonString(in_args).substr(0, 10'000) + // Cap the args strings logged to 10,000 characters to avoid crashing the JUCE logger.
 								 juce::NewLine() + juce::String("options: ") + JSONHelpers::GetAkJsonString(in_options) +
 								 juce::NewLine() + juce::String("result: ") + JSONHelpers::GetAkJsonString(out_result));
 
@@ -943,13 +959,8 @@ namespace AK::WwiseTransfer
 
 				if(!returnResult.GetArray().empty())
 				{
-					auto projectPath = juce::String(returnResult[0]["filePath"].GetVariant().GetString());
+					auto projectPath = normalizePath(juce::String(returnResult[0]["filePath"].GetVariant().GetString()));
 					auto projectId = juce::String(returnResult[0]["id"].GetVariant().GetString()).removeCharacters("{}");
-
-#ifndef WIN32
-					// Waapi returns the path as a windows path
-					projectPath = projectPath.replace("\\", juce::File::getSeparatorString()).replace("Y:", "~").replace("Z:", "/");
-#endif
 
 					response.result.projectPath = projectPath;
 					response.result.projectId = projectId;
@@ -963,6 +974,7 @@ namespace AK::WwiseTransfer
 
 		return response;
 	}
+
 	Waapi::Response<Waapi::AdditionalProjectInfo> WaapiClient::getAdditionalProjectInfo()
 	{
 		using namespace WwiseAuthoringAPI;
@@ -974,12 +986,7 @@ namespace AK::WwiseTransfer
 
 		if(result.HasKey("directories") && result["directories"].HasKey("originals"))
 		{
-			auto originalsFolder = juce::String(result["directories"]["originals"].GetVariant().GetString());
-
-#ifndef WIN32
-			// Waapi returns the path as a windows path
-			originalsFolder = originalsFolder.replace("\\", juce::File::getSeparatorString()).replace("Y:", "~").replace("Z:", "/");
-#endif
+			auto originalsFolder = normalizePath(juce::String(result["directories"]["originals"].GetVariant().GetString()));
 
 			response.result.originalsFolder = originalsFolder;
 		}
@@ -1006,8 +1013,15 @@ namespace AK::WwiseTransfer
 			}
 		}
 
+		if(result.HasKey("defaultImportWorkUnit") && result["defaultImportWorkUnit"].HasKey("path"))
+		{
+			auto defaultImportWorkUnitPath = juce::String(result["defaultImportWorkUnit"]["path"].GetVariant().GetString());
+			response.result.defaultImportWorkUnitPath = defaultImportWorkUnitPath;
+		}
+
 		return response;
 	}
+
 	Waapi::Response<Waapi::ObjectResponse> WaapiClient::getSelectedObject()
 	{
 		using namespace WwiseAuthoringAPI;

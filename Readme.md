@@ -4,7 +4,7 @@ ReaWwise is a REAPER extension that sound designers can use to transfer audio fi
 
 ![example](user-interface.png)
 
-## Table of contents
+## Table of Contents
 
 - [**Getting Started**](#getting-started)
 - [Building from Source](#building-from-source)
@@ -18,7 +18,10 @@ ReaWwise is a REAPER extension that sound designers can use to transfer audio fi
 - Windows
 - Mac
 
-### Manual installation
+### REAPER Required Version
+6.66 or higher
+
+### Manual Installation
 
 1. Go to the the [releases page](https://github.com/audiokinetic/ReaWwise/releases), then download the extension file (reaper_reawwise.dll for Windows or reaper_reawwise.dylib for Mac).
 
@@ -26,8 +29,8 @@ ReaWwise is a REAPER extension that sound designers can use to transfer audio fi
 
 3. If REAPER is running, restart the application. The extension is available in the Extensions menu.
 
-### Installing ReaWwise through ReaPack
-#### Importing the Audiokinetic Reaper Tools repository
+### Installing ReaWwise Through ReaPack
+#### Importing the Audiokinetic Reaper Tools Repository
 1. In the REAPER menu, go to **Extensions** > **ReaPack** > **Import Repositories**.
 
 2. In the dialog, insert the url of Audiokinetic's Reaper Tools repository (https://github.com/Audiokinetic/Reaper-Tools/raw/main/index.xml) and click Ok.
@@ -82,7 +85,7 @@ The repository is not open to pull request but in the case of a bug report, bugf
 Feature requests can also be submitted to the [feature request section](https://www.audiokinetic.com/qa/questions/reawwise) of Audiokinetic's Community Q&A. Use ReaWwise as the Category when submitting a question.
 
 ## Legal
-Copyright © 2023 [Audiokinetic Inc.](https://audiokinetic.com) All rights reserved.
+Copyright © 2025 [Audiokinetic Inc.](https://audiokinetic.com) All rights reserved.
 
 ## Acknowledgements
 Inspired by the work of [Karl Davis](https://github.com/karltechno)

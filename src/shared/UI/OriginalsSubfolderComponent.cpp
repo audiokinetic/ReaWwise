@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -17,6 +17,32 @@ specific language governing permissions and limitations under the License.
 
 #include "BinaryData.h"
 #include "Persistance/ApplicationState.h"
+
+namespace
+{
+	void setImageFromRawData(juce::Image& image, const void* rawData, size_t numBytes)
+	{
+		// Create a Drawable from the SVG data.
+		auto drawable = juce::Drawable::createFromImageData(rawData, numBytes);
+
+		if (drawable)
+		{
+			int width = drawable->getWidth();
+			int height = drawable->getHeight();
+
+			// Create a transparent ARGB image to draw on.
+			image = juce::Image(juce::Image::ARGB, width, height, true);
+
+			// Get a graphics context for the image and draw the drawable into it.
+			juce::Graphics g(image);
+			drawable->drawWithin(g, juce::Rectangle<float>(0, 0, width, height),
+				juce::RectanglePlacement::centred, 1.0f);
+		}
+	}
+
+	const char* kConnectionStatusConnectedTooltipMessage = "Connection Status: Connected";
+	const char* kConnectionStatusDisconnectedTooltipMessage = "Connection Status: Disconnected";
+}
 
 namespace AK::WwiseTransfer
 {
@@ -56,8 +82,12 @@ namespace AK::WwiseTransfer
 		projectPathEditor.getValueToTruncate().referTo(projectPath.getPropertyAsValue());
 		projectPathEditor.setReadOnly(true);
 		projectPathEditor.setMouseClickGrabsKeyboardFocus(false);
-
 		projectPathEditor.setMouseCursor(juce::MouseCursor::NormalCursor);
+
+		setImageFromRawData(connectedStatusImage, BinaryData::Success_svg, BinaryData::Success_svgSize);
+		setImageFromRawData(disconnectedStatusImage, BinaryData::Error_svg, BinaryData::Error_svgSize);
+		connectionStatusIcon.setImage(disconnectedStatusImage);
+		connectionStatusIcon.setTooltip(kConnectionStatusDisconnectedTooltipMessage);
 
 		originalsSubfolderEditor.setFont(CustomLookAndFeelConstants::smallFontSize);
 		originalsSubfolderEditor.getTextValue().referTo(originalsSubfolder.getPropertyAsValue());
@@ -94,6 +124,7 @@ namespace AK::WwiseTransfer
 		addAndMakeVisible(wildcardSelector);
 		addAndMakeVisible(aboutButton);
 		addAndMakeVisible(crossMachineTransferSettingsButton);
+		addAndMakeVisible(connectionStatusIcon);
 
 		refreshComponent();
 
@@ -120,6 +151,10 @@ namespace AK::WwiseTransfer
 			projectPathSection.removeFromRight(spacing);
 
 			crossMachineTransferSettingsButton.setBounds(projectPathSection.removeFromRight(smallButtonWidth));
+			projectPathSection.removeFromRight(spacing);
+
+			auto iconArea = projectPathSection.removeFromRight(smallButtonWidth);
+			connectionStatusIcon.setBounds(iconArea.reduced(4, 4)); // Make it a bit smaller for a better look.
 			projectPathSection.removeFromRight(spacing);
 
 			projectPathEditor.setBounds(projectPathSection);
@@ -177,10 +212,28 @@ namespace AK::WwiseTransfer
 	{
 		auto treeType = treeWhosePropertyHasChanged.getType();
 
-		if(treeType == IDs::application && property == IDs::projectPath || treeType == IDs::application && property == IDs::originalsFolder)
+		if(treeType == IDs::application)
 		{
-			triggerAsyncUpdate();
+			if (property == IDs::projectPath || treeType == IDs::application && property == IDs::originalsFolder)
+			{
+				triggerAsyncUpdate();
+			}
+			else if (property == IDs::waapiConnected)
+			{
+				bool waapiConnected = applicationState.getProperty(IDs::waapiConnected);
+				if (waapiConnected)
+				{
+					connectionStatusIcon.setImage(connectedStatusImage);
+					connectionStatusIcon.setTooltip(kConnectionStatusConnectedTooltipMessage);
+				}
+				else
+				{
+					connectionStatusIcon.setImage(disconnectedStatusImage);
+					connectionStatusIcon.setTooltip(kConnectionStatusDisconnectedTooltipMessage);
+				}
+			}
 		}
+		
 	}
 
 	void OriginalsSubfolderComponent::handleAsyncUpdate()
@@ -201,7 +254,7 @@ namespace AK::WwiseTransfer
 	void OriginalsSubfolderComponent::showCrossMachineTransferSettingsWindow()
 	{
 		juce::DialogWindow::LaunchOptions options;
-		options.dialogTitle = "Waapi Network Transfer Settings";
+		options.dialogTitle = "WAAPI Network Transfer Settings";
 		options.useNativeTitleBar = true;
 		options.resizable = false;
 		options.componentToCentreAround = this->getParentComponent()->getParentComponent();

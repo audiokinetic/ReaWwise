@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -80,7 +80,7 @@ namespace AK::WwiseTransfer
 		objectTypeComboBox.setTextWhenNothingSelected("Select Object Type");
 
 		for(auto& objectType : objectTypes)
-			objectTypeComboBox.addItem(WwiseHelper::objectTypeToReadableString(objectType), static_cast<int>(objectType));
+			objectTypeComboBox.addItem(WwiseHelper::objectTypeToReadableString(objectType, true), static_cast<int>(objectType));
 
 		objectLanguageComboBox.setTextWhenNothingSelected("Language");
 		objectLanguageComboBox.setTextWhenNoChoicesAvailable("No Languages loaded");

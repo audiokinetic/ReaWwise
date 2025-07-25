@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -39,10 +39,12 @@ namespace AK::WwiseTransfer::ApplicationState
 		void valueTreeChildRemoved(juce::ValueTree& parent, juce::ValueTree& child, int indexOfChild) override;
 		void valueTreeChildOrderChanged(juce::ValueTree& parent, int oldIndex, int newIndex) override;
 
-		bool validateImportDestination(const juce::String& importDestination);
+		bool validateImportDestination(const juce::String& importDestination) const;
 		bool validateOriginalsSubfolder(const juce::String& originalsFolder, const juce::String& languageSubfolder, const juce::String& originalsSubfolder);
 		void validatePropertyTemplatePath(juce::ValueTree hierarchyMappingNode);
 		void validateObjectName(juce::ValueTree hierarchyMappingNode);
 		void validateHierarchyMapping(Wwise::ObjectType importDestinationType, juce::ValueTree hierarchyMapping);
+
+		bool pathStartsWithAllowedPrefix(const juce::String& path) const;
 	};
 } // namespace AK::WwiseTransfer::ApplicationState

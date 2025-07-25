@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -180,7 +180,7 @@ namespace AK::WwiseTransfer
 		{
 		case HierarchyMappingTableColumn::ObjectType:
 		{
-			text = hierarchyMappingNode.type == Wwise::ObjectType::Unknown ? "Select Object Type" : WwiseHelper::objectTypeToReadableString(hierarchyMappingNode.type);
+			text = hierarchyMappingNode.type == Wwise::ObjectType::Unknown ? "Select Object Type" : WwiseHelper::objectTypeToReadableString(hierarchyMappingNode.type, true);
 			validCell = hierarchyMappingNode.typeValid;
 			break;
 		}

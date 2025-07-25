@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2023 AUDIOKINETIC Inc.
+Copyright (c) 2025 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -36,8 +36,8 @@ namespace AK::WwiseTransfer::ApplicationState
 		applicationState.setProperty(IDs::originalsFolder, "", nullptr);
 		applicationState.setProperty(IDs::languageSubfolder, "SFX", nullptr);
 
-		applicationState.setProperty(IDs::importDestination, "\\Actor-Mixer Hierarchy\\Default Work Unit", nullptr);
-		applicationState.setProperty(IDs::importDestinationValid, true, nullptr);
+		applicationState.setProperty(IDs::importDestination, "", nullptr);
+		applicationState.setProperty(IDs::importDestinationValid, false, nullptr);
 		applicationState.setProperty(IDs::importDestinationErrorMessage, "", nullptr);
 		applicationState.setProperty(IDs::importDestinationType, juce::VariantConverter<Wwise::ObjectType>::toVar(Wwise::ObjectType::WorkUnit), nullptr);
 
@@ -61,6 +61,7 @@ namespace AK::WwiseTransfer::ApplicationState
 		featureSupport.setProperty(IDs::undoGroupFeatureEnabled, false, nullptr);
 		featureSupport.setProperty(IDs::waqlEnabled, false, nullptr);
 		featureSupport.setProperty(IDs::additionalProjectInfoLookupEnabled, false, nullptr);
+		featureSupport.setProperty(IDs::newObjectNamesEnabled, false, nullptr);
 
 		applicationState.appendChild(featureSupport, nullptr);
 
