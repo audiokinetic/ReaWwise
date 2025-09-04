@@ -105,6 +105,14 @@ namespace AK::WwiseTransfer
 		}
 	}
 
+	void PersistanceSupport::valueTreeChildAdded(juce::ValueTree& parent, juce::ValueTree& childWhichHasBeenAdded)
+	{
+		juce::ignoreUnused(childWhichHasBeenAdded);
+
+		if(parent.getType() == IDs::hierarchyMapping)
+			saveState();
+	}
+
 	void PersistanceSupport::valueTreeChildRemoved(juce::ValueTree& parent, juce::ValueTree& child, int indexOfChild)
 	{
 		juce::ignoreUnused(child, indexOfChild);

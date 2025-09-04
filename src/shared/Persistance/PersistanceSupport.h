@@ -36,6 +36,7 @@ namespace AK::WwiseTransfer
 		std::unordered_map<juce::String, juce::ValueTree> stateCache;
 
 		void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
+		void valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded) override;
 		void valueTreeChildRemoved(juce::ValueTree& parent, juce::ValueTree& child, int indexOfChild) override;
 		void valueTreeChildOrderChanged(juce::ValueTree& parent, int oldIndex, int newIndex) override;
 
