@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -31,7 +31,6 @@ namespace AK::WwiseTransfer
 		Import::ContainerNameExistsOption containerNameExists;
 		juce::String projectPath;
 		juce::String originalsFolder;
-		bool waqlEnabled;
 		juce::String languageSubfolder;
 	};
 
@@ -54,9 +53,6 @@ namespace AK::WwiseTransfer
 		, refreshInterval(refreshInterval)
 		, previewOptionsChanged(false)
 	{
-		auto featureSupport = appState.getChildWithName(IDs::featureSupport);
-		waqlEnabled.referTo(featureSupport, IDs::waqlEnabled, nullptr);
-
 		applicationState.addListener(this);
 	}
 
@@ -87,7 +83,7 @@ namespace AK::WwiseTransfer
 
 	void DawWatcher::handleAsyncUpdate()
 	{
-		const auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping));
+		const auto hierarchyMappingPath = ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping), applicationState.getChildWithName(IDs::featureSupport).getProperty(IDs::isSegmentUniversal));
 		const auto importItems = dawContext.getItemsForPreview({importDestination, originalsSubfolder, hierarchyMappingPath});
 
 		const auto importItemsHash = ImportHelper::importPreviewItemsToHash(importItems);
@@ -98,6 +94,7 @@ namespace AK::WwiseTransfer
 														  WwiseHelper::pathToPathWithoutObjectTypes(hierarchyMappingPath));
 
 			previewOptionsChanged = false;
+			lastImportItemsHash = importItemsHash;
 
 			std::set<juce::String> objectPaths;
 			std::unordered_map<juce::String, juce::ValueTree> pathToValueTreeMapping;
@@ -206,11 +203,7 @@ namespace AK::WwiseTransfer
 			if(waapiConnected.get() && importDestination.get().isNotEmpty())
 			{
 				previewLoading = true;
-
-				if(waqlEnabled)
-					waapiClient.getObjectAncestorsAndDescendantsAsync(importDestination, onGetObjectAncestorsAndDescendants);
-				else
-					waapiClient.getObjectAncestorsAndDescendantsLegacyAsync(importDestination, onGetObjectAncestorsAndDescendants);
+				waapiClient.getObjectAncestorsAndDescendantsAsync(importDestination, onGetObjectAncestorsAndDescendants);
 			}
 			else
 			{
@@ -223,7 +216,7 @@ namespace AK::WwiseTransfer
 	void DawWatcher::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 	{
 		static std::initializer_list<juce::Identifier> properties{IDs::containerNameExists, IDs::projectPath, IDs::originalsFolder,
-			IDs::wwiseObjectsChanged, IDs::waqlEnabled, IDs::languageSubfolder, IDs::originalsFolder, IDs::importDestination, IDs::originalsSubfolder, IDs::waapiConnected};
+			IDs::wwiseObjectsChanged, IDs::languageSubfolder, IDs::originalsFolder, IDs::importDestination, IDs::originalsSubfolder, IDs::waapiConnected};
 
 		if(treeWhosePropertyHasChanged == applicationState && std::find(properties.begin(), properties.end(), property) != properties.end() ||
 			treeWhosePropertyHasChanged.getType() == IDs::hierarchyMappingNode)

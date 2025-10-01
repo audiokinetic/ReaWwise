@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -36,6 +36,10 @@ namespace AK::WwiseTransfer::Test
 		{Wwise::ObjectType::VirtualFolder, "Virtual Folder"},
 		{Wwise::ObjectType::WorkUnit, "Work Unit"},
 		{Wwise::ObjectType::Sound, "Sound"},
+		{Wwise::ObjectType::MusicSwitchContainer, "Music Switch Container"},
+		{Wwise::ObjectType::MusicPlaylistContainer, "Music Playlist Container"},
+		{Wwise::ObjectType::Segment, "Segment"},
+		{Wwise::ObjectType::Track, "Track"},
 		{Wwise::ObjectType::Unknown, "Unknown"},
 	};
 

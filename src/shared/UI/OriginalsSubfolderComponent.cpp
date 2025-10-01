@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -16,7 +16,7 @@ specific language governing permissions and limitations under the License.
 #include "OriginalsSubfolderComponent.h"
 
 #include "BinaryData.h"
-#include "Persistance/ApplicationState.h"
+#include "Persistence/ApplicationState.h"
 
 namespace
 {
@@ -41,6 +41,7 @@ namespace
 	}
 
 	const char* kConnectionStatusConnectedTooltipMessage = "Connection Status: Connected";
+	const char* kConnectionStatusWarningTooltipMessage = "Connection Status: Unsupported Wwise version.";
 	const char* kConnectionStatusDisconnectedTooltipMessage = "Connection Status: Disconnected";
 }
 
@@ -85,6 +86,7 @@ namespace AK::WwiseTransfer
 		projectPathEditor.setMouseCursor(juce::MouseCursor::NormalCursor);
 
 		setImageFromRawData(connectedStatusImage, BinaryData::Success_svg, BinaryData::Success_svgSize);
+		setImageFromRawData(connectedWarningStatusImage, BinaryData::Warning_svg, BinaryData::Warning_svgSize);
 		setImageFromRawData(disconnectedStatusImage, BinaryData::Error_svg, BinaryData::Error_svgSize);
 		connectionStatusIcon.setImage(disconnectedStatusImage);
 		connectionStatusIcon.setTooltip(kConnectionStatusDisconnectedTooltipMessage);
@@ -186,7 +188,7 @@ namespace AK::WwiseTransfer
 		projectPathEditor.setAlpha(!projectPathEmpty ? 1 : 0.5f);
 
 		fileBrowserButton.setEnabled(!projectPathEmpty && !originalsFolderEmpty);
-		fileBrowserButton.setTooltip(originalsFolderEmpty ? "File browser is only available when connected to Wwise 2022+" : "Browse");
+		fileBrowserButton.setTooltip("Browse");
 	}
 
 	void OriginalsSubfolderComponent::selectOriginalsSubfoler()
@@ -218,13 +220,21 @@ namespace AK::WwiseTransfer
 			{
 				triggerAsyncUpdate();
 			}
-			else if (property == IDs::waapiConnected)
+			else if(property == IDs::waapiConnected || property == IDs::minimumVersionRequirementMet)
 			{
 				bool waapiConnected = applicationState.getProperty(IDs::waapiConnected);
 				if (waapiConnected)
 				{
-					connectionStatusIcon.setImage(connectedStatusImage);
-					connectionStatusIcon.setTooltip(kConnectionStatusConnectedTooltipMessage);
+					if (applicationState.getProperty(IDs::minimumVersionRequirementMet))
+					{
+						connectionStatusIcon.setImage(connectedStatusImage);
+						connectionStatusIcon.setTooltip(kConnectionStatusConnectedTooltipMessage);
+					}
+					else
+					{
+						connectionStatusIcon.setImage(connectedWarningStatusImage);
+						connectionStatusIcon.setTooltip(kConnectionStatusWarningTooltipMessage);
+					}
 				}
 				else
 				{
@@ -233,7 +243,6 @@ namespace AK::WwiseTransfer
 				}
 			}
 		}
-		
 	}
 
 	void OriginalsSubfolderComponent::handleAsyncUpdate()

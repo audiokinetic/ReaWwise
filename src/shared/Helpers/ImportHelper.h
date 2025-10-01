@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -108,14 +108,14 @@ namespace AK::WwiseTransfer::ImportHelper
 		return hierarchyMappingNodeList;
 	}
 
-	inline juce::String hierarchyMappingToPath(std::vector<Import::HierarchyMappingNode> hierachyMappingNodeList)
+	inline juce::String hierarchyMappingToPath(std::vector<Import::HierarchyMappingNode> hierachyMappingNodeList, bool isSegmentUniversal)
 	{
 		juce::String path;
 
 		for(auto& hierarchyMappingNode : hierachyMappingNodeList)
 		{
 			if(hierarchyMappingNode.type != Wwise::ObjectType::Unknown)
-				path << WwiseHelper::buildObjectPathNode(hierarchyMappingNode.type, hierarchyMappingNode.name);
+				path << WwiseHelper::buildObjectPathNode(hierarchyMappingNode.type, hierarchyMappingNode.name, isSegmentUniversal);
 		}
 
 		return path;

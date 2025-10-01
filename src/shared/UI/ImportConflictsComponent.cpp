@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -29,7 +29,6 @@ namespace AK::WwiseTransfer
 			Import::ContainerNameExistsOption::CreateNew, Import::ContainerNameExistsOption::Replace};
 		constexpr std::initializer_list<Import::ApplyTemplateOption> applyTemplateOptions{Import::ApplyTemplateOption::Always,
 			Import::ApplyTemplateOption::NewObjectCreationOnly};
-		const juce::String pastePropertiesToolTip = "Paste properties are only available when connected to Wwise 2022+";
 	} // namespace ImportConflictsComponentContants
 
 	ImportConflictsComponent::ImportConflictsComponent(juce::ValueTree appState)
@@ -38,9 +37,6 @@ namespace AK::WwiseTransfer
 		, applyTemplate(applicationState, IDs::applyTemplate, nullptr)
 	{
 		using namespace ImportConflictsComponentContants;
-
-		auto featureSupport = applicationState.getChildWithName(IDs::featureSupport);
-		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
 
 		containerNameExistsLabel.setText("If Sound Name Exists", juce::dontSendNotification);
 		containerNameExistsLabel.setBorderSize(juce::BorderSize(0));
@@ -100,14 +96,6 @@ namespace AK::WwiseTransfer
 		addAndMakeVisible(containerNameExistsComboBox);
 		addAndMakeVisible(applyTemplateComboBox);
 
-		refreshComponent();
-
-		applicationState.addListener(this);
-	}
-
-	ImportConflictsComponent::~ImportConflictsComponent()
-	{
-		applicationState.removeListener(this);
 	}
 
 	void ImportConflictsComponent::resized()
@@ -135,27 +123,4 @@ namespace AK::WwiseTransfer
 		}
 	}
 
-	void ImportConflictsComponent::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
-	{
-		if(treeWhosePropertyHasChanged.getType() == IDs::featureSupport && property == IDs::applyTemplateFeatureEnabled)
-		{
-			triggerAsyncUpdate();
-		}
-	}
-
-	void ImportConflictsComponent::handleAsyncUpdate()
-	{
-		refreshComponent();
-	}
-
-	void ImportConflictsComponent::refreshComponent()
-	{
-		using namespace ImportConflictsComponentContants;
-
-		applyTemplateLabel.setEnabled(applyTemplateFeatureEnabled);
-		applyTemplateComboBox.setEnabled(applyTemplateFeatureEnabled);
-
-		applyTemplateLabel.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
-		applyTemplateComboBox.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
-	}
 } // namespace AK::WwiseTransfer

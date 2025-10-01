@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -79,10 +79,7 @@ namespace AK::WwiseTransfer
 				// Will be eventullay compared to the results of the import to figure out what was newly created
 				Waapi::Response<Waapi::ObjectResponseSet> existingObjectsResponse;
 
-				if(options.waqlEnabled)
-					existingObjectsResponse = waapiClient.getObjectAncestorsAndDescendants(options.importDestination);
-				else
-					existingObjectsResponse = waapiClient.getObjectAncestorsAndDescendantsLegacy(options.importDestination);
+				existingObjectsResponse = waapiClient.getObjectAncestorsAndDescendants(options.importDestination);
 
 				if(existingObjectsResponse.status)
 				{
@@ -104,7 +101,7 @@ namespace AK::WwiseTransfer
 						}
 					}
 
-					const ScopedUndoGroup scopedundogroup(waapiClient, options.undoGroupFeatureEnabled);
+					const ScopedUndoGroup scopedundogroup(waapiClient);
 
 					juce::String objectLanguage = ImportTaskContants::defaultObjectLanguage;
 					if(options.hierarchyMappingNodeList.back().type == Wwise::ObjectType::SoundVoice)
@@ -178,54 +175,50 @@ namespace AK::WwiseTransfer
 							}
 						}
 
-						// Applying templates only works in custom hierarchy mapping mode
-						if(options.applyTemplateFeatureEnabled)
+						// Will store node depth in relation to template property path
+						std::map<int, juce::String> depthToTemplatePropertyPathMap;
+
+						int importDestinationDepth = WwiseHelper::pathToPathParts(options.importDestination).size();
+
+						for(int i = 0; i < options.hierarchyMappingNodeList.size(); ++i)
 						{
-							// Will store node depth in relation to template property path
-							std::map<int, juce::String> depthToTemplatePropertyPathMap;
+							const auto& hierarchyMappingNode = options.hierarchyMappingNodeList[i];
 
-							int importDestinationDepth = WwiseHelper::pathToPathParts(options.importDestination).size();
-
-							for(int i = 0; i < options.hierarchyMappingNodeList.size(); ++i)
+							if(hierarchyMappingNode.propertyTemplatePath.isNotEmpty() &&
+								hierarchyMappingNode.propertyTemplatePathEnabled &&
+								hierarchyMappingNode.propertyTemplatePathValid)
 							{
-								const auto& hierarchyMappingNode = options.hierarchyMappingNodeList[i];
+								depthToTemplatePropertyPathMap[importDestinationDepth + i + 1] = hierarchyMappingNode.propertyTemplatePath;
+							}
+						}
 
-								if(hierarchyMappingNode.propertyTemplatePath.isNotEmpty() &&
-									hierarchyMappingNode.propertyTemplatePathEnabled &&
-									hierarchyMappingNode.propertyTemplatePathValid)
-								{
-									depthToTemplatePropertyPathMap[importDestinationDepth + i + 1] = hierarchyMappingNode.propertyTemplatePath;
-								}
+						if(depthToTemplatePropertyPathMap.size() > 0)
+						{
+							std::map<PropertyTemplatePath, std::vector<ObjectPath>> propertyTemplatePathToObjectMapping;
+
+							// Go through all objects and if their depth matches a hierarchy node that has a template defined in it, add it to propertyTemplatePathToObjectMapping
+							// We will eventually use this map to submit paste property requests in waaapi
+							for(const auto& [objectPath, object] : summary.objects)
+							{
+								const int depth = WwiseHelper::pathToPathParts(objectPath).size();
+
+								auto it = depthToTemplatePropertyPathMap.find(depth);
+
+								if(it != depthToTemplatePropertyPathMap.end() && (options.applyTemplateOption == Import::ApplyTemplateOption::Always || object.objectStatus == Import::ObjectStatus::New))
+									propertyTemplatePathToObjectMapping[it->second].emplace_back(objectPath);
 							}
 
-							if(depthToTemplatePropertyPathMap.size() > 0)
+							for(const auto& [source, targets] : propertyTemplatePathToObjectMapping)
 							{
-								std::map<PropertyTemplatePath, std::vector<ObjectPath>> propertyTemplatePathToObjectMapping;
-
-								// Go through all objects and if their depth matches a hierarchy node that has a template defined in it, add it to propertyTemplatePathToObjectMapping
-								// We will eventually use this map to submit paste property requests in waaapi
-								for(const auto& [objectPath, object] : summary.objects)
+								const auto response = waapiClient.pasteProperties({source, targets});
+								if(!response.status)
 								{
-									const int depth = WwiseHelper::pathToPathParts(objectPath).size();
-
-									auto it = depthToTemplatePropertyPathMap.find(depth);
-
-									if(it != depthToTemplatePropertyPathMap.end() && (options.applyTemplateOption == Import::ApplyTemplateOption::Always || object.objectStatus == Import::ObjectStatus::New))
-										propertyTemplatePathToObjectMapping[it->second].emplace_back(objectPath);
+									summary.errors.push_back(response.error);
 								}
-
-								for(const auto& [source, targets] : propertyTemplatePathToObjectMapping)
+								else
 								{
-									const auto response = waapiClient.pasteProperties({source, targets});
-									if(!response.status)
-									{
-										summary.errors.push_back(response.error);
-									}
-									else
-									{
-										for(const auto& target : targets)
-											summary.objects[target].propertyTemplatePath = source;
-									}
+									for(const auto& target : targets)
+										summary.objects[target].propertyTemplatePath = source;
 								}
 							}
 						}
@@ -240,7 +233,7 @@ namespace AK::WwiseTransfer
 
 							importedObjectPaths.emplace_back(WwiseHelper::getCommonAncestor(first, last));
 
-							waapiClient.selectObjects(options.selectObjectsOnImportCommand, importedObjectPaths);
+							waapiClient.selectObjects("FindInProjectExplorerSelectionChannel1", importedObjectPaths);
 						}
 					}
 					else
@@ -268,20 +261,16 @@ namespace AK::WwiseTransfer
 		struct ScopedUndoGroup final
 		{
 			WaapiClient& waapiClient;
-			bool enabled{false};
 
-			ScopedUndoGroup(WaapiClient& waapiClient, bool enable)
+			ScopedUndoGroup(WaapiClient& waapiClient)
 				: waapiClient(waapiClient)
-				, enabled(enable)
 			{
-				if(enable)
-					waapiClient.beginUndoGroup();
+				waapiClient.beginUndoGroup();
 			}
 
 			~ScopedUndoGroup()
 			{
-				if(enabled)
-					waapiClient.endUndoGroup("Import and Apply Paste Properties");
+				waapiClient.endUndoGroup("Import and Apply Paste Properties");
 			}
 		};
 

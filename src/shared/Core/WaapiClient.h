@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -97,7 +97,6 @@ namespace AK::WwiseTransfer
 		Waapi::Response<Waapi::ObjectResponseSet> pasteProperties(const Waapi::PastePropertiesRequest& pastePropertiesRequest);
 		Waapi::Response<Waapi::ObjectResponseSet> import(const std::vector<Waapi::ImportItemRequest>& importItemsRequest, Import::ContainerNameExistsOption containerNameExistsOption, const juce::String& objectLanguage);
 		Waapi::Response<Waapi::ObjectResponseSet> getObjectAncestorsAndDescendants(const juce::String& objectPath);
-		Waapi::Response<Waapi::ObjectResponseSet> getObjectAncestorsAndDescendantsLegacy(const juce::String& objectPath);
 		Waapi::Response<std::vector<juce::String>> getProjectLanguages();
 		Waapi::Response<Waapi::ObjectResponse> getObject(const juce::String& objectPath);
 
@@ -189,17 +188,6 @@ namespace AK::WwiseTransfer
 			auto onJobExecute = [objectPath, this]()
 			{
 				return getObjectAncestorsAndDescendants(objectPath);
-			};
-
-			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);
-		}
-
-		template <typename Callback>
-		void getObjectAncestorsAndDescendantsLegacyAsync(const juce::String& objectPath, Callback& callback)
-		{
-			auto onJobExecute = [objectPath, this]()
-			{
-				return getObjectAncestorsAndDescendantsLegacy(objectPath);
 			};
 
 			threadPool.addJob(new AsyncJob(onJobExecute, callback), true);

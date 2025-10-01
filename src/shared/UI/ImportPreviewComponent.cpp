@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -52,9 +52,6 @@ namespace AK::WwiseTransfer
 	{
 		using namespace ImportPreviewComponentConstants;
 
-		auto featureSupport = appState.getChildWithName(IDs::featureSupport);
-		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
-
 		treeView.setDefaultOpenness(true);
 		treeView.setRootItem(&rootItem);
 		treeView.setRootItemVisible(false);
@@ -65,7 +62,8 @@ namespace AK::WwiseTransfer
 		for(const auto& tableHeader : tableHeaders)
 		{
 			auto index = (&tableHeader - tableHeaders.begin());
-			header.addColumn(tableHeader, index + 1, columnInitialWidth, columnMinimumWidth, columnMaximumWidth, defaultColumnPropertyFlags);
+			bool isStatusColumn = index % 2 != 0;
+			header.addColumn(tableHeader, index + 1, isStatusColumn ? columnInitialWidth : columnInitialWidth * 3, columnMinimumWidth, isStatusColumn ? columnMaximumWidth / 3 : columnMaximumWidth, defaultColumnPropertyFlags);
 		}
 
 		header.setStretchToFitActive(true);
@@ -111,11 +109,6 @@ namespace AK::WwiseTransfer
 		{
 			triggerAsyncUpdate();
 		}
-
-		if(treeWhosePropertyHasChanged.getType() == IDs::featureSupport && property == IDs::applyTemplateFeatureEnabled)
-		{
-			refreshHeader();
-		}
 	}
 
 	void ImportPreviewComponent::valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded)
@@ -150,11 +143,8 @@ namespace AK::WwiseTransfer
 		auto currentWidth = header.getColumnWidth(tableHeaders.size());
 		auto propertyFlags = defaultColumnPropertyFlags;
 
-		if(!applyTemplateFeatureEnabled.get())
-			propertyFlags |= disabledFlag;
-
 		header.removeColumn(tableHeaders.size());
-		header.addColumn(*(tableHeaders.end() - 1), tableHeaders.size(), currentWidth, columnMinimumWidth, columnMaximumWidth, propertyFlags);
+		header.addColumn(*(tableHeaders.end() - 1), tableHeaders.size(), currentWidth, columnMinimumWidth, columnMaximumWidth / 3, propertyFlags);
 
 		header.setStretchToFitActive(true);
 	}

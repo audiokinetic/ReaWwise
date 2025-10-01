@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -42,6 +42,8 @@ namespace AK::WwiseTransfer
 		juce::HyperlinkButton documentationLink;
 		juce::HyperlinkButton releaseNotesLink;
 		juce::HyperlinkButton licensingLink;
+		juce::HyperlinkButton issuesLink;
+		juce::HyperlinkButton openSourceComponentsButton;
 
 		juce::TooltipWindow tooltipWindow;
 

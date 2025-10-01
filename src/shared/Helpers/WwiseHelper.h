@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -23,60 +23,6 @@ specific language governing permissions and limitations under the License.
 
 namespace AK::WwiseTransfer::WwiseHelper
 {
-	inline bool validateObjectTypeParentChildRelationShip(Wwise::ObjectType parent, Wwise::ObjectType child)
-	{
-		using namespace Wwise;
-
-		switch(parent)
-		{
-		case ObjectType::BlendContainer:
-		case ObjectType::RandomContainer:
-		case ObjectType::SequenceContainer:
-		case ObjectType::SwitchContainer:
-		{
-			static constexpr std::initializer_list<ObjectType> children{
-				ObjectType::SwitchContainer,
-				ObjectType::RandomContainer,
-				ObjectType::SequenceContainer,
-				ObjectType::BlendContainer,
-				ObjectType::SoundSFX,
-				ObjectType::SoundVoice,
-			};
-
-			return std::find(children.begin(), children.end(), child) != children.end();
-		};
-		case ObjectType::ActorMixer:
-		case ObjectType::VirtualFolder:
-		case ObjectType::WorkUnit:
-		{
-			static constexpr std::initializer_list<ObjectType> children{
-				ObjectType::WorkUnit,
-				ObjectType::VirtualFolder,
-				ObjectType::ActorMixer,
-				ObjectType::SwitchContainer,
-				ObjectType::RandomContainer,
-				ObjectType::SequenceContainer,
-				ObjectType::BlendContainer,
-				ObjectType::SoundSFX,
-				ObjectType::SoundVoice,
-			};
-
-			return std::find(children.begin(), children.end(), child) != children.end();
-		};
-		case ObjectType::PhysicalFolder:
-		{
-			static constexpr std::initializer_list<ObjectType> children{
-				ObjectType::PhysicalFolder,
-				ObjectType::WorkUnit,
-			};
-
-			return std::find(children.begin(), children.end(), child) != children.end();
-		};
-		default:
-			return false;
-		}
-	};
-
 	inline juce::String objectTypeToReadableString(Wwise::ObjectType objectType, bool forDisplayPurpose = false)
 	{
 		using namespace Wwise;
@@ -84,7 +30,7 @@ namespace AK::WwiseTransfer::WwiseHelper
 		switch(objectType)
 		{
 		case ObjectType::ActorMixer:
-			return !forDisplayPurpose ? "Actor-Mixer" : "Actor-Mixer / Property Container";
+			return !forDisplayPurpose ? "Actor-Mixer" : "Property Container";
 		case ObjectType::AudioFileSource:
 			return "Audio File Source";
 		case ObjectType::BlendContainer:
@@ -107,6 +53,14 @@ namespace AK::WwiseTransfer::WwiseHelper
 			return "Work Unit";
 		case ObjectType::Sound:
 			return "Sound";
+		case ObjectType::MusicSwitchContainer:
+			return "Music Switch Container";
+		case ObjectType::MusicPlaylistContainer:
+			return "Music Playlist Container";
+		case ObjectType::Segment:
+			return "Segment";
+		case ObjectType::Track:
+			return "Track";
 		default:
 			return "Unknown";
 		}
@@ -118,7 +72,7 @@ namespace AK::WwiseTransfer::WwiseHelper
 
 		if(objectTypeAsString == "AudioFileSource" || objectTypeAsString == "Audio File Source")
 			return ObjectType::AudioFileSource;
-		else if(objectTypeAsString == "ActorMixer" || objectTypeAsString == "Actor Mixer" || objectTypeAsString == "Actor-Mixer" || objectTypeAsString == "Property Container" || objectTypeAsString == "Actor-Mixer / Property Container")
+		else if(objectTypeAsString == "ActorMixer" || objectTypeAsString == "Actor Mixer" || objectTypeAsString == "Actor-Mixer" || objectTypeAsString == "Property Container" || objectTypeAsString == "PropertyContainer" || objectTypeAsString == "Actor-Mixer / Property Container")
 			return ObjectType::ActorMixer;
 		else if(objectTypeAsString == "BlendContainer" || objectTypeAsString == "Blend Container")
 			return ObjectType::BlendContainer;
@@ -142,13 +96,24 @@ namespace AK::WwiseTransfer::WwiseHelper
 			return ObjectType::VirtualFolder;
 		else if(objectTypeAsString == "Physical Folder")
 			return ObjectType::PhysicalFolder;
+		else if(objectTypeAsString == "MusicSwitchContainer" || objectTypeAsString == "Music Switch Container")
+			return ObjectType::MusicSwitchContainer;
+		else if(objectTypeAsString == "MusicPlaylistContainer" || objectTypeAsString == "Music Playlist Container")
+			return ObjectType::MusicPlaylistContainer;
+		else if(objectTypeAsString == "Segment" || objectTypeAsString == "Music Segment")
+			return ObjectType::Segment;
+		else if(objectTypeAsString == "Track" || objectTypeAsString == "Music Track")
+			return ObjectType::Track;
 		else
 			return ObjectType::Unknown;
 	};
 
-	inline juce::String buildObjectPathNode(Wwise::ObjectType objectType, const juce::String& name)
+	inline juce::String buildObjectPathNode(Wwise::ObjectType objectType, const juce::String& name, bool isSegmentUniversal)
 	{
-		return "\\<" + objectTypeToReadableString(objectType) + ">" + name;
+		juce::String objectTypeString = objectTypeToReadableString(objectType);
+		if((objectType == Wwise::ObjectType::Segment || objectType == Wwise::ObjectType::Track) && !isSegmentUniversal)
+			objectTypeString = "Music " + objectTypeString;
+		return "\\<" + objectTypeString + ">" + name;
 	}
 
 	inline juce::String pathToPathWithoutObjectTypes(const juce::String& objectPath)

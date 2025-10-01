@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -25,6 +25,7 @@ namespace AK::WwiseTransfer
 	namespace HierarchyMappingControlsConstants
 	{
 		constexpr int buttonSize = 24;
+		constexpr int buttonSpacing = 1;
 	}
 
 	HierarchyMappingControls::HierarchyMappingControls(juce::ValueTree appState, ApplicationProperties& applicationProperties, const juce::String& applicationName)
@@ -93,13 +94,13 @@ namespace AK::WwiseTransfer
 
 		juce::FlexBox buttonSection;
 		buttonSection.flexDirection = juce::FlexBox::Direction::column;
-		buttonSection.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
+		buttonSection.justifyContent = juce::FlexBox::JustifyContent::flexStart;
 
 		auto buttonSectionWidth = area.getWidth();
-		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, presetMenuComponent));
-		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, insertButton));
-		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, removeButton));
-		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, moveUpButton));
+		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, presetMenuComponent).withMargin({0, 0, buttonSpacing, 0}));
+		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, insertButton).withMargin({0, 0, buttonSpacing, 0}));
+		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, removeButton).withMargin({0, 0, buttonSpacing, 0}));
+		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, moveUpButton).withMargin({0, 0, buttonSpacing, 0}));
 		buttonSection.items.add(juce::FlexItem(buttonSectionWidth, buttonSize, moveDownButton));
 
 		buttonSection.performLayout(area);

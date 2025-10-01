@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -48,14 +48,12 @@ namespace AK::WwiseTransfer
 		private:
 			juce::ValueTree hierarchyMapping;
 			juce::CachedValue<int> selectedRow;
-			juce::CachedValue<bool> applyTemplateFeatureEnabled;
 		};
 
 		HierarchyMappingTableModel model;
 		juce::ValueTree applicationState;
 		juce::ValueTree hierarchyMapping;
 		juce::CachedValue<int> selectedRow;
-		juce::CachedValue<bool> applyTemplateFeatureEnabled;
 
 		void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
 		void valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded) override;

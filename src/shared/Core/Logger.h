@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -24,6 +24,8 @@ namespace AK::WwiseTransfer
 	public:
 		Logger(const juce::String& applicationName);
 
+		Logger(const juce::File& logFile, const juce::String& welcomeMessage, juce::int64 maxFileSizeBytes, juce::int64 trimToBytes);
+
 		class IListener
 		{
 		public:
@@ -39,6 +41,14 @@ namespace AK::WwiseTransfer
 		void logMessage(const juce::String& message) override;
 
 	private:
+		void trimLogFile();
+
 		juce::ListenerList<IListener> listeners;
+
+		juce::CriticalSection writeLock; // Guards the members below, and makes trimming and writing atomic.
+		const juce::int64 maxFileSizeBytes;
+		const juce::int64 trimToBytes;
+		juce::int64 bytesLogged = 0;
+		juce::int64 nextTrimAtBytes;
 	};
 } // namespace AK::WwiseTransfer

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -193,10 +193,6 @@ namespace AK::WwiseTransfer::Import
 			std::vector<Import::HierarchyMappingNode> hierarchyMappingNodeList;
 			juce::String originalsFolder;
 			juce::String languageSubfolder;
-			juce::String selectObjectsOnImportCommand;
-			bool applyTemplateFeatureEnabled{false};
-			bool undoGroupFeatureEnabled{false};
-			bool waqlEnabled{false};
 		};
 	} // namespace Task
 } // namespace AK::WwiseTransfer::Import

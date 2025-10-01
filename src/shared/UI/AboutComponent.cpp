@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -18,6 +18,7 @@ specific language governing permissions and limitations under the License.
 #include "AK/AkWwiseSDKVersion.h"
 #include "BinaryData.h"
 #include "Theme/CustomLookAndFeel.h"
+#include "OpenSourceComponent.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -32,11 +33,12 @@ namespace AK::WwiseTransfer
 		constexpr int linkHeight = 20;
 		constexpr int margin = 10;
 		constexpr int width = 300;
-		constexpr int height = 254;
+		constexpr int height = 294;
 		constexpr int wwiseIconHeight = 100;
 		const juce::String githubBaseUrl = "https://github.com/audiokinetic/";
 		const juce::String releaseNoteUrlPart = "/releases/tag/";
 		const juce::String licenseUrlPart = "/blob/main/License.txt";
+		const juce::String issuesUrlPart = "/issues";
 		const juce::String documentationUrl = "https://www.audiokinetic.com/library/reawwise";
 	} // namespace AboutComponentConstants
 
@@ -77,12 +79,35 @@ namespace AK::WwiseTransfer
 		licensingLink.setURL(githubBaseUrl + applicationName + licenseUrlPart);
 		licensingLink.setJustificationType(juce::Justification::centred);
 
+		issuesLink.setButtonText("Issues & Requests");
+		issuesLink.setAlpha(0.5f);
+		issuesLink.setURL(githubBaseUrl + applicationName + issuesUrlPart);
+		issuesLink.setJustificationType(juce::Justification::centred);
+
+		openSourceComponentsButton.setButtonText("Open Source Components");
+		openSourceComponentsButton.setAlpha(0.5f);
+		openSourceComponentsButton.setJustificationType(juce::Justification::centred);
+		openSourceComponentsButton.onClick = [this]
+		{
+			juce::DialogWindow::LaunchOptions options;
+			options.dialogTitle = "Open Source Components";
+			options.useNativeTitleBar = true;
+			options.resizable = false;
+			options.componentToCentreAround = this;
+
+			auto openSourceComponent = std::make_unique<OpenSourceComponent>();
+			options.content = juce::OptionalScopedPointer<juce::Component>(openSourceComponent.release(), true);
+			options.launchAsync();
+		};
+
 		addAndMakeVisible(titleLabel);
 		addAndMakeVisible(versionLabel);
 		addAndMakeVisible(copyrightLabel);
 		addAndMakeVisible(documentationLink);
 		addAndMakeVisible(releaseNotesLink);
 		addAndMakeVisible(licensingLink);
+		addAndMakeVisible(issuesLink);
+		addAndMakeVisible(openSourceComponentsButton);
 		addAndMakeVisible(*wwiseIcon);
 
 		versionLabel.setTooltip("Wwise SDK: " + juce::String(AK_WWISE_VST_VERSION_FULL) + juce::newLine +
@@ -115,14 +140,14 @@ namespace AK::WwiseTransfer
 
 		area.removeFromTop(margin);
 
-		juce::FlexBox fb;
-		fb.flexDirection = juce::FlexBox::Direction::row;
+		juce::Grid grid;
+		grid.templateRows = {juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1))};
+		grid.templateColumns = {juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1))};
+		grid.items = {juce::GridItem(documentationLink), juce::GridItem(releaseNotesLink),
+		              juce::GridItem(licensingLink), juce::GridItem(issuesLink),
+					  juce::GridItem(openSourceComponentsButton).withColumn({juce::GridItem::Span(2), juce::GridItem::Keyword::autoValue}).withJustifySelf(juce::GridItem::JustifySelf::center)};
 
-		fb.items.add(juce::FlexItem(documentationLink).withHeight(linkHeight).withFlex(1));
-		fb.items.add(juce::FlexItem(releaseNotesLink).withHeight(linkHeight).withFlex(1));
-		fb.items.add(juce::FlexItem(licensingLink).withHeight(linkHeight).withFlex(1));
-
-		fb.performLayout(area.removeFromTop(linkHeight));
+		grid.performLayout(area.removeFromTop(linkHeight * 3));
 	}
 
 	void AboutComponent::paint(juce::Graphics& g)

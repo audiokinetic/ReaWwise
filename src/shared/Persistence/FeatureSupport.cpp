@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -26,12 +26,9 @@ namespace AK::WwiseTransfer
 		, waapiClient(waapiClient)
 	{
 		auto featureSupport = applicationState.getChildWithName(IDs::featureSupport);
-		selectObjectsOnImportCommand.referTo(featureSupport, IDs::selectObjectsOnImportCommand, nullptr);
-		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
-		undoGroupFeatureEnabled.referTo(featureSupport, IDs::undoGroupFeatureEnabled, nullptr);
-		waqlEnabled.referTo(featureSupport, IDs::waqlEnabled, nullptr);
-		additionalProjectInfoLookupEnabled.referTo(featureSupport, IDs::additionalProjectInfoLookupEnabled, nullptr);
 		newObjectNamesEnabled.referTo(featureSupport, IDs::newObjectNamesEnabled, nullptr);
+		isSegmentUniversal.referTo(featureSupport, IDs::isSegmentUniversal, nullptr);
+		isUsingInteractiveMusicHierarchy.referTo(featureSupport, IDs::isUsingInteractiveMusicHierarchy, nullptr);
 
 		applicationState.addListener(this);
 	}
@@ -54,22 +51,17 @@ namespace AK::WwiseTransfer
 
 				version.copyPropertiesAndChildrenFrom(versionValueTree, nullptr);
 
-				selectObjectsOnImportCommand = response.result >= v2022_1_0_0 ? FindInProjectExplorerSelectionChannel1 : FindInProjectExplorerSyncGroup1;
-				applyTemplateFeatureEnabled = response.result >= v2022_1_0_0;
-				undoGroupFeatureEnabled = response.result >= v2021_1_10_0;
-				waqlEnabled = response.result >= v2021_1_0_0;
-				additionalProjectInfoLookupEnabled = response.result >= v2022_1_0_0;
-				newObjectNamesEnabled = response.result >= v2025_1_0_0;
+				applicationState.setProperty(IDs::minimumVersionRequirementMet, response.result >= minimum_supported_version, nullptr);
 
-				triggerListenerOnVersionSensitiveProperties();
+				newObjectNamesEnabled = response.result >= v2025_1_0_0;
+				isSegmentUniversal = response.result >= v2026_1_0_0;
+				isUsingInteractiveMusicHierarchy = response.result < v2025_1_0_0;
+
+				// Manually trigger listeners on version sensitive properties.
+				applicationState.sendPropertyChangeMessage(IDs::importDestination);
 			};
 
 			waapiClient.getVersionAsync(onGetVersionAsync);
 		}
-	}
-
-	void FeatureSupport::triggerListenerOnVersionSensitiveProperties()
-	{
-		applicationState.sendPropertyChangeMessage(IDs::importDestination);
 	}
 } // namespace AK::WwiseTransfer

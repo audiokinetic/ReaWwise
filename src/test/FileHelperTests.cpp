@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -79,5 +79,36 @@ namespace AK::WwiseTransfer::Test
 
 			REQUIRE(FileHelper::countModifiedFilesInDirectoriesSince(directorySet, time) == 1);
 		}
+	}
+
+	TEST_CASE("deleteOldFiles")
+	{
+		auto tmpDir = juce::File::getSpecialLocation(juce::File::SpecialLocationType::tempDirectory)
+		                  .getChildFile("temp_" + juce::String::toHexString(juce::Random::getSystemRandom().nextInt()));
+
+		tmpDir.createDirectory();
+
+		auto oldMatchingFile = tmpDir.getChildFile("Log_2020-01-01.txt");
+		auto recentMatchingFile = tmpDir.getChildFile("Log_2020-01-02.txt");
+		auto oldOtherFile = tmpDir.getChildFile("settings.txt");
+
+		oldMatchingFile.create();
+		recentMatchingFile.create();
+		oldOtherFile.create();
+
+		auto thirtyDaysAgo = juce::Time::getCurrentTime() - juce::RelativeTime::days(30);
+		oldMatchingFile.setLastModificationTime(thirtyDaysAgo);
+		oldOtherFile.setLastModificationTime(thirtyDaysAgo);
+
+		FileHelper::deleteOldFiles(tmpDir, "Log_*.txt", 14);
+
+		SECTION("Only files matching the wildcard and older than the maximum age are deleted")
+		{
+			REQUIRE_FALSE(oldMatchingFile.exists());
+			REQUIRE(recentMatchingFile.exists());
+			REQUIRE(oldOtherFile.exists());
+		}
+
+		tmpDir.deleteRecursively();
 	}
 } // namespace AK::WwiseTransfer::Test

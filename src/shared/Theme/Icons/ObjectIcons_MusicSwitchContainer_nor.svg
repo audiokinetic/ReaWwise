@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
+    <g transform="matrix(1,0,0,1,-360,-125)">
+        <g transform="matrix(1,0,0,1,360,125)">
+            <g id="ObjectIcons_MusicSwitchContainer_nor">
+                <g id="Icons">
+                    <g transform="matrix(1,0,0,1,-40,-25)">
+                        <g id="Base-Block" serif:id="Base Block">
+                            <path d="M55,27.1C55,25.941 54.059,25 52.9,25L42.1,25C40.941,25 40,25.941 40,27.1L40,37.9C40,39.059 40.941,40 42.1,40L52.9,40C54.059,40 55,39.059 55,37.9L55,27.1Z" style="fill-opacity:0;"/>
+                        </g>
+                    </g>
+                    <path d="M7.92,15L7.08,15C6.484,15 6,14.516 6,13.92L6,13L3.4,13C2.627,13 2,12.373 2,11.6L2,10.4C2,10.209 2.038,10.027 2.108,9.861C1.457,9.59 1,8.948 1,8.2L1,6.8C1,6.449 1.101,6.122 1.276,5.846C1.108,5.714 1,5.51 1,5.28L1,3.72C1,3.324 1.321,3.002 1.72,3L6.003,3L6,2.95L6,1.05C6,0.471 6.469,0.001 7.05,0L7.95,0C8.531,0.001 9,0.471 9,1.05L9,2.95L8.997,3L13.28,3C13.681,3.003 14,3.325 14,3.72L14,5.28C14,5.51 13.892,5.714 13.724,5.846C13.899,6.122 14,6.449 14,6.8L14,8.2C14,9.192 13.196,9.997 12.2,10L10.8,10C10.289,10 9.827,9.786 9.5,9.442C9.33,9.621 9.123,9.765 8.892,9.861C8.962,10.027 9,10.209 9,10.4L9,11.6C9,11.687 8.992,11.772 8.976,11.854C8.992,11.927 9,12.003 9,12.08L9,13.92C9,14.514 8.519,14.997 7.92,15ZM4,10L3,10L3,12L7,12L7,14L8,14L8,11L4,11L4,10ZM13,6L10,6L10,9L13,9L13,6ZM5,6L2,6L2,9L5,9L5,6ZM9,6L6,6L6,9L9,9L9,6ZM8.001,1L7.001,1L7.001,4L2.001,4L2.001,5L13.001,5L13.001,4L8.001,4L8.001,1Z" style="fill:rgb(34,34,34);"/>
+                    <g transform="matrix(-2.44079e-16,1,-1,6.12323e-17,23,-4)">
+                        <rect x="10" y="10" width="3" height="3" style="fill:rgb(200,200,200);"/>
+                    </g>
+                    <g transform="matrix(-2.44079e-16,1,-1,6.12323e-17,19,-4)">
+                        <rect x="10" y="10" width="3" height="3" style="fill:rgb(200,200,200);"/>
+                    </g>
+                    <g transform="matrix(-2.44079e-16,1,-1,6.12323e-17,15,-4)">
+                        <rect x="10" y="10" width="3" height="3" style="fill:rgb(200,200,200);"/>
+                    </g>
+                    <g transform="matrix(1,0,0,1,8.0005,2)">
+                        <path d="M0,2L0,-1L-1,-1L-1,2L-6,2L-6,3L5,3L5,2L0,2Z" style="fill:rgb(200,200,200);"/>
+                    </g>
+                    <g transform="matrix(1,0,0,1,4,13)">
+                        <path d="M0,-2L0,-3L-1,-3L-1,-1L3,-1L3,1L4,1L4,-2L0,-2Z" style="fill:rgb(200,200,200);"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

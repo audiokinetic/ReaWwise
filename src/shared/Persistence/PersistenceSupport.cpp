@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -13,35 +13,35 @@ specific language governing permissions and limitations under the License.
 
 ----------------------------------------------------------------------------------------*/
 
-#include "PersistanceSupport.h"
+#include "PersistenceSupport.h"
 
 #include "Model/IDs.h"
 
 namespace AK::WwiseTransfer
 {
-	namespace PersistanceSupportConstants
+	namespace PersistenceSupportConstants
 	{
 		const std::initializer_list<juce::Identifier> fieldsToPersist{IDs::originalsSubfolder, IDs::importDestination,
 			IDs::originalsSubfolder, IDs::containerNameExists, IDs::applyTemplate};
 
 		const std::initializer_list<juce::Identifier> hierarchyMappingNodeFieldsToPersist{IDs::objectName, IDs::objectType, IDs::propertyTemplatePath, IDs::propertyTemplatePathEnabled, IDs::objectLanguage};
-	} // namespace PersistanceSupportConstants
+	} // namespace PersistenceSupportConstants
 
-	PersistanceSupport::PersistanceSupport(juce::ValueTree appState, DawContext& dawContext)
+	PersistenceSupport::PersistenceSupport(juce::ValueTree appState, DawContext& dawContext)
 		: dawContext(dawContext)
 		, applicationState(appState)
 	{
 		applicationState.addListener(this);
 	}
 
-	PersistanceSupport::~PersistanceSupport()
+	PersistenceSupport::~PersistenceSupport()
 	{
 		applicationState.removeListener(this);
 	}
 
-	void PersistanceSupport::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
+	void PersistenceSupport::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 	{
-		using namespace PersistanceSupportConstants;
+		using namespace PersistenceSupportConstants;
 
 		auto treeType = treeWhosePropertyHasChanged.getType();
 
@@ -105,7 +105,7 @@ namespace AK::WwiseTransfer
 		}
 	}
 
-	void PersistanceSupport::valueTreeChildAdded(juce::ValueTree& parent, juce::ValueTree& childWhichHasBeenAdded)
+	void PersistenceSupport::valueTreeChildAdded(juce::ValueTree& parent, juce::ValueTree& childWhichHasBeenAdded)
 	{
 		juce::ignoreUnused(childWhichHasBeenAdded);
 
@@ -113,7 +113,7 @@ namespace AK::WwiseTransfer
 			saveState();
 	}
 
-	void PersistanceSupport::valueTreeChildRemoved(juce::ValueTree& parent, juce::ValueTree& child, int indexOfChild)
+	void PersistenceSupport::valueTreeChildRemoved(juce::ValueTree& parent, juce::ValueTree& child, int indexOfChild)
 	{
 		juce::ignoreUnused(child, indexOfChild);
 
@@ -121,7 +121,7 @@ namespace AK::WwiseTransfer
 			saveState();
 	}
 
-	void PersistanceSupport::valueTreeChildOrderChanged(juce::ValueTree& parent, int oldIndex, int newIndex)
+	void PersistenceSupport::valueTreeChildOrderChanged(juce::ValueTree& parent, int oldIndex, int newIndex)
 	{
 		juce::ignoreUnused(oldIndex, newIndex);
 
@@ -129,12 +129,12 @@ namespace AK::WwiseTransfer
 			saveState();
 	}
 
-	void PersistanceSupport::saveState()
+	void PersistenceSupport::saveState()
 	{
 		// For reasons of simplicity, we store the whole state everytime. It would be possible to retrieve the current state,
 		// and only modify the value that has changed. It would be more complicated and due to the fact that the size of the state is quite small,
 		// not provide much performance gain.
-		using namespace PersistanceSupportConstants;
+		using namespace PersistenceSupportConstants;
 
 		juce::ValueTree stateToBeSaved(IDs::application);
 

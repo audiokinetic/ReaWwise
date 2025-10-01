@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -23,6 +23,8 @@ specific language governing permissions and limitations under the License.
 
 namespace AK::WwiseTransfer::ApplicationState
 {
+	/// This class validates the application state to determine if we can proceed to the import into Wwise.
+	///
 	class Validator
 		: juce::ValueTree::Listener
 	{
@@ -44,7 +46,9 @@ namespace AK::WwiseTransfer::ApplicationState
 		void validatePropertyTemplatePath(juce::ValueTree hierarchyMappingNode);
 		void validateObjectName(juce::ValueTree hierarchyMappingNode);
 		void validateHierarchyMapping(Wwise::ObjectType importDestinationType, juce::ValueTree hierarchyMapping);
+		bool validateObjectTypeParentChildRelationShip(Wwise::ObjectType parent, Wwise::ObjectType child);
 
 		bool pathStartsWithAllowedPrefix(const juce::String& path) const;
+		bool isImportDestinationInMusicHierarchy() const;
 	};
 } // namespace AK::WwiseTransfer::ApplicationState

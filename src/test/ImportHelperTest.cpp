@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -122,7 +122,7 @@ namespace AK::WwiseTransfer::Test
 			nodes.emplace_back(hierarchyMappingNode);
 		}
 
-		auto fullPath = ImportHelper::hierarchyMappingToPath(nodes);
+		auto fullPath = ImportHelper::hierarchyMappingToPath(nodes, true);
 
 		juce::StringArray pathList;
 		pathList.addTokens(fullPath, "\\", "");

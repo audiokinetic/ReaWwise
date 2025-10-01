@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -48,9 +48,6 @@ namespace AK::WwiseTransfer
 	{
 		using namespace HierarchyMappingTableConstants;
 
-		auto featureSupport = appState.getChildWithName(IDs::featureSupport);
-		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
-
 		setModel(&model);
 
 		for(const auto& tableHeader : tableHeaders)
@@ -80,11 +77,6 @@ namespace AK::WwiseTransfer
 		if(treeType == IDs::hierarchyMappingNode || treeType == IDs::hierarchyMapping && property == IDs::selectedRow)
 		{
 			repaint();
-		}
-
-		if(treeType == IDs::featureSupport && property == IDs::applyTemplateFeatureEnabled)
-		{
-			refreshHeader();
 		}
 	}
 
@@ -137,9 +129,6 @@ namespace AK::WwiseTransfer
 		auto currentWidth = getHeader().getColumnWidth(tableHeaders.size());
 		auto propertyFlags = defaultColumnPropertyFlags;
 
-		if(!applyTemplateFeatureEnabled.get())
-			propertyFlags |= disabledFlag;
-
 		getHeader().removeColumn(tableHeaders.size());
 		getHeader().addColumn(*(tableHeaders.end() - 1), tableHeaders.size(), currentWidth, columnMinimumWidth, columnMaximumWidth, propertyFlags);
 
@@ -149,8 +138,6 @@ namespace AK::WwiseTransfer
 	HierarchyMappingTable::HierarchyMappingTableModel::HierarchyMappingTableModel(juce::ValueTree appState)
 		: hierarchyMapping(appState.getChildWithName(IDs::hierarchyMapping))
 	{
-		auto featureSupport = appState.getChildWithName(IDs::featureSupport);
-		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
 	}
 
 	int HierarchyMappingTable::HierarchyMappingTableModel::getNumRows()
@@ -193,7 +180,7 @@ namespace AK::WwiseTransfer
 		case HierarchyMappingTableColumn::PropertyTemplatePath:
 		{
 			text = hierarchyMappingNode.propertyTemplatePath;
-			cellEnabled = hierarchyMappingNode.propertyTemplatePathEnabled && applyTemplateFeatureEnabled;
+			cellEnabled = hierarchyMappingNode.propertyTemplatePathEnabled;
 			validCell = hierarchyMappingNode.propertyTemplatePathValid;
 			break;
 		}

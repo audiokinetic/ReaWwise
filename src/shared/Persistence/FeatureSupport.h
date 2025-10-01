@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -25,11 +25,13 @@ namespace AK::WwiseTransfer
 	namespace FeatureSupportConstants
 	{
 		const juce::String FindInProjectExplorerSelectionChannel1 = "FindInProjectExplorerSelectionChannel1";
-		const juce::String FindInProjectExplorerSyncGroup1 = "FindInProjectExplorerSyncGroup1";
+
+		const Wwise::Version v2026_1_0_0 = {2026, 1, 0, 0};
 		const Wwise::Version v2025_1_0_0 = {2025, 1, 0, 0};
-		const Wwise::Version v2022_1_0_0 = {2022, 1, 0, 0};
-		const Wwise::Version v2021_1_0_0 = {2021, 1, 0, 0};
-		const Wwise::Version v2021_1_10_0 = {2021, 1, 10, 0};
+		const Wwise::Version v2024_1_0_0 = {2024, 1, 0, 0};
+		const Wwise::Version v2023_1_0_0 = {2023, 1, 0, 0};
+
+		const Wwise::Version minimum_supported_version = v2024_1_0_0;
 	} // namespace FeatureSupportConstants
 
 	class FeatureSupport
@@ -43,19 +45,14 @@ namespace AK::WwiseTransfer
 		void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged,
 			const juce::Identifier& property) override;
 
-		void triggerListenerOnVersionSensitiveProperties();	
-
 		WaapiClient& waapiClient;
 
 		juce::ValueTree applicationState;
 		juce::ValueTree version;
 
 		juce::ValueTree featureSupport;
-		juce::CachedValue<juce::String> selectObjectsOnImportCommand;
-		juce::CachedValue<bool> applyTemplateFeatureEnabled;
-		juce::CachedValue<bool> undoGroupFeatureEnabled;
-		juce::CachedValue<bool> waqlEnabled;
-		juce::CachedValue<bool> additionalProjectInfoLookupEnabled;
 		juce::CachedValue<bool> newObjectNamesEnabled;
+		juce::CachedValue<bool> isSegmentUniversal;
+		juce::CachedValue<bool> isUsingInteractiveMusicHierarchy;
 	};
 } // namespace AK::WwiseTransfer

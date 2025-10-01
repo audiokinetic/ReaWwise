@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -34,5 +34,16 @@ namespace AK::WwiseTransfer::FileHelper
 		}
 
 		return modifiedFiles;
+	}
+
+	inline void deleteOldFiles(const juce::File& folder, const juce::String& wildcard, int maxAgeDays)
+	{
+		const auto cutoff = juce::Time::getCurrentTime() - juce::RelativeTime::days(maxAgeDays);
+
+		for(const auto& file : folder.findChildFiles(juce::File::TypesOfFileToFind::findFiles, false, wildcard))
+		{
+			if(file.getLastModificationTime() < cutoff)
+				file.deleteFile();
+		}
 	}
 } // namespace AK::WwiseTransfer::FileHelper

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -18,7 +18,7 @@ specific language governing permissions and limitations under the License.
 #include "Core/DawContext.h"
 #include "Core/ImportTask.h"
 #include "Core/WaapiClient.h"
-#include "Persistance/ApplicationProperties.h"
+#include "Persistence/ApplicationProperties.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -42,6 +42,7 @@ namespace AK::WwiseTransfer
 		juce::ValueTree applicationState;
 		juce::CachedValue<bool> originalsSubfolderValid;
 		juce::CachedValue<bool> importDestinationValid;
+		juce::CachedValue<bool> minimumVersionRequirementMet;
 		juce::CachedValue<juce::String> importDestination;
 		juce::CachedValue<juce::String> originalsSubFolder;
 		juce::CachedValue<juce::String> originalsFolder;
@@ -52,11 +53,6 @@ namespace AK::WwiseTransfer
 		juce::CachedValue<bool> transferInProgress;
 		juce::ValueTree hierarchyMapping;
 		juce::ValueTree previewItems;
-
-		juce::CachedValue<juce::String> selectObjectsOnImportCommand;
-		juce::CachedValue<bool> applyTemplateFeatureEnabled;
-		juce::CachedValue<bool> undoGroupFeatureEnabled;
-		juce::CachedValue<bool> waqlEnabled;
 
 		WaapiClient& waapiClient;
 		DawContext& dawContext;
