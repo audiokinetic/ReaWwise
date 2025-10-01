@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -383,6 +383,13 @@ namespace AK::ReaWwise
 			return {};
 		}
 
-		return WwiseTransfer::StringHelper::splitDoubleNullTerminatedString(buffer);
+		std::vector<juce::String> itemList = WwiseTransfer::StringHelper::splitDoubleNullTerminatedString(buffer);
+
+		if (pattern.contains("$folders"))
+		{
+			WwiseTransfer::StringHelper::extendFoldersObjectType(pattern, itemList);
+		}
+
+		return itemList;
 	}
 } // namespace AK::ReaWwise

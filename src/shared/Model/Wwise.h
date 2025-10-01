@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -19,20 +19,6 @@ specific language governing permissions and limitations under the License.
 
 namespace AK::WwiseTransfer::Wwise
 {
-	enum class ImportObjectType
-	{
-		SFX,
-		Voice,
-		Music
-	};
-
-	enum class ImportOperation
-	{
-		CreateNew,
-		UseExisting,
-		ReplaceExisting
-	};
-
 	enum class ObjectType
 	{
 		Unknown,
@@ -47,7 +33,11 @@ namespace AK::WwiseTransfer::Wwise
 		SwitchContainer,
 		VirtualFolder,
 		WorkUnit,
-		Sound
+		Sound,
+		MusicSwitchContainer,
+		MusicPlaylistContainer,
+		Segment,
+		Track
 	};
 
 	struct Version

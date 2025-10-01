@@ -1,4 +1,5 @@
-build/
+./build/
 .vs/
 .vscode/
 3rd/AkAutobahn/AkAutobahn
+__pycache__

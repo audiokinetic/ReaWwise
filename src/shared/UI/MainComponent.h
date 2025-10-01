@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -26,11 +26,12 @@ specific language governing permissions and limitations under the License.
 #include "ImportPreviewComponent.h"
 #include "OriginalsSubfolderComponent.h"
 #include "OutputLogComponent.h"
-#include "Persistance/ApplicationProperties.h"
-#include "Persistance/ApplicationStateValidator.h"
-#include "Persistance/FeatureSupport.h"
-#include "Persistance/PersistanceSupport.h"
-#include "Persistance/WwiseProjectSupport.h"
+#include "Persistence/ApplicationProperties.h"
+#include "Persistence/ApplicationStateValidator.h"
+#include "Persistence/FeatureSupport.h"
+#include "Persistence/PersistenceSupport.h"
+#include "Persistence/WwiseProjectSupport.h"
+#include "HorizontalResizeBar.h"
 #include "Splitter.h"
 #include "Theme/CustomLookAndFeel.h"
 
@@ -62,7 +63,7 @@ namespace AK::WwiseTransfer
 		DawWatcher dawWatcher;
 
 		FeatureSupport featureSupport;
-		PersistanceSupport persistanceSupport;
+		PersistenceSupport persistenceSupport;
 		WwiseProjectSupport wwiseProjectSupport;
 
 		OutputLogComponent outputLog;
@@ -76,6 +77,10 @@ namespace AK::WwiseTransfer
 		juce::TooltipWindow tooltipWindow;
 
 		Splitter splitter;
+		HorizontalResizeBar importResizeBar;
+
+		int importSectionHeight;
+		int importSectionHeightAtDragStart;
 
 		juce::CachedValue<bool> collapsedUI;
 

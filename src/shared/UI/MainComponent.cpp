@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 
 #include "MainComponent.h"
 
-#include "Persistance/ApplicationState.h"
+#include "Persistence/ApplicationState.h"
 
 namespace AK::WwiseTransfer
 {
@@ -53,7 +53,7 @@ namespace AK::WwiseTransfer
 		, importConflictsComponent(applicationState)
 		, importControlsComponent(applicationState, waapiClient, dawContext, applicationProperties, applicationName)
 		, featureSupport(applicationState, waapiClient)
-		, persistanceSupport(applicationState, dawContext)
+		, persistenceSupport(applicationState, dawContext)
 		, wwiseProjectSupport(applicationState, waapiClient)
 		, collapsedUI(applicationState, IDs::collapsedUI, nullptr)
 		, logger(applicationName)
@@ -75,11 +75,32 @@ namespace AK::WwiseTransfer
 
 		applicationState.addListener(this);
 
+		importSectionHeight = importComponentHeight;
+		importSectionHeightAtDragStart = importComponentHeight;
+
+		importResizeBar.onDragStart = [this]()
+		{
+			importSectionHeightAtDragStart = importSectionHeight;
+		};
+
+		importResizeBar.onDrag = [this](int totalDelta)
+		{
+			using namespace MainComponentConstants;
+			const int minHeight = importComponentHeight;
+			const int fixedOtherHeight = originalsSubfolderComponentHeight + importDestinationComponentHeight
+				+ importConflictsComponentHeight + splitterHeight + splitterHeight
+				+ importControlsComponentHeight + 10 * margin;
+			const int maxHeight = juce::jmax(minHeight, getHeight() - fixedOtherHeight - 50);
+			importSectionHeight = std::clamp(importSectionHeightAtDragStart + totalDelta, minHeight, maxHeight);
+			resized();
+		};
+
 		addAndMakeVisible(originalsSubfolderComponent);
 
 		addChildComponent(importDestinationComponent);
 		addChildComponent(importComponent);
 		addChildComponent(importConflictsComponent);
+		addChildComponent(importResizeBar);
 
 		addAndMakeVisible(importPreviewComponent);
 		addAndMakeVisible(importControlsComponent);
@@ -115,9 +136,9 @@ namespace AK::WwiseTransfer
 
 			area.removeFromTop(margin);
 
-			importComponent.setBounds(area.removeFromTop(importComponentHeight));
+			importComponent.setBounds(area.removeFromTop(importSectionHeight));
 
-			area.removeFromTop(margin);
+			importResizeBar.setBounds(area.removeFromTop(margin));
 
 			importConflictsComponent.setBounds(area.removeFromTop(importConflictsComponentHeight));
 		}
@@ -176,6 +197,7 @@ namespace AK::WwiseTransfer
 		importDestinationComponent.setVisible(!collapsedUI);
 		importComponent.setVisible(!collapsedUI);
 		importConflictsComponent.setVisible(!collapsedUI);
+		importResizeBar.setVisible(!collapsedUI);
 
 		if(shouldResize)
 			resized();

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -22,12 +22,12 @@ specific language governing permissions and limitations under the License.
 
 namespace AK::WwiseTransfer
 {
-	class PersistanceSupport
+	class PersistenceSupport
 		: juce::ValueTree::Listener
 	{
 	public:
-		PersistanceSupport(juce::ValueTree appState, DawContext& dawContext);
-		virtual ~PersistanceSupport();
+		PersistenceSupport(juce::ValueTree appState, DawContext& dawContext);
+		virtual ~PersistenceSupport();
 
 	private:
 		DawContext& dawContext;

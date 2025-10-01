@@ -9,7 +9,7 @@ may use this file in accordance with the end user license agreement provided
 with the software or, alternatively, in accordance with the terms contained in a
 written agreement between you and Audiokinetic Inc.
 
-  Copyright (c) 2025 Audiokinetic Inc.
+  Copyright (c) 2026 Audiokinetic Inc.
 *******************************************************************************/
 // Based on authoring's IncludeRapidJson.h
 

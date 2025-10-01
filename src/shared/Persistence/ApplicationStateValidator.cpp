@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -58,6 +58,11 @@ namespace AK::WwiseTransfer::ApplicationState
 
 				valueTree.setPropertyExcludingListener(this, IDs::importDestinationValid, isValid, nullptr);
 				valueTree.setPropertyExcludingListener(this, IDs::importDestinationErrorMessage, errorMessage, nullptr);
+
+				// Re-validate immediately in case the hierarchy context changed (e.g. moved between Actor-Mixer
+				// and Interactive Music Hierarchy) without the destination object type changing.
+				const auto importDestinationType = juce::VariantConverter<Wwise::ObjectType>::fromVar(valueTree[IDs::importDestinationType]);
+				validateHierarchyMapping(importDestinationType, applicationState.getChildWithName(IDs::hierarchyMapping));
 
 				auto onGetObjectAsync = [this](const Waapi::Response<Waapi::ObjectResponse> response)
 				{
@@ -186,6 +191,8 @@ namespace AK::WwiseTransfer::ApplicationState
 
 	void Validator::validateHierarchyMapping(Wwise::ObjectType importDestinationType, juce::ValueTree hierarchyMapping)
 	{
+		bool isUsingInteractiveMusicHierarchy = applicationState.getChildWithName(IDs::featureSupport).getProperty(IDs::isUsingInteractiveMusicHierarchy);
+
 		// To properly validate the hierarchy mapping, we must include the import destination
 		std::vector<Wwise::ObjectType> hierarchyTypes{importDestinationType};
 		for(int i = 0; i < hierarchyMapping.getNumChildren(); ++i)
@@ -202,15 +209,26 @@ namespace AK::WwiseTransfer::ApplicationState
 			bool isValid = true;
 			juce::String errorMessage;
 
-			// Last item must be SoundSFX, report this error above any others
-			if(i == hierarchyTypes.size() - 1 && child != Wwise::ObjectType::SoundSFX && child != Wwise::ObjectType::SoundVoice)
+			// Last item must be SoundSFX, Sound Voice, Segment or Track. Report this error above any others.
+			if(i == hierarchyTypes.size() - 1 &&
+			   child != Wwise::ObjectType::SoundSFX &&
+			   child != Wwise::ObjectType::SoundVoice &&
+			   child != Wwise::ObjectType::Segment &&
+			   child != Wwise::ObjectType::Track)
 			{
 				isValid = false;
-				errorMessage << "Last item must be of type 'SoundSFX' or 'Sound Voice'";
+				errorMessage << "Last item must be of type 'Sound SFX', 'Sound Voice', 'Segment' or 'Track'.";
+			}
+			else if(isUsingInteractiveMusicHierarchy &&
+					!isImportDestinationInMusicHierarchy() &&
+					(child == Wwise::ObjectType::MusicSwitchContainer || child == Wwise::ObjectType::MusicPlaylistContainer))
+			{
+				isValid = false;
+				errorMessage << "'" << WwiseHelper::objectTypeToReadableString(child) << "' can only be used in the Interactive Music Hierarchy";
 			}
 			else if(parent != Wwise::ObjectType::Unknown &&
 					child != Wwise::ObjectType::Unknown &&
-					!WwiseHelper::validateObjectTypeParentChildRelationShip(parent, child))
+					!validateObjectTypeParentChildRelationShip(parent, child))
 			{
 				isValid = false;
 				errorMessage << "'" << WwiseHelper::objectTypeToReadableString(child) << "' cannot be a child of '" << WwiseHelper::objectTypeToReadableString(parent) << "'";
@@ -222,14 +240,108 @@ namespace AK::WwiseTransfer::ApplicationState
 		}
 	}
 
+	bool Validator::validateObjectTypeParentChildRelationShip(Wwise::ObjectType parent, Wwise::ObjectType child)
+	{
+		using namespace Wwise;
+
+		bool isSegmentUniversal = applicationState.getChildWithName(IDs::featureSupport).getProperty(IDs::isSegmentUniversal);
+		bool isUsingInteractiveMusicHierarchy = applicationState.getChildWithName(IDs::featureSupport).getProperty(IDs::isUsingInteractiveMusicHierarchy);
+		bool validRelationship = false;
+
+		switch(parent)
+		{
+		case ObjectType::BlendContainer:
+		case ObjectType::RandomContainer:
+		case ObjectType::SequenceContainer:
+		case ObjectType::SwitchContainer:
+		{
+			validRelationship = child == ObjectType::SwitchContainer || child == ObjectType::RandomContainer || child == ObjectType::SequenceContainer ||
+			                    child == ObjectType::BlendContainer || child == ObjectType::SoundSFX || child == ObjectType::SoundVoice;
+			if (isSegmentUniversal)
+			{
+				validRelationship |= child == ObjectType::Segment;
+			}
+			break;
+		};
+		case ObjectType::ActorMixer:
+		{
+			validRelationship = child == ObjectType::WorkUnit || child == ObjectType::VirtualFolder || child == ObjectType::ActorMixer ||
+			                    child == ObjectType::SwitchContainer || child == ObjectType::RandomContainer || child == ObjectType::SequenceContainer ||
+			                    child == ObjectType::BlendContainer || child == ObjectType::SoundSFX || child == ObjectType::SoundVoice;
+
+			if(isSegmentUniversal)
+			{
+				validRelationship |= child == ObjectType::Segment;
+			}
+			break;
+		}
+		case ObjectType::VirtualFolder:
+		case ObjectType::WorkUnit:
+		{
+			validRelationship = child == ObjectType::WorkUnit || child == ObjectType::VirtualFolder || child == ObjectType::ActorMixer ||
+			                    child == ObjectType::SwitchContainer || child == ObjectType::RandomContainer || child == ObjectType::SequenceContainer ||
+			                    child == ObjectType::BlendContainer || child == ObjectType::SoundSFX || child == ObjectType::SoundVoice;
+
+			if(!isUsingInteractiveMusicHierarchy || isImportDestinationInMusicHierarchy())
+			{
+				validRelationship |= child == ObjectType::MusicSwitchContainer || child == ObjectType::MusicPlaylistContainer;
+			}
+
+			if(isSegmentUniversal)
+			{
+				validRelationship |= child == ObjectType::Segment;
+			}
+			break;
+		};
+		case ObjectType::PhysicalFolder:
+		{
+			validRelationship = child == ObjectType::PhysicalFolder || child == ObjectType::WorkUnit;
+			break;
+		};
+		case ObjectType::MusicSwitchContainer:
+		{
+			validRelationship = child == ObjectType::WorkUnit || child == ObjectType::VirtualFolder ||
+			                    child == ObjectType::MusicSwitchContainer || child == ObjectType::MusicPlaylistContainer ||
+			                    child == ObjectType::Segment;
+			break;
+		}
+		case ObjectType::MusicPlaylistContainer:
+		{
+			validRelationship = child == ObjectType::Segment;
+			break;
+		}
+		case ObjectType::Segment:
+		{
+			validRelationship = child == ObjectType::Track;
+			break;
+		}
+		default:
+			break;
+		}
+
+		return validRelationship;
+	};
+
+	bool Validator::isImportDestinationInMusicHierarchy() const
+	{
+		static const juce::String pathPrefixMusicHierarchy = "\\Interactive Music Hierarchy";
+		const juce::String importDestination = applicationState[IDs::importDestination];
+		return importDestination.startsWith(pathPrefixMusicHierarchy);
+	}
+
 	bool Validator::pathStartsWithAllowedPrefix(const juce::String& path) const
 	{
 		static const juce::String pathPrefixLegacy = "\\Actor-Mixer Hierarchy";
 		static const juce::String pathPrefix = "\\Containers";
+		static const juce::String pathPrefixMusicHierarchy = "\\Interactive Music Hierarchy";
 
 		auto featureSupport = applicationState.getChildWithName(IDs::featureSupport);
 		bool useNewObjectNames = featureSupport.getProperty(IDs::newObjectNamesEnabled);
+		bool isUsingInteractiveMusicHierarchy = featureSupport.getProperty(IDs::isUsingInteractiveMusicHierarchy);
 
-		return useNewObjectNames ? path.startsWith(pathPrefix) : path.startsWith(pathPrefixLegacy);
+		if(useNewObjectNames)
+			return path.startsWith(pathPrefix);
+
+		return path.startsWith(pathPrefixLegacy) || (isUsingInteractiveMusicHierarchy && path.startsWith(pathPrefixMusicHierarchy));
 	}
 } // namespace AK::WwiseTransfer::ApplicationState

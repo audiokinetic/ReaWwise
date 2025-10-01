@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -16,6 +16,7 @@ specific language governing permissions and limitations under the License.
 #include "WaapiClient.h"
 
 #include "Helpers/ImportHelper.h"
+#include "Helpers/StringHelper.h"
 #include "Model/IDs.h"
 
 #include <JSONHelpers.h>
@@ -66,6 +67,8 @@ namespace AK::WwiseTransfer
 	{
 		static constexpr const char* const objectNotFound = "Object not found";
 	}
+
+	static constexpr std::size_t maxLoggedPayloadBytes = 10'000;
 
 	WaapiClientWatcher::WaapiClientWatcher(juce::ValueTree appState, WaapiClient& waapiClient, WaapiClientWatcherConfig&& waapiClientWatcherConfig)
 		: juce::Thread("WaapiService")
@@ -356,10 +359,11 @@ namespace AK::WwiseTransfer
 
 		auto status = Call(in_uri, in_args, in_options, out_result, in_timeoutMs);
 
+		// Cap each logged payload to avoid crashing the JUCE logger and filling the disk. Results can be megabytes in size.
 		juce::Logger::writeToLog(juce::String(in_uri) +
-								 juce::NewLine() + juce::String("args: ") + JSONHelpers::GetAkJsonString(in_args).substr(0, 10'000) + // Cap the args strings logged to 10,000 characters to avoid crashing the JUCE logger.
-								 juce::NewLine() + juce::String("options: ") + JSONHelpers::GetAkJsonString(in_options) +
-								 juce::NewLine() + juce::String("result: ") + JSONHelpers::GetAkJsonString(out_result));
+								 juce::NewLine() + juce::String("args: ") + StringHelper::truncateUtf8(JSONHelpers::GetAkJsonString(in_args), maxLoggedPayloadBytes) +
+								 juce::NewLine() + juce::String("options: ") + StringHelper::truncateUtf8(JSONHelpers::GetAkJsonString(in_options), maxLoggedPayloadBytes) +
+								 juce::NewLine() + juce::String("result: ") + StringHelper::truncateUtf8(JSONHelpers::GetAkJsonString(out_result), maxLoggedPayloadBytes));
 
 		return status;
 	}
@@ -369,9 +373,9 @@ namespace AK::WwiseTransfer
 		auto status = Call(in_uri, in_args, in_options, out_result, in_timeoutMs);
 
 		juce::Logger::writeToLog(juce::String(in_uri) +
-								 juce::NewLine() + juce::String("args: ") + in_args +
-								 juce::NewLine() + juce::String("options: ") + in_options +
-								 juce::NewLine() + juce::String("result: ") + out_result);
+								 juce::NewLine() + juce::String("args: ") + StringHelper::truncateUtf8(in_args, maxLoggedPayloadBytes) +
+								 juce::NewLine() + juce::String("options: ") + StringHelper::truncateUtf8(in_options, maxLoggedPayloadBytes) +
+								 juce::NewLine() + juce::String("result: ") + StringHelper::truncateUtf8(out_result, maxLoggedPayloadBytes));
 
 		return status;
 	}
@@ -639,128 +643,7 @@ namespace AK::WwiseTransfer
 		return response;
 	}
 
-	Waapi::Response<Waapi::ObjectResponseSet> WaapiClient::getObjectAncestorsAndDescendantsLegacy(const juce::String& objectPath)
-	{
-		using namespace WwiseAuthoringAPI;
 
-		Waapi::Response<Waapi::ObjectResponseSet> response;
-
-		static auto buildArgs = [](const juce::String& path)
-		{
-			auto from = AkJson::Map{
-				{
-					"from",
-					AkJson::Map{
-						{
-							"path",
-							AkJson::Array{
-								AkVariant{path.toStdString()},
-							},
-						},
-					},
-				},
-			};
-
-			return from;
-		};
-
-		static auto addTransform = [](AkJson::Map& args, const juce::String& transform)
-		{
-			args["transform"] = AkJson::Array{
-				AkJson::Map{
-					{
-						"select",
-						AkJson::Array{
-							AkVariant{transform.toStdString()},
-						},
-					},
-				},
-			};
-		};
-
-		static auto fillResponse = [](auto& response, const auto& result)
-		{
-			if(result.HasKey("return"))
-			{
-				auto objects = result["return"].GetArray();
-
-				for(auto& object : objects)
-				{
-					response.result.emplace(object);
-				}
-			}
-		};
-
-		static const auto options = AkJson::Map{
-			{
-				"return",
-				AkJson::Array{
-					AkVariant{"id"},
-					AkVariant{"name"},
-					AkVariant{"type"},
-					AkVariant{"path"},
-					AkVariant{"sound:originalWavFilePath"},
-					AkVariant{"workunitType"},
-				},
-			},
-		};
-
-		auto args = buildArgs(objectPath);
-
-		AkJson result;
-		response.status = call(WaapiCommands::objectGet, args, options, result);
-
-		if(response.status)
-			fillResponse(response, result);
-
-		args = buildArgs(objectPath);
-		addTransform(args, "descendants");
-
-		response.status = call(WaapiCommands::objectGet, args, options, result);
-
-		if(response.status)
-			fillResponse(response, result);
-
-		args = buildArgs(objectPath);
-		addTransform(args, "ancestors");
-
-		response.status = call(WaapiCommands::objectGet, args, options, result);
-
-		if(response.status)
-			fillResponse(response, result);
-		else
-		{
-			auto objectAncestors = WwiseHelper::pathToAncestorPaths(objectPath);
-
-			for(int i = objectAncestors.size() - 1; i >= 0; --i)
-			{
-				args = buildArgs(objectAncestors[i]);
-
-				response.status = call(WaapiCommands::objectGet, args, options, result);
-
-				if(response.status)
-				{
-					fillResponse(response, result);
-
-					args = buildArgs(objectAncestors[i]);
-					addTransform(args, "ancestors");
-
-					response.status = call(WaapiCommands::objectGet, args, options, result);
-
-					if(response.status)
-					{
-						fillResponse(response, result);
-						break;
-					}
-				}
-			}
-		}
-
-		if(!response.status)
-			response.error = WaapiHelper::parseError(WaapiCommands::objectGet, result);
-
-		return response;
-	}
 
 	Waapi::Response<Waapi::ObjectResponse> WaapiClient::getObject(const juce::String& objectPath)
 	{

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -21,7 +21,7 @@ specific language governing permissions and limitations under the License.
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-namespace AK::WwiseTransfer::PersistanceHelper
+namespace AK::WwiseTransfer::PersistenceHelper
 {
 	inline juce::String hierarchyMappingToPresetData(juce::ValueTree hierarchyMapping)
 	{
@@ -71,4 +71,4 @@ namespace AK::WwiseTransfer::PersistanceHelper
 		auto hierarchyMappingValueTree = ImportHelper::hierachyMappingNodeListToValueTree(hierarchyMapping);
 		return hierarchyMappingValueTree;
 	}
-} // namespace AK::WwiseTransfer::PersistanceHelper
+} // namespace AK::WwiseTransfer::PersistenceHelper

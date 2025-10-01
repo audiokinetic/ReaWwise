@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -16,7 +16,7 @@ specific language governing permissions and limitations under the License.
 #pragma once
 
 #include "CustomDrawableButton.h"
-#include "Persistance/ApplicationProperties.h"
+#include "Persistence/ApplicationProperties.h"
 
 #include <memory>
 

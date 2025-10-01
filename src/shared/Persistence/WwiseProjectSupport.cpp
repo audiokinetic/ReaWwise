@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -32,9 +32,6 @@ namespace AK::WwiseTransfer
 		, hierarchyMapping(applicationState.getChildWithName(IDs::hierarchyMapping))
 		, languages(applicationState.getChildWithName(IDs::languages))
 	{
-		auto featureSupport = applicationState.getChildWithName(IDs::featureSupport);
-		additionalProjectInfoLookupEnabled.referTo(featureSupport, IDs::additionalProjectInfoLookupEnabled, nullptr);
-
 		applicationState.addListener(this);
 	}
 
@@ -49,16 +46,7 @@ namespace AK::WwiseTransfer
 
 		if(treeType == IDs::application)
 		{
-			if(property == IDs::additionalProjectInfoLookupEnabled)
-			{
-				additionalProjectInfoLookupEnabled.forceUpdateOfCachedValue();
-
-				if(additionalProjectInfoLookupEnabled.get())
-					loadAdditionalProjectInfo();
-				else
-					resetAdditionalProjectInfo();
-			}
-			else if(property == IDs::projectId)
+			if(property == IDs::projectId)
 			{
 				projectId.forceUpdateOfCachedValue();
 
@@ -70,12 +58,8 @@ namespace AK::WwiseTransfer
 				// Proceed to load additional data
 				else
 				{
-					// Available in all supported versions of wwise
 					loadProjectLanguages();
-
-					// Extra information only available in wwise 2022+
-					if(additionalProjectInfoLookupEnabled.get())
-						loadAdditionalProjectInfo();
+					loadAdditionalProjectInfo();
 				}
 			}
 			else if(property == IDs::waapiConnected)

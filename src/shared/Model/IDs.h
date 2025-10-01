@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -21,6 +21,7 @@ namespace AK::WwiseTransfer::IDs
 {
 	inline const juce::Identifier application = "application";
 	inline const juce::Identifier waapiConnected = "waapiConnected";
+	inline const juce::Identifier minimumVersionRequirementMet = "minimumVersionRequirementMet";
 	inline const juce::Identifier projectPath = "projectPath";
 	inline const juce::Identifier projectId = "projectId";
 
@@ -75,12 +76,9 @@ namespace AK::WwiseTransfer::IDs
 	inline const juce::Identifier build = "build";
 
 	inline const juce::Identifier featureSupport = "featureSupport";
-	inline const juce::Identifier selectObjectsOnImportCommand = "selectObjectsOnImportCommand";
-	inline const juce::Identifier applyTemplateFeatureEnabled = "applyTemplateFeatureEnabled";
-	inline const juce::Identifier undoGroupFeatureEnabled = "undoGroupFeatureEnabled";
-	inline const juce::Identifier waqlEnabled = "waqlEnabled";
-	inline const juce::Identifier additionalProjectInfoLookupEnabled = "additionalProjectInfoLookupEnabled";
 	inline const juce::Identifier newObjectNamesEnabled = "newObjectNamesEnabled";
+	inline const juce::Identifier isSegmentUniversal = "isSegmentUniversal";
+	inline const juce::Identifier isUsingInteractiveMusicHierarchy = "isUsingInteractiveMusicHierarchy";
 
 	inline const juce::Identifier wwiseObjectsChanged = "wwiseObjectsChanged";
 

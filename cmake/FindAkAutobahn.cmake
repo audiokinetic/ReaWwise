@@ -6,7 +6,7 @@ file(GLOB AK_AUTOBAHN_SOURCES
 
 add_library(AkAutobahn)
 
-set_property(TARGET AkAutobahn PROPERTY CXX_STANDARD 14)
+set_property(TARGET AkAutobahn PROPERTY CXX_STANDARD ${CMAKE_CXX_STANDARD})
 
 target_sources(AkAutobahn PRIVATE ${AK_AUTOBAHN_SOURCES})
 

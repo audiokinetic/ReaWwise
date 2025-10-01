@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -13,7 +13,7 @@ specific language governing permissions and limitations under the License.
 
 ----------------------------------------------------------------------------------------*/
 
-#include "PersistanceHelperTest.h"
+#include "PersistenceHelperTest.h"
 
 
 namespace AK::WwiseTransfer::Test
@@ -36,7 +36,7 @@ namespace AK::WwiseTransfer::Test
 
 		SECTION("Without Removed Properties")
 		{
-			auto presetData = PersistanceHelper::hierarchyMappingToPresetData(rootValueTree);
+			auto presetData = PersistenceHelper::hierarchyMappingToPresetData(rootValueTree);
 			auto parsedData = juce::parseXML(presetData);
 
 			for (int index = 0; index < childrenCount; index++)
@@ -54,7 +54,7 @@ namespace AK::WwiseTransfer::Test
 				addPropertiesToRemove(childTree);
 			}
 
-			auto presetData = PersistanceHelper::hierarchyMappingToPresetData(rootValueTree);
+			auto presetData = PersistenceHelper::hierarchyMappingToPresetData(rootValueTree);
 			auto parsedData = juce::parseXML(presetData);
 
 			for (int index = 0; index < childrenCount; index++)
@@ -69,7 +69,7 @@ namespace AK::WwiseTransfer::Test
 	TEST_CASE("hierarchyMappingToPresetData: Empty Value Tree")
 	{
 		auto valueTree = juce::ValueTree();
-		auto presetData = PersistanceHelper::hierarchyMappingToPresetData(valueTree);
+		auto presetData = PersistenceHelper::hierarchyMappingToPresetData(valueTree);
 
 		REQUIRE(presetData.isEmpty());
 	}
@@ -83,7 +83,7 @@ namespace AK::WwiseTransfer::Test
 
 		rootValueTree.addChild(childValueTree, 0, nullptr);
 		auto rootPresetData = rootValueTree.toXmlString();
-		auto valueTree = PersistanceHelper::presetDataToHierarchyMapping(rootPresetData);
+		auto valueTree = PersistenceHelper::presetDataToHierarchyMapping(rootPresetData);
 
 		for (int index = 0; index < valueTree.getNumChildren(); index++)
 		{
@@ -93,7 +93,7 @@ namespace AK::WwiseTransfer::Test
 
 	TEST_CASE("presetDataToHierarchyMapping: Empty String")
 	{
-		auto hierarchyMapping = PersistanceHelper::presetDataToHierarchyMapping("");
+		auto hierarchyMapping = PersistenceHelper::presetDataToHierarchyMapping("");
 
 		REQUIRE_FALSE(hierarchyMapping.isValid());
 	}

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -35,10 +35,22 @@ namespace AK::WwiseTransfer
 		constexpr int syncButtonWidth = 36;
 		constexpr int propertyTemplateToggleButtonWidth = 22;
 		constexpr int lineThickness = 2;
-		constexpr std::initializer_list<Wwise::ObjectType> objectTypes{Wwise::ObjectType::ActorMixer, Wwise::ObjectType::BlendContainer,
-			Wwise::ObjectType::PhysicalFolder, Wwise::ObjectType::RandomContainer, Wwise::ObjectType::SequenceContainer, Wwise::ObjectType::SoundSFX,
-			Wwise::ObjectType::SoundVoice, Wwise::ObjectType::SwitchContainer, Wwise::ObjectType::VirtualFolder, Wwise::ObjectType::WorkUnit};
-		const juce::String pastePropertiesToolTip = "Paste properties are only available when connected to Wwise 2022+";
+		constexpr std::initializer_list<Wwise::ObjectType> objectTypes {
+			Wwise::ObjectType::ActorMixer,
+			Wwise::ObjectType::BlendContainer,
+			Wwise::ObjectType::PhysicalFolder,
+			Wwise::ObjectType::RandomContainer,
+			Wwise::ObjectType::SequenceContainer,
+			Wwise::ObjectType::SoundSFX,
+			Wwise::ObjectType::SoundVoice,
+			Wwise::ObjectType::SwitchContainer,
+			Wwise::ObjectType::VirtualFolder,
+			Wwise::ObjectType::WorkUnit,
+			Wwise::ObjectType::MusicSwitchContainer,
+			Wwise::ObjectType::MusicPlaylistContainer,
+			Wwise::ObjectType::Segment,
+			Wwise::ObjectType::Track,
+		};
 	} // namespace SelectedRowPropertiesComponentConstants
 
 	SelectedRowPropertiesComponent::SelectedRowPropertiesComponent(juce::ValueTree appState, WaapiClient& waapiClient)
@@ -53,9 +65,6 @@ namespace AK::WwiseTransfer
 		using namespace SelectedRowPropertiesComponentConstants;
 
 		setText("Selected Row Properties");
-
-		auto featureSupport = applicationState.getChildWithName(IDs::featureSupport);
-		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
 
 		objectTypeLabel.setText("Object Type", juce::dontSendNotification);
 		objectTypeLabel.setBorderSize(juce::BorderSize(0));
@@ -187,21 +196,16 @@ namespace AK::WwiseTransfer
 	{
 		using namespace SelectedRowPropertiesComponentConstants;
 
-		auto isEnabled = propertyTemplatePathEnabled && applyTemplateFeatureEnabled;
-
-		propertyTemplatePathSyncButton.setEnabled(isEnabled);
-		propertyTemplatePathEditor.setEnabled(isEnabled);
-		propertyTemplatePathEditor.setAlpha(isEnabled ? 1 : 0.5f);
-		propertyTemplatePathEditor.setMouseCursor(isEnabled ? juce::MouseCursor::IBeamCursor : juce::MouseCursor::NormalCursor);
+		propertyTemplatePathSyncButton.setEnabled(propertyTemplatePathEnabled);
+		propertyTemplatePathEditor.setEnabled(propertyTemplatePathEnabled);
+		propertyTemplatePathEditor.setAlpha(propertyTemplatePathEnabled ? 1 : 0.5f);
+		propertyTemplatePathEditor.setMouseCursor(propertyTemplatePathEnabled ? juce::MouseCursor::IBeamCursor : juce::MouseCursor::NormalCursor);
 
 		// Not using isEnabled because these fields depend on propertyTemplatePathEnabled.
-		propertyTemplateToggleButton.setEnabled(applyTemplateFeatureEnabled);
-		propertyTemplatePathLabel.setEnabled(applyTemplateFeatureEnabled);
+		propertyTemplateToggleButton.setEnabled(true);
+		propertyTemplatePathLabel.setEnabled(true);
 
-		propertyTemplatePathEditor.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
-		propertyTemplatePathSyncButton.setTooltip(applyTemplateFeatureEnabled ? "Sync with selected object in Wwise" : pastePropertiesToolTip);
-		propertyTemplateToggleButton.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
-		propertyTemplatePathLabel.setTooltip(applyTemplateFeatureEnabled ? "" : pastePropertiesToolTip);
+		propertyTemplatePathSyncButton.setTooltip("Sync with selected object in Wwise");
 	}
 
 	void SelectedRowPropertiesComponent::paint(juce::Graphics& g)
@@ -305,8 +309,7 @@ namespace AK::WwiseTransfer
 		auto treeType = treeWhosePropertyHasChanged.getType();
 
 		if(treeType == IDs::hierarchyMapping && property == IDs::selectedRow ||
-			treeType == IDs::hierarchyMappingNode && (property == IDs::objectType || property == IDs::propertyTemplatePathEnabled) ||
-			treeType == IDs::featureSupport && property == IDs::applyTemplateFeatureEnabled)
+		   treeType == IDs::hierarchyMappingNode && (property == IDs::objectType || property == IDs::propertyTemplatePathEnabled))
 		{
 			triggerAsyncUpdate();
 		}

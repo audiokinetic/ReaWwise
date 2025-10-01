@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -53,7 +53,10 @@ namespace AK::WwiseTransfer
 		area.removeFromTop(topMargin);
 		area.removeFromBottom(margin);
 
-		auto hierarchyMappingTableArea = area.removeFromTop(hierarchyMappingTableHeight);
+		auto selectedRowArea = area.removeFromBottom(selectedRowPropertiesSectionHeight);
+		area.removeFromBottom(spacing);
+
+		auto hierarchyMappingTableArea = area;
 		{
 			hierarchyMappingControls.setBounds(hierarchyMappingTableArea.removeFromRight(hierarchyMappingControlsWidth));
 			hierarchyMappingTableArea.removeFromRight(spacing);
@@ -61,7 +64,6 @@ namespace AK::WwiseTransfer
 			hierarchyMappingTable.setBounds(hierarchyMappingTableArea);
 		}
 
-		area.removeFromTop(spacing);
-		selectedRowPropertiesComponent.setBounds(area.removeFromTop(selectedRowPropertiesSectionHeight));
+		selectedRowPropertiesComponent.setBounds(selectedRowArea);
 	}
 } // namespace AK::WwiseTransfer

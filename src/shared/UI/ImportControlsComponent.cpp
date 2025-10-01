@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -49,6 +49,7 @@ namespace AK::WwiseTransfer
 		: applicationState(appState)
 		, originalsSubfolderValid(applicationState, IDs::originalsSubfolderValid, nullptr)
 		, importDestinationValid(applicationState, IDs::importDestinationValid, nullptr)
+		, minimumVersionRequirementMet(applicationState, IDs::minimumVersionRequirementMet, nullptr)
 		, importDestination(applicationState, IDs::importDestination, nullptr)
 		, originalsSubFolder(applicationState, IDs::originalsSubfolder, nullptr)
 		, originalsFolder(applicationState, IDs::originalsFolder, nullptr)
@@ -65,12 +66,6 @@ namespace AK::WwiseTransfer
 		, applicationName(applicationName)
 	{
 		using namespace ImportControlsComponentConstants;
-
-		auto featureSupport = applicationState.getChildWithName(IDs::featureSupport);
-		selectObjectsOnImportCommand.referTo(featureSupport, IDs::selectObjectsOnImportCommand, nullptr);
-		applyTemplateFeatureEnabled.referTo(featureSupport, IDs::applyTemplateFeatureEnabled, nullptr);
-		undoGroupFeatureEnabled.referTo(featureSupport, IDs::undoGroupFeatureEnabled, nullptr);
-		waqlEnabled.referTo(featureSupport, IDs::waqlEnabled, nullptr);
 
 		importButton.setButtonText("Transfer to Wwise");
 
@@ -123,7 +118,7 @@ namespace AK::WwiseTransfer
 		transferInProgress = true;
 
 		const auto hierarchyMappingPath =
-			ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)));
+			ImportHelper::hierarchyMappingToPath(ImportHelper::valueTreeToHierarchyMappingNodeList(applicationState.getChildWithName(IDs::hierarchyMapping)), applicationState.getChildWithName(IDs::featureSupport).getProperty(IDs::isSegmentUniversal));
 		const Import::Options opts(importDestination, originalsSubFolder, hierarchyMappingPath);
 
 		const auto previewItems = dawContext.getItemsForPreview(opts);
@@ -270,7 +265,11 @@ namespace AK::WwiseTransfer
 
 	void ImportControlsComponent::refreshComponent()
 	{
-		auto importButtonEnabled = !transferInProgress.get() && originalsSubfolderValid.get() && importDestinationValid.get() && projectPath.get().isNotEmpty() &&
+		auto importButtonEnabled = !transferInProgress.get() &&
+								   originalsSubfolderValid.get() &&
+								   importDestinationValid.get() &&
+								   minimumVersionRequirementMet.get() &&
+			                       projectPath.get().isNotEmpty() &&
 		                           previewItems.getNumChildren() > 0;
 
 		auto hieararchyMappingNodes = ImportHelper::valueTreeToHierarchyMappingNodeList(hierarchyMapping);
@@ -288,7 +287,9 @@ namespace AK::WwiseTransfer
 
 		juce::String tooltip;
 
-		if(projectPath.get().isEmpty())
+		if(!minimumVersionRequirementMet)
+			tooltip = "Unsupported Wwise version.";
+		else if(projectPath.get().isEmpty())
 			tooltip = "Connect to Wwise to continue";
 		else if(previewItems.getNumChildren() == 0)
 			tooltip = "Nothing to transfer";
@@ -301,7 +302,7 @@ namespace AK::WwiseTransfer
 	void ImportControlsComponent::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 	{
 		if(treeWhosePropertyHasChanged == applicationState && (property == IDs::originalsSubfolderValid || property == IDs::importDestinationValid ||
-																  property == IDs::projectPath || property == IDs::transferInProgress) ||
+																  property == IDs::projectPath || property == IDs::transferInProgress || property == IDs::minimumVersionRequirementMet) ||
 			treeWhosePropertyHasChanged.getType() == IDs::hierarchyMappingNode)
 		{
 			triggerAsyncUpdate();
@@ -415,8 +416,7 @@ namespace AK::WwiseTransfer
 
 		const Import::Task::Options importTaskOptions{
 			importItems, containerNameExistsOption, applyTemplateOption, importDestination, hierarchyMappingNodeList,
-			originalsFolder, languageSubfolder, selectObjectsOnImportCommand, applyTemplateFeatureEnabled, undoGroupFeatureEnabled,
-			waqlEnabled};
+			originalsFolder, languageSubfolder};
 
 		auto onImportComplete = [this, importTaskOptions = importTaskOptions](const Import::Summary& importSummary)
 		{

@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -16,7 +16,7 @@ specific language governing permissions and limitations under the License.
 #include "PresetMenuComponent.h"
 
 #include "BinaryData.h"
-#include "Helpers/PersistanceHelper.h"
+#include "Helpers/PersistenceHelper.h"
 #include "Model/IDs.h"
 
 namespace AK::WwiseTransfer
@@ -66,7 +66,7 @@ namespace AK::WwiseTransfer
 
 				if(createResult)
 				{
-					const auto presetData = PersistanceHelper::hierarchyMappingToPresetData(hierarchyMapping);
+					const auto presetData = PersistenceHelper::hierarchyMappingToPresetData(hierarchyMapping);
 					file.replaceWithText(presetData);
 					applicationProperties.addRecentHierarchyMappingPreset(file.getFullPathName());
 				}
@@ -131,7 +131,7 @@ namespace AK::WwiseTransfer
 	void PresetMenuComponent::loadPreset(const juce::File& presetFile)
 	{
 		auto presetData = presetFile.loadFileAsString();
-		auto hierarchyMappingTemp = PersistanceHelper::presetDataToHierarchyMapping(presetData);
+		auto hierarchyMappingTemp = PersistenceHelper::presetDataToHierarchyMapping(presetData);
 
 		if(hierarchyMappingTemp.isValid())
 		{

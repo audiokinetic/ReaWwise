@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -13,7 +13,7 @@ specific language governing permissions and limitations under the License.
 
 ----------------------------------------------------------------------------------------*/
 
-#include "Helpers/PersistanceHelper.h"
+#include "Helpers/PersistenceHelper.h"
 #include "Model/Import.h"
 #include "Model/IDs.h"
 #include <catch2/catch_all.hpp>
@@ -107,7 +107,7 @@ namespace AK::WwiseTransfer::Test
 
 	inline void testHierarchyMappingValueTreeEquality(juce::ValueTree valueTree, const TestHierarchyMappingNodeValues& values)
 	{
-		// PersistanceHelper::presetDataToHierarchyMapping sets hardcoded data to newly created valueTree
+		// PersistenceHelper::presetDataToHierarchyMapping sets hardcoded data to newly created valueTree
 		REQUIRE(valueTree.getProperty(IDs::objectName) == values.objectName);
 		REQUIRE(valueTree.getProperty(IDs::objectNameValid));
 		REQUIRE(juce::VariantConverter<juce::String>::fromVar(valueTree.getProperty(IDs::objectNameErrorMessage)).isEmpty());

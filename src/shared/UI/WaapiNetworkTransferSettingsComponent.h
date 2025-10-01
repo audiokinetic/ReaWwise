@@ -16,7 +16,7 @@ specific language governing permissions and limitations under the License.
 #pragma once
 
 #include "Core/WaapiClient.h"
-#include "Persistance/ApplicationProperties.h"
+#include "Persistence/ApplicationProperties.h"
 #include "Theme/CustomLookAndFeel.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>

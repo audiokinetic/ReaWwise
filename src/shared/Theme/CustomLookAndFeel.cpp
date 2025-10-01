@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 The script in this file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 
 #include "CustomLookAndFeel.h"
 
-#include "BinaryData.h"
+#include <BinaryData.h>
 #include "UI/HierarchyMappingTable.h"
 #include "UI/ImportPreviewComponent.h"
 #include "UI/ValidatableTextEditor.h"
@@ -38,7 +38,7 @@ namespace AK::WwiseTransfer
 		, previewItemNewColor{0xff29afff}
 		, previewItemReplacedColor{0xffda8e40}
 		, errorColor(0xffff3333)
-		, regularTypeFace{juce::Typeface::createSystemTypefaceFor(BinaryData::noto_universal_ttf, BinaryData::noto_universal_ttfSize)}
+		, regularTypeFace{juce::Typeface::createSystemTypefaceFor(BinaryData::GoNotoKurrentRegular_ttf, BinaryData::GoNotoKurrentRegular_ttfSize)}
 	{
 		setColourScheme({
 			windowBackgroundColor,
@@ -119,6 +119,22 @@ namespace AK::WwiseTransfer
 		case ObjectType::WorkUnit:
 		{
 			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_Workunit_nor_svg, BinaryData::ObjectIcons_Workunit_nor_svgSize);
+		}
+		case ObjectType::MusicSwitchContainer:
+		{
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_MusicSwitchContainer_nor_svg, BinaryData::ObjectIcons_MusicSwitchContainer_nor_svgSize);
+		}
+		case ObjectType::MusicPlaylistContainer:
+		{
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_MusicPlaylistContainer_nor_svg, BinaryData::ObjectIcons_MusicPlaylistContainer_nor_svgSize);
+		}
+		case ObjectType::Segment:
+		{
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_MusicSegment_nor_svg, BinaryData::ObjectIcons_MusicSegment_nor_svgSize);
+		}
+		case ObjectType::Track:
+		{
+			return juce::Drawable::createFromImageData(BinaryData::ObjectIcons_MusicTrack_nor_svg, BinaryData::ObjectIcons_MusicTrack_nor_svgSize);
 		}
 		default:
 		{

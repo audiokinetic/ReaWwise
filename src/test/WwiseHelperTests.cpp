@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------------------
 
-Copyright (c) 2025 AUDIOKINETIC Inc.
+Copyright (c) 2026 AUDIOKINETIC Inc.
 
 This file is licensed to use under the license available at:
 https://github.com/audiokinetic/ReaWwise/blob/main/License.txt (the "License").
@@ -40,7 +40,7 @@ namespace AK::WwiseTransfer::Test
 		for(const auto& objectType : objectTypes)
 		{
 			auto expectedResult = "\\<" + WwiseHelper::objectTypeToReadableString(objectType) + ">" + testName;
-			REQUIRE(WwiseHelper::buildObjectPathNode(objectType, testName) == expectedResult);
+			REQUIRE(WwiseHelper::buildObjectPathNode(objectType, testName, true) == expectedResult);
 		}
 	}
 
@@ -51,7 +51,7 @@ namespace AK::WwiseTransfer::Test
 
 		for(const auto& objectType : objectTypes)
 		{
-			auto buildObjectPath = WwiseHelper::buildObjectPathNode(objectType, testName);
+			auto buildObjectPath = WwiseHelper::buildObjectPathNode(objectType, testName, true);
 			REQUIRE(WwiseHelper::pathToPathWithoutObjectTypes(buildObjectPath) == expectedResult);
 		}
 	}
@@ -114,7 +114,7 @@ namespace AK::WwiseTransfer::Test
 		{
 			for(const auto& objectType : objectTypes)
 			{
-				auto buildObjectPath = WwiseHelper::buildObjectPathNode(objectType, testName);
+				auto buildObjectPath = WwiseHelper::buildObjectPathNode(objectType, testName, true);
 
 				REQUIRE(WwiseHelper::pathToObjectType(buildObjectPath) == objectType);
 			}

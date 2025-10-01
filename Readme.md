@@ -50,7 +50,7 @@ ReaWwise is a REAPER extension that sound designers can use to transfer audio fi
 - Git
 - CMake (minimum version 3.22.0)
 - Platform-specific build tools (Visual Studio or XCode)
-- Wwise with SDK (minimum version 2021.1.1)
+- Wwise with SDK (minimum version 2023.1.1)
 - WWISESDK environment variable set to the path of the installed Wwise SDK
 
 ### Building
@@ -85,7 +85,7 @@ The repository is not open to pull request but in the case of a bug report, bugf
 Feature requests can also be submitted to the [feature request section](https://www.audiokinetic.com/qa/questions/reawwise) of Audiokinetic's Community Q&A. Use ReaWwise as the Category when submitting a question.
 
 ## Legal
-Copyright © 2025 [Audiokinetic Inc.](https://audiokinetic.com) All rights reserved.
+Copyright © 2026 [Audiokinetic Inc.](https://audiokinetic.com) All rights reserved.
 
 ## Acknowledgements
 Inspired by the work of [Karl Davis](https://github.com/karltechno)

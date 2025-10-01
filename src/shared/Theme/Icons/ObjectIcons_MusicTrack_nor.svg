@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
+    <g transform="matrix(1,0,0,1,-380,-125)">
+        <g transform="matrix(1,0,0,1,380,125)">
+            <g id="ObjectIcons_MusicTrack_nor">
+                <g id="Icons">
+                    <g transform="matrix(1,0,0,1,-40,-25)">
+                        <g id="Base-Block" serif:id="Base Block">
+                            <path d="M55,27.1C55,25.941 54.059,25 52.9,25L42.1,25C40.941,25 40,25.941 40,27.1L40,37.9C40,39.059 40.941,40 42.1,40L52.9,40C54.059,40 55,39.059 55,37.9L55,27.1Z" style="fill-opacity:0;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(4.33333,0,0,3.66667,-7.66667,-34.6667)">
+                        <path d="M5,10.6C5,10.269 4.773,10 4.492,10L2.508,10C2.227,10 2,10.269 2,10.6L2,12.4C2,12.731 2.227,13 2.508,13L4.492,13C4.773,13 5,12.731 5,12.4L5,10.6Z" style="fill:rgb(34,34,34);"/>
+                    </g>
+                    <g transform="matrix(3.66667,0,0,3,-5.33333,-27)">
+                        <path d="M5,10.48C5,10.215 4.824,10 4.607,10L2.393,10C2.176,10 2,10.215 2,10.48L2,12.52C2,12.785 2.176,13 2.393,13L4.607,13C4.824,13 5,12.785 5,12.52L5,10.48Z" style="fill:rgb(200,200,200);"/>
+                    </g>
+                    <g transform="matrix(1,0,0,1,-100,-75)">
+                        <path d="M104.182,82L104.52,80.863L104.89,81.329L105.344,78.685L106.053,80.742L106.511,80.144L107.162,82L109.008,82L109.522,80.846L109.977,81.373L110.543,79.998L111.199,81.623L111.971,82.318L112.486,82.344L113,82.347L113,82.661L112.503,82.668L112,82.689L111.199,83.377L110.543,85.002L109.977,83.627L109.522,84.154L109.008,83L107.166,83L106.443,84.879L105.985,84.278L105.344,86.347L104.89,83.688L104.52,84.156L104.178,83L103,82.709L102,82.694L102,82.362L103,82.343L104.182,82Z" style="fill:rgb(34,34,34);"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
